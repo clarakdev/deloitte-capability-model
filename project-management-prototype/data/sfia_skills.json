@@ -1,0 +1,884 @@
+[
+  {
+    "code": "ACIN",
+    "name": "Accessibility and inclusion",
+    "category": "Relationships and engagement",
+    "description": "Driving accessibility and inclusion in services and products."
+  },
+  {
+    "code": "ANCC",
+    "name": "Analytical classification and coding",
+    "category": "Development and implementation",
+    "description": "Interpreting information and assigning classifications or labels based on domain-specific knowledge, standards and guidelines to enable data analysis and use."
+  },
+  {
+    "code": "ADEV",
+    "name": "Animation development",
+    "category": "Development and implementation",
+    "description": "Designing and developing animated and interactive systems such as games, simulations and virtual environments."
+  },
+  {
+    "code": "ASUP",
+    "name": "Application support",
+    "category": "Delivery and operation",
+    "description": "Delivering management, technical and administrative services to support and maintain live applications."
+  },
+  {
+    "code": "AIDE",
+    "name": "Artificial intelligence (AI) and data ethics",
+    "category": "Development and implementation",
+    "description": "Implementing and promoting ethical practices in the design, development, deployment and use of AI and data technologies."
+  },
+  {
+    "code": "ASMG",
+    "name": "Asset management",
+    "category": "Delivery and operation",
+    "description": "Managing the full lifecycle of assets from acquisition, operation, maintenance to disposal."
+  },
+  {
+    "code": "AUDT",
+    "name": "Audit",
+    "category": "Strategy and architecture",
+    "description": "Delivering independent, risk-based assessments of the effectiveness of processes, the controls and the compliance environment of an organisation."
+  },
+  {
+    "code": "AVMT",
+    "name": "Availability management",
+    "category": "Delivery and operation",
+    "description": "Ensuring services deliver agreed levels of availability to meet the current and future needs of the business."
+  },
+  {
+    "code": "BENM",
+    "name": "Benefits management",
+    "category": "Change and transformation",
+    "description": "Forecasting, planning and monitoring the emergence and effective realisation of anticipated benefits from projects and programmes."
+  },
+  {
+    "code": "BIDM",
+    "name": "Bid/proposal management",
+    "category": "Relationships and engagement",
+    "description": "Managing preparation and submission of bids and proposals for contracts, grants, projects, or services."
+  },
+  {
+    "code": "BRMG",
+    "name": "Brand management",
+    "category": "Relationships and engagement",
+    "description": "Managing brand strategy to establish and enhance brand identity and value aligned with organisational goals."
+  },
+  {
+    "code": "BUDF",
+    "name": "Budgeting and forecasting",
+    "category": "Strategy and architecture",
+    "description": "Developing and managing financial budgets and forecasts to enable effective decision-making and resource allocation."
+  },
+  {
+    "code": "ADMN",
+    "name": "Business administration",
+    "category": "Strategy and architecture",
+    "description": "Managing and performing administrative services and tasks to enable individuals, teams and organisations to succeed in their objectives."
+  },
+  {
+    "code": "BINT",
+    "name": "Business intelligence",
+    "category": "Development and implementation",
+    "description": "Developing, producing and delivering regular and one-off management information to provide insights and aid decision-making."
+  },
+  {
+    "code": "BSMO",
+    "name": "Business modelling",
+    "category": "Change and transformation",
+    "description": "Creating abstract or distilled models of business scenarios, representing processes, data and roles to support decision-making and analysis."
+  },
+  {
+    "code": "BPRE",
+    "name": "Business process improvement",
+    "category": "Change and transformation",
+    "description": "Creating new and potentially disruptive approaches to performing business activities."
+  },
+  {
+    "code": "BUSA",
+    "name": "Business situation analysis",
+    "category": "Change and transformation",
+    "description": "Investigating business situations to define recommendations for improvement action."
+  },
+  {
+    "code": "CPMG",
+    "name": "Capacity management",
+    "category": "Delivery and operation",
+    "description": "Ensuring service components have the capacity and performance to meet current and planned business needs."
+  },
+  {
+    "code": "CSOP",
+    "name": "Certification scheme operation",
+    "category": "Relationships and engagement",
+    "description": "Designing, developing and operating certification schemes, accreditations and credentials, including digital credentials or badges."
+  },
+  {
+    "code": "CHMG",
+    "name": "Change control",
+    "category": "Delivery and operation",
+    "description": "Assessing risks associated with proposed changes and ensuring changes to products, services or systems are controlled and coordinated."
+  },
+  {
+    "code": "LEDA",
+    "name": "Competency assessment",
+    "category": "People and skills",
+    "description": "Assessing knowledge, skills, competency and behaviours by any means, whether formal or informal, against frameworks such as SFIA."
+  },
+  {
+    "code": "CFMG",
+    "name": "Configuration management",
+    "category": "Delivery and operation",
+    "description": "Planning, identifying, controlling, accounting for and auditing of configuration items (CIs) and their interrelationships."
+  },
+  {
+    "code": "CNSL",
+    "name": "Consultancy",
+    "category": "Relationships and engagement",
+    "description": "Providing advice and recommendations, based on expertise and experience, to address client needs."
+  },
+  {
+    "code": "INCA",
+    "name": "Content design and authoring",
+    "category": "Relationships and engagement",
+    "description": "Planning, designing and creating content that meets user-centred and organisational needs, encompassing textual information, graphical content and multimedia elements."
+  },
+  {
+    "code": "ICPM",
+    "name": "Content publishing",
+    "category": "Relationships and engagement",
+    "description": "Managing processes to collect, assemble and publish content across various channels to meet organisational and audience needs."
+  },
+  {
+    "code": "COPL",
+    "name": "Continuity management",
+    "category": "Strategy and architecture",
+    "description": "Developing, implementing and testing a business continuity framework."
+  },
+  {
+    "code": "ITCM",
+    "name": "Contract management",
+    "category": "Relationships and engagement",
+    "description": "Managing and operating formal contracts, addressing supplier and client needs in product and service provision."
+  },
+  {
+    "code": "COMG",
+    "name": "Cost management",
+    "category": "Strategy and architecture",
+    "description": "Planning, controlling and analysing costs to enable the effective use of financial resources."
+  },
+  {
+    "code": "CELO",
+    "name": "Customer engagement and loyalty",
+    "category": "Relationships and engagement",
+    "description": "Developing and executing strategies to attract, engage and retain customers through targeted communications and loyalty initiatives."
+  },
+  {
+    "code": "CEXP",
+    "name": "Customer experience",
+    "category": "Relationships and engagement",
+    "description": "Ensuring the delivery of high-quality interactions and experiences that meet customer expectations across all touchpoints and channels."
+  },
+  {
+    "code": "CSMG",
+    "name": "Customer service support",
+    "category": "Relationships and engagement",
+    "description": "Managing and operating customer service or service desk functions."
+  },
+  {
+    "code": "CRIM",
+    "name": "Cybercrime investigation",
+    "category": "Delivery and operation",
+    "description": "Investigates cybercrimes, collects evidence, determines incident impacts and collaborates with legal teams to protect digital assets."
+  },
+  {
+    "code": "DAAN",
+    "name": "Data analytics",
+    "category": "Development and implementation",
+    "description": "Enabling data-driven decision making by extracting, analysing and communicating insights from structured and unstructured data."
+  },
+  {
+    "code": "DENG",
+    "name": "Data engineering",
+    "category": "Development and implementation",
+    "description": "Designing, building, operationalising, securing and monitoring data pipelines, stores and real-time processing systems for scalable and reliable data management."
+  },
+  {
+    "code": "DATM",
+    "name": "Data management",
+    "category": "Development and implementation",
+    "description": "Developing and implementing plans, policies and practices that control, protect and optimise the value and governance of data assets."
+  },
+  {
+    "code": "DTAN",
+    "name": "Data modelling and design",
+    "category": "Development and implementation",
+    "description": "Developing models and diagrams to represent, communicate and manage data requirements and data assets."
+  },
+  {
+    "code": "DATS",
+    "name": "Data science",
+    "category": "Development and implementation",
+    "description": "Applying mathematics, statistics, data mining and predictive modelling techniques to gain insights, predict behaviours and generate value from data."
+  },
+  {
+    "code": "VISL",
+    "name": "Data visualisation",
+    "category": "Development and implementation",
+    "description": "Facilitating understanding of data by displaying concepts, ideas and facts using graphical representations."
+  },
+  {
+    "code": "DBAD",
+    "name": "Database administration",
+    "category": "Delivery and operation",
+    "description": "Installing, configuring, monitoring, maintaining databases and data stores, ensuring performance and security and adapting to evolving technologies."
+  },
+  {
+    "code": "DBDS",
+    "name": "Database design",
+    "category": "Development and implementation",
+    "description": "Specifying, designing and maintaining mechanisms for storing and accessing data across various environments and platforms."
+  },
+  {
+    "code": "DEMG",
+    "name": "Delivery management",
+    "category": "Delivery and operation",
+    "description": "Ensuring successful delivery of new or updated products and services through effective leadership and collaboration within defined delivery cycles."
+  },
+  {
+    "code": "DEMM",
+    "name": "Demand management",
+    "category": "Delivery and operation",
+    "description": "Analysing and proactively managing business demand for new services or modifications to existing service features or volumes."
+  },
+  {
+    "code": "DEPL",
+    "name": "Deployment",
+    "category": "Development and implementation",
+    "description": "Transitioning software from development to live usage, managing risks and ensuring it works as intended."
+  },
+  {
+    "code": "DGFS",
+    "name": "Digital forensics",
+    "category": "Delivery and operation",
+    "description": "Recovering and investigating material found in digital devices."
+  },
+  {
+    "code": "DIGM",
+    "name": "Digital marketing",
+    "category": "Relationships and engagement",
+    "description": "Planning and executing activities to promote products, services and brands through digital channels and technologies."
+  },
+  {
+    "code": "EMRG",
+    "name": "Emerging technology monitoring",
+    "category": "Strategy and architecture",
+    "description": "Identifying and assessing new and emerging technologies, products, services, methods and techniques."
+  },
+  {
+    "code": "EEXP",
+    "name": "Employee experience",
+    "category": "People and skills",
+    "description": "Enhancing employee engagement and ways of working, empowering employees and supporting their health and wellbeing."
+  },
+  {
+    "code": "STPL",
+    "name": "Enterprise and business architecture",
+    "category": "Strategy and architecture",
+    "description": "Aligning an organisation's technology strategy with its business mission, strategy and processes and documenting this using architectural models."
+  },
+  {
+    "code": "DCMA",
+    "name": "Facilities management",
+    "category": "Delivery and operation",
+    "description": "Planning, designing and managing the buildings, space and facilities which, collectively, make up the IT estate."
+  },
+  {
+    "code": "FEAS",
+    "name": "Feasibility assessment",
+    "category": "Change and transformation",
+    "description": "Defining, evaluating and describing business change options for financial, technical and business feasibility and strategic alignment."
+  },
+  {
+    "code": "FIAN",
+    "name": "Financial analysis",
+    "category": "Strategy and architecture",
+    "description": "Conducting in-depth analysis of financial data to derive insights and support decision-making."
+  },
+  {
+    "code": "FMIT",
+    "name": "Financial management",
+    "category": "Strategy and architecture",
+    "description": "Managing the effective use and control of financial resources to support business strategies, compliance and risk mitigation."
+  },
+  {
+    "code": "RSCH",
+    "name": "Formal research",
+    "category": "Strategy and architecture",
+    "description": "Systematically creating new knowledge by data gathering, innovation, experimentation, evaluation and dissemination."
+  },
+  {
+    "code": "TEST",
+    "name": "Functional testing",
+    "category": "Development and implementation",
+    "description": "Assessing specified or unspecified functional requirements and characteristics of products, systems and services through investigation and testing."
+  },
+  {
+    "code": "GOVN",
+    "name": "Governance",
+    "category": "Strategy and architecture",
+    "description": "Defining and operating frameworks for decision-making, risk management, stakeholder relationships and compliance with organisational and regulatory obligations."
+  },
+  {
+    "code": "GRDN",
+    "name": "Graphic design",
+    "category": "Relationships and engagement",
+    "description": "Creating and applying visual concepts to communicate ideas, enhance aesthetics and improve user experience across digital and print media."
+  },
+  {
+    "code": "HWDE",
+    "name": "Hardware design",
+    "category": "Development and implementation",
+    "description": "Specifying and designing hardware systems and components to meet defined requirements by following agreed design principles and standards."
+  },
+  {
+    "code": "HPCC",
+    "name": "High-performance computing",
+    "category": "Development and implementation",
+    "description": "Using advanced computer systems and special programming techniques to solve complex computational problems."
+  },
+  {
+    "code": "IAMT",
+    "name": "Identity and access management",
+    "category": "Delivery and operation",
+    "description": "Managing identity verification and access permissions within organisational systems and environments."
+  },
+  {
+    "code": "USUP",
+    "name": "Incident management",
+    "category": "Delivery and operation",
+    "description": "Coordinating responses to a diverse range of incidents to minimise negative impacts and quickly restore services."
+  },
+  {
+    "code": "PEDP",
+    "name": "Information and data compliance",
+    "category": "Strategy and architecture",
+    "description": "Implementing and promoting compliance with information and data management legislation."
+  },
+  {
+    "code": "INAS",
+    "name": "Information assurance",
+    "category": "Strategy and architecture",
+    "description": "Protecting against and managing risks related to the use, storage and transmission of data and information systems."
+  },
+  {
+    "code": "IRMG",
+    "name": "Information management",
+    "category": "Strategy and architecture",
+    "description": "Enabling the effective management and use of information assets."
+  },
+  {
+    "code": "SCTY",
+    "name": "Information security",
+    "category": "Strategy and architecture",
+    "description": "Defining and operating a framework of security controls and security management strategies."
+  },
+  {
+    "code": "ISCO",
+    "name": "Information systems coordination",
+    "category": "Strategy and architecture",
+    "description": "Coordinating information and technology strategies where the adoption of a common approach would benefit the organisation."
+  },
+  {
+    "code": "IFDN",
+    "name": "Infrastructure design",
+    "category": "Development and implementation",
+    "description": "Designing technology infrastructure to meet business requirements, ensuring scalability, reliability, security and alignment with strategic objectives."
+  },
+  {
+    "code": "ITOP",
+    "name": "Infrastructure operations",
+    "category": "Delivery and operation",
+    "description": "Provisioning, deploying, configuring, operating and optimising technology infrastructure across physical, virtual and cloud-based environments."
+  },
+  {
+    "code": "INOV",
+    "name": "Innovation management",
+    "category": "Strategy and architecture",
+    "description": "Identifying, prioritising, incubating and exploiting opportunities provided by information, communication and digital technologies."
+  },
+  {
+    "code": "INVA",
+    "name": "Investment appraisal",
+    "category": "Strategy and architecture",
+    "description": "Assessing the attractiveness of possible investments or projects."
+  },
+  {
+    "code": "JADN",
+    "name": "Job analysis and design",
+    "category": "People and skills",
+    "description": "Planning, analysing and designing job roles and structures to align with organisational requirements, goals and culture."
+  },
+  {
+    "code": "KNOW",
+    "name": "Knowledge management",
+    "category": "Strategy and architecture",
+    "description": "Systematically capturing, developing and leveraging vital knowledge to create value and enhance organisational performance."
+  },
+  {
+    "code": "ETMG",
+    "name": "Learning and development management",
+    "category": "People and skills",
+    "description": "Delivering management, advisory and administrative services to support the development of knowledge, skills and competencies."
+  },
+  {
+    "code": "ETDL",
+    "name": "Learning delivery",
+    "category": "People and skills",
+    "description": "Transferring knowledge, developing skills and changing behaviours using a range of techniques, resources and media."
+  },
+  {
+    "code": "TMCR",
+    "name": "Learning design and development",
+    "category": "People and skills",
+    "description": "Designing and developing resources to transfer knowledge, develop skills and change behaviours."
+  },
+  {
+    "code": "MLNG",
+    "name": "Machine learning",
+    "category": "Development and implementation",
+    "description": "Developing systems that learn from data and experience, improving performance, accuracy and adaptability in dynamic environments."
+  },
+  {
+    "code": "MRCH",
+    "name": "Market research",
+    "category": "Relationships and engagement",
+    "description": "Gathering, analysing and interpreting data about markets, customers and competitors to inform business decisions and strategies."
+  },
+  {
+    "code": "MKCM",
+    "name": "Marketing campaign management",
+    "category": "Relationships and engagement",
+    "description": "Executing, monitoring and optimising marketing campaigns across various channels to engage target audiences and achieve desired outcomes."
+  },
+  {
+    "code": "MKTG",
+    "name": "Marketing management",
+    "category": "Relationships and engagement",
+    "description": "Developing, implementing and managing marketing strategies and plans to achieve organisational objectives and drive business growth."
+  },
+  {
+    "code": "MEAS",
+    "name": "Measurement",
+    "category": "Delivery and operation",
+    "description": "Developing and operating a measurement capability to support agreed organisational information needs."
+  },
+  {
+    "code": "METL",
+    "name": "Methods and tools",
+    "category": "Delivery and operation",
+    "description": "Leading the adoption, management and optimisation of methods and tools, ensuring effective use and alignment with organisational objectives."
+  },
+  {
+    "code": "NTDS",
+    "name": "Network design",
+    "category": "Development and implementation",
+    "description": "Designing communication networks to meet business requirements, ensuring scalability, reliability, security and alignment with strategic objectives."
+  },
+  {
+    "code": "NTAS",
+    "name": "Network support",
+    "category": "Delivery and operation",
+    "description": "Providing maintenance and support services for communications networks."
+  },
+  {
+    "code": "NFTS",
+    "name": "Non-functional testing",
+    "category": "Development and implementation",
+    "description": "Assessing systems and services to evaluate performance, security, scalability and other non-functional qualities against requirements or expected standards."
+  },
+  {
+    "code": "NUAN",
+    "name": "Numerical analysis",
+    "category": "Development and implementation",
+    "description": "Creating, analysing, implementing, testing and improving algorithms for numerically solving mathematical problems."
+  },
+  {
+    "code": "OCOP",
+    "name": "Offensive cyber operations",
+    "category": "Delivery and operation",
+    "description": "Planning, executing and managing offensive cybersecurity operations, including target selection, electronic target folders and post-operation analysis."
+  },
+  {
+    "code": "ORDI",
+    "name": "Organisation design and implementation",
+    "category": "Change and transformation",
+    "description": "Planning, designing and implementing an integrated organisation structure and culture."
+  },
+  {
+    "code": "OCDV",
+    "name": "Organisational capability development",
+    "category": "People and skills",
+    "description": "Providing leadership, advice and implementation support to assess organisational capabilities and to identify, prioritise and implement improvements."
+  },
+  {
+    "code": "OCEN",
+    "name": "Organisational change enablement",
+    "category": "Change and transformation",
+    "description": "Facilitating cultural and behavioural change by enabling individuals and teams to embed new ways of working and adapt to changes."
+  },
+  {
+    "code": "CIPM",
+    "name": "Organisational change management",
+    "category": "Change and transformation",
+    "description": "Planning, designing and implementing activities to transition the organisation and people to the required future state."
+  },
+  {
+    "code": "OFCL",
+    "name": "Organisational facilitation",
+    "category": "People and skills",
+    "description": "Supporting workgroups to implement principles and practices for effective teamwork across organisational boundaries and professional specialisms."
+  },
+  {
+    "code": "PENT",
+    "name": "Penetration testing",
+    "category": "Delivery and operation",
+    "description": "Testing the effectiveness of security controls by emulating the tools and techniques of likely attackers."
+  },
+  {
+    "code": "PEMT",
+    "name": "Performance management",
+    "category": "People and skills",
+    "description": "Improving organisational performance by developing the performance of individuals and workgroups to meet agreed objectives with measurable results."
+  },
+  {
+    "code": "POMG",
+    "name": "Portfolio management",
+    "category": "Change and transformation",
+    "description": "Developing and applying a management framework to define and deliver a portfolio of programmes, projects and/or ongoing services."
+  },
+  {
+    "code": "PROF",
+    "name": "Portfolio, programme and project support",
+    "category": "Change and transformation",
+    "description": "Providing support and guidance on portfolio, programme and project management processes, procedures, tools and techniques."
+  },
+  {
+    "code": "PBMG",
+    "name": "Problem management",
+    "category": "Delivery and operation",
+    "description": "Managing the lifecycle of all problems that have occurred or could occur in delivering a service."
+  },
+  {
+    "code": "PRTS",
+    "name": "Process testing",
+    "category": "Development and implementation",
+    "description": "Assessing documented and undocumented process flows within a product, system or service against business needs through investigation and testing."
+  },
+  {
+    "code": "PROD",
+    "name": "Product management",
+    "category": "Change and transformation",
+    "description": "Managing and developing products or services throughout their full lifecycle, from inception through growth, maturity, and decline, to retirement."
+  },
+  {
+    "code": "PDSV",
+    "name": "Professional development",
+    "category": "People and skills",
+    "description": "Facilitating the professional development of individuals in line with their career goals and organisational requirements."
+  },
+  {
+    "code": "PGMG",
+    "name": "Programme management",
+    "category": "Change and transformation",
+    "description": "Identifying, planning and coordinating a set of related projects and activities in support of specific business strategies and objectives."
+  },
+  {
+    "code": "PROG",
+    "name": "Programming/software development",
+    "category": "Development and implementation",
+    "description": "Developing software components to deliver value to stakeholders."
+  },
+  {
+    "code": "PRMG",
+    "name": "Project management",
+    "category": "Change and transformation",
+    "description": "Delivering agreed project outcomes by aligning appropriate management techniques, collaboration, leadership and governance to specific project and organisational contexts."
+  },
+  {
+    "code": "QUAS",
+    "name": "Quality assurance",
+    "category": "Delivery and operation",
+    "description": "Assuring, through ongoing and periodic assessments and reviews, that the organisation's quality objectives are being met."
+  },
+  {
+    "code": "QUMG",
+    "name": "Quality management",
+    "category": "Delivery and operation",
+    "description": "Defining and operating a management framework of processes and working practices to deliver the organisation's quality objectives."
+  },
+  {
+    "code": "RFEN",
+    "name": "Radio frequency engineering",
+    "category": "Development and implementation",
+    "description": "Designing, installing and maintaining radio frequency based devices and software."
+  },
+  {
+    "code": "RESD",
+    "name": "Real-time/embedded systems development",
+    "category": "Development and implementation",
+    "description": "Designing and developing reliable real-time software typically within embedded systems."
+  },
+  {
+    "code": "RMGT",
+    "name": "Records management",
+    "category": "Delivery and operation",
+    "description": "Planning, implementing and managing the full lifecycle of organisational records."
+  },
+  {
+    "code": "RELM",
+    "name": "Release management",
+    "category": "Delivery and operation",
+    "description": "Managing the release of new and updated services into production, ensuring alignment with business objectives and compliance standards."
+  },
+  {
+    "code": "REQM",
+    "name": "Requirements definition and management",
+    "category": "Change and transformation",
+    "description": "Managing requirements through the entire delivery and operational lifecycle."
+  },
+  {
+    "code": "RESC",
+    "name": "Resourcing",
+    "category": "People and skills",
+    "description": "Acquiring, deploying and onboarding resources."
+  },
+  {
+    "code": "BURM",
+    "name": "Risk management",
+    "category": "Strategy and architecture",
+    "description": "Planning and implementing processes for managing risk across the enterprise, aligned with organisational strategy and governance frameworks."
+  },
+  {
+    "code": "SFAS",
+    "name": "Safety assessment",
+    "category": "Development and implementation",
+    "description": "Assessing safety-related software and hardware systems to determine compliance with standards and required levels of safety integrity."
+  },
+  {
+    "code": "SFEN",
+    "name": "Safety engineering",
+    "category": "Development and implementation",
+    "description": "Applying appropriate methods to assure safety during all lifecycle phases of safety-related systems developments."
+  },
+  {
+    "code": "SSUP",
+    "name": "Sales support",
+    "category": "Relationships and engagement",
+    "description": "Providing advice and support to the sales force, customers and sales partners."
+  },
+  {
+    "code": "SCMO",
+    "name": "Scientific modelling",
+    "category": "Development and implementation",
+    "description": "Applying computer simulation and other forms of computation to solve real-world problems in scientific disciplines."
+  },
+  {
+    "code": "SCAD",
+    "name": "Security operations",
+    "category": "Delivery and operation",
+    "description": "Managing and administering security measures, using tools and intelligence to protect assets, ensuring compliance and operational integrity."
+  },
+  {
+    "code": "SALE",
+    "name": "Selling",
+    "category": "Relationships and engagement",
+    "description": "Finding prospective customers and working with them to identify needs, influence purchase decisions and enhance future business opportunities."
+  },
+  {
+    "code": "SEAC",
+    "name": "Service acceptance",
+    "category": "Delivery and operation",
+    "description": "Managing the process to obtain formal confirmation that service acceptance criteria have been met."
+  },
+  {
+    "code": "SCMG",
+    "name": "Service catalogue management",
+    "category": "Delivery and operation",
+    "description": "Providing a source of consistent information about available services and products to customers and users."
+  },
+  {
+    "code": "SLMO",
+    "name": "Service level management",
+    "category": "Delivery and operation",
+    "description": "Agreeing targets for service levels and assessing, monitoring and managing the delivery of services against the targets."
+  },
+  {
+    "code": "PORT",
+    "name": "Software configuration",
+    "category": "Development and implementation",
+    "description": "Designing and deploying software product configurations into software environments or platforms."
+  },
+  {
+    "code": "SWDN",
+    "name": "Software design",
+    "category": "Development and implementation",
+    "description": "Architecting and designing software to meet specified requirements, ensuring adherence to established standards and principles."
+  },
+  {
+    "code": "ARCH",
+    "name": "Solution architecture",
+    "category": "Development and implementation",
+    "description": "Developing and communicating a multi-dimensional solution architecture to deliver agreed business outcomes."
+  },
+  {
+    "code": "SORC",
+    "name": "Sourcing",
+    "category": "Relationships and engagement",
+    "description": "Managing, or providing advice on, the procurement or commissioning of products and services."
+  },
+  {
+    "code": "TECH",
+    "name": "Specialist advice",
+    "category": "Relationships and engagement",
+    "description": "Providing authoritative, professional advice and direction in a specialist area."
+  },
+  {
+    "code": "RLMT",
+    "name": "Stakeholder relationship management",
+    "category": "Relationships and engagement",
+    "description": "Systematically analysing, managing and influencing stakeholder relationships to achieve mutually beneficial outcomes through structured engagement."
+  },
+  {
+    "code": "STMG",
+    "name": "Storage management",
+    "category": "Delivery and operation",
+    "description": "Provisioning, configuring and optimising on-premises and cloud-based storage solutions, ensuring data availability, security and alignment with business objectives."
+  },
+  {
+    "code": "ITSP",
+    "name": "Strategic planning",
+    "category": "Strategy and architecture",
+    "description": "Creating and maintaining organisational-level strategies to align overall business plans, actions and resources with high-level business objectives."
+  },
+  {
+    "code": "SUBF",
+    "name": "Subject formation",
+    "category": "People and skills",
+    "description": "Specifying, designing and developing curricula within a structured and systematic education environment."
+  },
+  {
+    "code": "SUPP",
+    "name": "Supplier management",
+    "category": "Relationships and engagement",
+    "description": "Aligning the organisation's supplier performance objectives and activities with sourcing strategies and plans, balancing costs, efficiencies and service quality."
+  },
+  {
+    "code": "SUST",
+    "name": "Sustainability",
+    "category": "Strategy and architecture",
+    "description": "Advising and leading sustainability initiatives to reduce environmental impact and ensure compliance with relevant standards and regulations."
+  },
+  {
+    "code": "SYSP",
+    "name": "System software administration",
+    "category": "Delivery and operation",
+    "description": "Installing, managing and maintaining operating systems, data management, office automation and utility software across various infrastructure environments."
+  },
+  {
+    "code": "SLEN",
+    "name": "Systems and software lifecycle engineering",
+    "category": "Development and implementation",
+    "description": "Establishing and deploying an environment for developing, continually improving and securely operating software and systems products and services."
+  },
+  {
+    "code": "DESN",
+    "name": "Systems design",
+    "category": "Development and implementation",
+    "description": "Designing systems to meet specified requirements and agreed systems architectures."
+  },
+  {
+    "code": "DLMG",
+    "name": "Systems development management",
+    "category": "Development and implementation",
+    "description": "Planning, estimating and executing systems development work to time, budget and quality targets."
+  },
+  {
+    "code": "HSIN",
+    "name": "Systems installation and removal",
+    "category": "Delivery and operation",
+    "description": "Installing and testing, or decommissioning and removing, systems or system components."
+  },
+  {
+    "code": "SINT",
+    "name": "Systems integration and build",
+    "category": "Development and implementation",
+    "description": "Planning, implementing and controlling activities to integrate system elements, subsystems and interfaces to create operational systems, products or services."
+  },
+  {
+    "code": "TEAC",
+    "name": "Teaching",
+    "category": "People and skills",
+    "description": "Delivering and assessing curricula in a structured and systematic education environment."
+  },
+  {
+    "code": "ITMG",
+    "name": "Technology service management",
+    "category": "Delivery and operation",
+    "description": "Managing the provision of technology-based services to meet defined organisational needs."
+  },
+  {
+    "code": "THIN",
+    "name": "Threat intelligence",
+    "category": "Delivery and operation",
+    "description": "Developing and sharing actionable insights on current and potential security threats to the success or integrity of an organisation."
+  },
+  {
+    "code": "BPTS",
+    "name": "User acceptance testing",
+    "category": "Development and implementation",
+    "description": "Validating systems, products, business processes or services to determine whether the acceptance criteria have been satisfied."
+  },
+  {
+    "code": "UNAN",
+    "name": "User experience analysis",
+    "category": "Relationships and engagement",
+    "description": "Understanding the context of use for systems, products and services and specifying user experience requirements and design goals."
+  },
+  {
+    "code": "HCEV",
+    "name": "User experience design",
+    "category": "Relationships and engagement",
+    "description": "Producing design concepts and prototypes for user interactions and experiences of a product, system or service."
+  },
+  {
+    "code": "USEV",
+    "name": "User experience evaluation",
+    "category": "Relationships and engagement",
+    "description": "Validating systems, products or services against user experience goals, metrics and targets."
+  },
+  {
+    "code": "URCH",
+    "name": "User research",
+    "category": "Relationships and engagement",
+    "description": "Identifying users' behaviours, needs and motivations using observational research methods."
+  },
+  {
+    "code": "VUAS",
+    "name": "Vulnerability assessment",
+    "category": "Delivery and operation",
+    "description": "Identifying and classifying security vulnerabilities in networks, systems and applications and mitigating or eliminating their impact."
+  },
+  {
+    "code": "VURE",
+    "name": "Vulnerability research",
+    "category": "Delivery and operation",
+    "description": "Conducting applied research to discover, evaluate and mitigate new or unknown security vulnerabilities and weaknesses."
+  },
+  {
+    "code": "WFPL",
+    "name": "Workforce planning",
+    "category": "People and skills",
+    "description": "Strategically projecting the demand for people and skills and proactively planning the workforce supply to meet organisational needs."
+  }
+]

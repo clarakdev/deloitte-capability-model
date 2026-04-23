@@ -1,0 +1,917 @@
+[
+  {
+    "id": "EMP001",
+    "name": "Uma Brown",
+    "skills": [
+      {
+        "code": "KNOW",
+        "name": "Knowledge management",
+        "level": 2
+      },
+      {
+        "code": "IRMG",
+        "name": "Information management",
+        "level": 6
+      },
+      {
+        "code": "HPCC",
+        "name": "High-performance computing",
+        "level": 1
+      }
+    ]
+  },
+  {
+    "id": "EMP002",
+    "name": "Victor Jackson",
+    "skills": [
+      {
+        "code": "CNSL",
+        "name": "Consultancy",
+        "level": 5
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 5
+      },
+      {
+        "code": "BENM",
+        "name": "Benefits management",
+        "level": 1
+      },
+      {
+        "code": "AVMT",
+        "name": "Availability management",
+        "level": 5
+      },
+      {
+        "code": "INCA",
+        "name": "Content design and authoring",
+        "level": 2
+      },
+      {
+        "code": "GRDN",
+        "name": "Graphic design",
+        "level": 6
+      },
+      {
+        "code": "USUP",
+        "name": "Incident management",
+        "level": 6
+      }
+    ]
+  },
+  {
+    "id": "EMP003",
+    "name": "Wendy Green",
+    "skills": [
+      {
+        "code": "HWDE",
+        "name": "Hardware design",
+        "level": 3
+      },
+      {
+        "code": "SCAD",
+        "name": "Security operations",
+        "level": 3
+      },
+      {
+        "code": "ETMG",
+        "name": "Learning and development management",
+        "level": 2
+      },
+      {
+        "code": "ANCC",
+        "name": "Analytical classification and coding",
+        "level": 2
+      },
+      {
+        "code": "DEMG",
+        "name": "Delivery management",
+        "level": 7
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 3
+      }
+    ]
+  },
+  {
+    "id": "EMP004",
+    "name": "David Williams",
+    "skills": [
+      {
+        "code": "ICPM",
+        "name": "Content publishing",
+        "level": 5
+      },
+      {
+        "code": "PEMT",
+        "name": "Performance management",
+        "level": 1
+      },
+      {
+        "code": "CIPM",
+        "name": "Organisational change management",
+        "level": 4
+      },
+      {
+        "code": "INOV",
+        "name": "Innovation management",
+        "level": 1
+      },
+      {
+        "code": "BUDF",
+        "name": "Budgeting and forecasting",
+        "level": 5
+      },
+      {
+        "code": "SCMG",
+        "name": "Service catalogue management",
+        "level": 3
+      }
+    ]
+  },
+  {
+    "id": "EMP005",
+    "name": "Alex Harris",
+    "skills": [
+      {
+        "code": "POMG",
+        "name": "Portfolio management",
+        "level": 7
+      },
+      {
+        "code": "FEAS",
+        "name": "Feasibility assessment",
+        "level": 2
+      },
+      {
+        "code": "CPMG",
+        "name": "Capacity management",
+        "level": 7
+      },
+      {
+        "code": "BUDF",
+        "name": "Budgeting and forecasting",
+        "level": 1
+      },
+      {
+        "code": "IAMT",
+        "name": "Identity and access management",
+        "level": 4
+      },
+      {
+        "code": "MLNG",
+        "name": "Machine learning",
+        "level": 3
+      },
+      {
+        "code": "LEDA",
+        "name": "Competency assessment",
+        "level": 4
+      }
+    ]
+  },
+  {
+    "id": "EMP006",
+    "name": "Uma Martin",
+    "skills": [
+      {
+        "code": "DEMM",
+        "name": "Demand management",
+        "level": 6
+      },
+      {
+        "code": "PBMG",
+        "name": "Problem management",
+        "level": 6
+      },
+      {
+        "code": "PENT",
+        "name": "Penetration testing",
+        "level": 6
+      },
+      {
+        "code": "TEST",
+        "name": "Functional testing",
+        "level": 1
+      },
+      {
+        "code": "INVA",
+        "name": "Investment appraisal",
+        "level": 5
+      }
+    ]
+  },
+  {
+    "id": "EMP007",
+    "name": "Uma Davies",
+    "skills": [
+      {
+        "code": "IRMG",
+        "name": "Information management",
+        "level": 6
+      },
+      {
+        "code": "DEMM",
+        "name": "Demand management",
+        "level": 3
+      },
+      {
+        "code": "SLMO",
+        "name": "Service level management",
+        "level": 7
+      },
+      {
+        "code": "PDSV",
+        "name": "Professional development",
+        "level": 7
+      },
+      {
+        "code": "JADN",
+        "name": "Job analysis and design",
+        "level": 7
+      },
+      {
+        "code": "USEV",
+        "name": "User experience evaluation",
+        "level": 1
+      },
+      {
+        "code": "HWDE",
+        "name": "Hardware design",
+        "level": 2
+      }
+    ]
+  },
+  {
+    "id": "EMP008",
+    "name": "Alex Jones",
+    "skills": [
+      {
+        "code": "QUMG",
+        "name": "Quality management",
+        "level": 6
+      },
+      {
+        "code": "INVA",
+        "name": "Investment appraisal",
+        "level": 3
+      },
+      {
+        "code": "BUSA",
+        "name": "Business situation analysis",
+        "level": 2
+      },
+      {
+        "code": "GOVN",
+        "name": "Governance",
+        "level": 6
+      },
+      {
+        "code": "VURE",
+        "name": "Vulnerability research",
+        "level": 4
+      }
+    ]
+  },
+  {
+    "id": "EMP009",
+    "name": "Mia Hill",
+    "skills": [
+      {
+        "code": "SCMG",
+        "name": "Service catalogue management",
+        "level": 5
+      },
+      {
+        "code": "DATS",
+        "name": "Data science",
+        "level": 4
+      },
+      {
+        "code": "INOV",
+        "name": "Innovation management",
+        "level": 3
+      },
+      {
+        "code": "DTAN",
+        "name": "Data modelling and design",
+        "level": 2
+      },
+      {
+        "code": "SCTY",
+        "name": "Information security",
+        "level": 2
+      },
+      {
+        "code": "URCH",
+        "name": "User research",
+        "level": 5
+      },
+      {
+        "code": "ITMG",
+        "name": "Technology service management",
+        "level": 4
+      },
+      {
+        "code": "BURM",
+        "name": "Risk management",
+        "level": 1
+      }
+    ]
+  },
+  {
+    "id": "EMP010",
+    "name": "Yara Jones",
+    "skills": [
+      {
+        "code": "DBDS",
+        "name": "Database design",
+        "level": 5
+      },
+      {
+        "code": "DEMG",
+        "name": "Delivery management",
+        "level": 1
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 4
+      }
+    ]
+  },
+  {
+    "id": "EMP011",
+    "name": "Mia Lewis",
+    "skills": [
+      {
+        "code": "SINT",
+        "name": "Systems integration and build",
+        "level": 7
+      },
+      {
+        "code": "ISCO",
+        "name": "Information systems coordination",
+        "level": 3
+      },
+      {
+        "code": "HCEV",
+        "name": "User experience design",
+        "level": 7
+      },
+      {
+        "code": "ADEV",
+        "name": "Animation development",
+        "level": 6
+      },
+      {
+        "code": "CEXP",
+        "name": "Customer experience",
+        "level": 3
+      },
+      {
+        "code": "ITMG",
+        "name": "Technology service management",
+        "level": 1
+      }
+    ]
+  },
+  {
+    "id": "EMP012",
+    "name": "James Thompson",
+    "skills": [
+      {
+        "code": "SEAC",
+        "name": "Service acceptance",
+        "level": 7
+      },
+      {
+        "code": "ACIN",
+        "name": "Accessibility and inclusion",
+        "level": 2
+      },
+      {
+        "code": "INOV",
+        "name": "Innovation management",
+        "level": 5
+      },
+      {
+        "code": "SUPP",
+        "name": "Supplier management",
+        "level": 1
+      }
+    ]
+  },
+  {
+    "id": "EMP013",
+    "name": "Blake Harris",
+    "skills": [
+      {
+        "code": "SUST",
+        "name": "Sustainability",
+        "level": 5
+      },
+      {
+        "code": "FIAN",
+        "name": "Financial analysis",
+        "level": 7
+      },
+      {
+        "code": "DBDS",
+        "name": "Database design",
+        "level": 5
+      },
+      {
+        "code": "PRTS",
+        "name": "Process testing",
+        "level": 1
+      },
+      {
+        "code": "DEMM",
+        "name": "Demand management",
+        "level": 5
+      }
+    ]
+  },
+  {
+    "id": "EMP014",
+    "name": "Karen Hughes",
+    "skills": [
+      {
+        "code": "CELO",
+        "name": "Customer engagement and loyalty",
+        "level": 2
+      },
+      {
+        "code": "POMG",
+        "name": "Portfolio management",
+        "level": 1
+      },
+      {
+        "code": "MEAS",
+        "name": "Measurement",
+        "level": 2
+      }
+    ]
+  },
+  {
+    "id": "EMP015",
+    "name": "Cameron Hall",
+    "skills": [
+      {
+        "code": "CFMG",
+        "name": "Configuration management",
+        "level": 7
+      },
+      {
+        "code": "RLMT",
+        "name": "Stakeholder relationship management",
+        "level": 5
+      },
+      {
+        "code": "CPMG",
+        "name": "Capacity management",
+        "level": 7
+      }
+    ]
+  },
+  {
+    "id": "EMP016",
+    "name": "Emma Taylor",
+    "skills": [
+      {
+        "code": "ARCH",
+        "name": "Solution architecture",
+        "level": 7
+      },
+      {
+        "code": "UNAN",
+        "name": "User experience analysis",
+        "level": 6
+      },
+      {
+        "code": "DEPL",
+        "name": "Deployment",
+        "level": 6
+      },
+      {
+        "code": "INOV",
+        "name": "Innovation management",
+        "level": 2
+      },
+      {
+        "code": "SINT",
+        "name": "Systems integration and build",
+        "level": 6
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 3
+      },
+      {
+        "code": "GOVN",
+        "name": "Governance",
+        "level": 4
+      },
+      {
+        "code": "THIN",
+        "name": "Threat intelligence",
+        "level": 6
+      }
+    ]
+  },
+  {
+    "id": "EMP017",
+    "name": "Uma Walker",
+    "skills": [
+      {
+        "code": "DESN",
+        "name": "Systems design",
+        "level": 3
+      },
+      {
+        "code": "SALE",
+        "name": "Selling",
+        "level": 1
+      },
+      {
+        "code": "CSMG",
+        "name": "Customer service support",
+        "level": 5
+      },
+      {
+        "code": "SCTY",
+        "name": "Information security",
+        "level": 5
+      },
+      {
+        "code": "HPCC",
+        "name": "High-performance computing",
+        "level": 2
+      },
+      {
+        "code": "BUSA",
+        "name": "Business situation analysis",
+        "level": 5
+      }
+    ]
+  },
+  {
+    "id": "EMP018",
+    "name": "Henry Smith",
+    "skills": [
+      {
+        "code": "BPRE",
+        "name": "Business process improvement",
+        "level": 1
+      },
+      {
+        "code": "IAMT",
+        "name": "Identity and access management",
+        "level": 7
+      },
+      {
+        "code": "CPMG",
+        "name": "Capacity management",
+        "level": 3
+      }
+    ]
+  },
+  {
+    "id": "EMP019",
+    "name": "Carol Edwards",
+    "skills": [
+      {
+        "code": "ETMG",
+        "name": "Learning and development management",
+        "level": 2
+      },
+      {
+        "code": "RLMT",
+        "name": "Stakeholder relationship management",
+        "level": 6
+      },
+      {
+        "code": "GOVN",
+        "name": "Governance",
+        "level": 5
+      },
+      {
+        "code": "THIN",
+        "name": "Threat intelligence",
+        "level": 5
+      }
+    ]
+  },
+  {
+    "id": "EMP020",
+    "name": "Peter Wilson",
+    "skills": [
+      {
+        "code": "RESD",
+        "name": "Real-time/embedded systems development",
+        "level": 4
+      },
+      {
+        "code": "DCMA",
+        "name": "Facilities management",
+        "level": 4
+      },
+      {
+        "code": "ICPM",
+        "name": "Content publishing",
+        "level": 7
+      },
+      {
+        "code": "SFAS",
+        "name": "Safety assessment",
+        "level": 6
+      },
+      {
+        "code": "PENT",
+        "name": "Penetration testing",
+        "level": 1
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 6
+      }
+    ]
+  },
+  {
+    "id": "EMP021",
+    "name": "Uma Harris",
+    "skills": [
+      {
+        "code": "BPRE",
+        "name": "Business process improvement",
+        "level": 7
+      },
+      {
+        "code": "RFEN",
+        "name": "Radio frequency engineering",
+        "level": 7
+      },
+      {
+        "code": "OCDV",
+        "name": "Organisational capability development",
+        "level": 1
+      }
+    ]
+  },
+  {
+    "id": "EMP022",
+    "name": "Henry Evans",
+    "skills": [
+      {
+        "code": "ITMG",
+        "name": "Technology service management",
+        "level": 2
+      },
+      {
+        "code": "SCAD",
+        "name": "Security operations",
+        "level": 3
+      },
+      {
+        "code": "DTAN",
+        "name": "Data modelling and design",
+        "level": 4
+      },
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 2
+      }
+    ]
+  },
+  {
+    "id": "EMP023",
+    "name": "Blake Ward",
+    "skills": [
+      {
+        "code": "SCMO",
+        "name": "Scientific modelling",
+        "level": 1
+      },
+      {
+        "code": "UNAN",
+        "name": "User experience analysis",
+        "level": 6
+      },
+      {
+        "code": "COPL",
+        "name": "Continuity management",
+        "level": 5
+      }
+    ]
+  },
+  {
+    "id": "EMP024",
+    "name": "Alex Smith",
+    "skills": [
+      {
+        "code": "PEDP",
+        "name": "Information and data compliance",
+        "level": 4
+      },
+      {
+        "code": "DEPL",
+        "name": "Deployment",
+        "level": 4
+      },
+      {
+        "code": "RESD",
+        "name": "Real-time/embedded systems development",
+        "level": 2
+      }
+    ]
+  },
+  {
+    "id": "EMP025",
+    "name": "Blake Wright",
+    "skills": [
+      {
+        "code": "DEPL",
+        "name": "Deployment",
+        "level": 4
+      },
+      {
+        "code": "PDSV",
+        "name": "Professional development",
+        "level": 3
+      },
+      {
+        "code": "ACIN",
+        "name": "Accessibility and inclusion",
+        "level": 7
+      }
+    ]
+  },
+  {
+    "id": "EMP026",
+    "name": "Zoe White",
+    "skills": [
+      {
+        "code": "RESC",
+        "name": "Resourcing",
+        "level": 3
+      },
+      {
+        "code": "USEV",
+        "name": "User experience evaluation",
+        "level": 2
+      },
+      {
+        "code": "RLMT",
+        "name": "Stakeholder relationship management",
+        "level": 1
+      },
+      {
+        "code": "DBDS",
+        "name": "Database design",
+        "level": 5
+      },
+      {
+        "code": "DCMA",
+        "name": "Facilities management",
+        "level": 6
+      }
+    ]
+  },
+  {
+    "id": "EMP027",
+    "name": "Rachel Jones",
+    "skills": [
+      {
+        "code": "NTDS",
+        "name": "Network design",
+        "level": 1
+      },
+      {
+        "code": "BSMO",
+        "name": "Business modelling",
+        "level": 7
+      },
+      {
+        "code": "ADMN",
+        "name": "Business administration",
+        "level": 2
+      },
+      {
+        "code": "SORC",
+        "name": "Sourcing",
+        "level": 1
+      },
+      {
+        "code": "SUPP",
+        "name": "Supplier management",
+        "level": 5
+      },
+      {
+        "code": "SINT",
+        "name": "Systems integration and build",
+        "level": 1
+      },
+      {
+        "code": "DEMG",
+        "name": "Delivery management",
+        "level": 6
+      },
+      {
+        "code": "SYSP",
+        "name": "System software administration",
+        "level": 7
+      }
+    ]
+  },
+  {
+    "id": "EMP028",
+    "name": "Henry Wright",
+    "skills": [
+      {
+        "code": "VURE",
+        "name": "Vulnerability research",
+        "level": 5
+      },
+      {
+        "code": "SCTY",
+        "name": "Information security",
+        "level": 1
+      },
+      {
+        "code": "BRMG",
+        "name": "Brand management",
+        "level": 4
+      }
+    ]
+  },
+  {
+    "id": "EMP029",
+    "name": "Victor Hall",
+    "skills": [
+      {
+        "code": "DLMG",
+        "name": "Systems development management",
+        "level": 2
+      },
+      {
+        "code": "NTDS",
+        "name": "Network design",
+        "level": 6
+      },
+      {
+        "code": "ITOP",
+        "name": "Infrastructure operations",
+        "level": 6
+      },
+      {
+        "code": "RSCH",
+        "name": "Formal research",
+        "level": 3
+      },
+      {
+        "code": "INAS",
+        "name": "Information assurance",
+        "level": 4
+      },
+      {
+        "code": "INOV",
+        "name": "Innovation management",
+        "level": 3
+      },
+      {
+        "code": "QUAS",
+        "name": "Quality assurance",
+        "level": 7
+      }
+    ]
+  },
+  {
+    "id": "EMP030",
+    "name": "Dana Williams",
+    "skills": [
+      {
+        "code": "SCMG",
+        "name": "Service catalogue management",
+        "level": 1
+      },
+      {
+        "code": "VUAS",
+        "name": "Vulnerability assessment",
+        "level": 5
+      },
+      {
+        "code": "COPL",
+        "name": "Continuity management",
+        "level": 2
+      }
+    ]
+  }
+]
