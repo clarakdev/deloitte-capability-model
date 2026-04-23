@@ -164,10 +164,25 @@ def render_input() -> None:
         for err in errors:
             st.warning(err)
 
+    mode = st.radio(
+        "Assignment mode",
+        options=["auto", "manual"],
+        format_func=lambda m: (
+            "Auto — system finds the globally optimal assignment"
+            if m == "auto"
+            else "Manual — review top-5 candidates per role and choose yourself"
+        ),
+        horizontal=True,
+        key="assignment_mode",
+    )
+
     if st.button("Run Matching", type="primary", disabled=bool(errors)):
         st.session_state.pending_projects = projects_data
+        st.session_state.pending_mode = mode
         # Clear any previous results so app.py re-runs matching
         st.session_state.pop("assignments", None)
         st.session_state.pop("gap_analyses", None)
-        st.session_state.page = "results"
+        st.session_state.pop("manual_rankings", None)
+        st.session_state.pop("manual_selections", None)
+        st.session_state.page = "selection" if mode == "manual" else "results"
         st.rerun()

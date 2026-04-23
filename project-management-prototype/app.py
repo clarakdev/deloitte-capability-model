@@ -19,10 +19,11 @@ st.set_page_config(
 )
 
 from core.gap_analysis import analyse_gaps  # noqa: E402
-from core.matching import assign  # noqa: E402
+from core.matching import assign, rank_employees  # noqa: E402
 from core.role_mapper import map_role_to_skills  # noqa: E402
 from ui.input_page import render_input  # noqa: E402
 from ui.results_page import render_results  # noqa: E402
+from ui.selection_page import render_selection  # noqa: E402
 
 _EMPLOYEES_PATH = Path(__file__).parent / "data" / "employees.json"
 
@@ -38,12 +39,8 @@ def _load_employees() -> list[dict]:
         return json.load(f)
 
 
-def _run_matching(
-    projects_data: list[dict],
-) -> tuple[list[dict], list[list[dict]]]:
-    """Run the full matching pipeline and return assignments + gap analyses."""
-    employees = _load_employees()
-
+def _build_flat_roles(projects_data: list[dict]) -> list[dict]:
+    """Map each role to SFIA skills and return a flat list ready for matching."""
     flat_roles: list[dict] = []
     for project in projects_data:
         proj_name = project["name"] or "Unnamed Project"
@@ -57,10 +54,28 @@ def _run_matching(
                     "project": proj_name,
                 }
             )
+    return flat_roles
 
+
+def _run_matching(
+    projects_data: list[dict],
+) -> tuple[list[dict], list[list[dict]]]:
+    """Run the full auto-matching pipeline and return assignments + gap analyses."""
+    employees = _load_employees()
+    flat_roles = _build_flat_roles(projects_data)
     assignments = assign(employees, flat_roles)
     gap_analyses = [analyse_gaps(a) for a in assignments]
     return assignments, gap_analyses
+
+
+def _prepare_manual(
+    projects_data: list[dict],
+) -> tuple[list[dict], list[list[dict]]]:
+    """Build flat_roles and compute per-role employee rankings for manual mode."""
+    employees = _load_employees()
+    flat_roles = _build_flat_roles(projects_data)
+    rankings = rank_employees(employees, flat_roles)
+    return flat_roles, rankings
 
 
 def main() -> None:
@@ -70,8 +85,24 @@ def main() -> None:
     if st.session_state.page == "input":
         render_input()
 
+    elif st.session_state.page == "selection":
+        # Prepare rankings on first visit
+        if "manual_rankings" not in st.session_state:
+            projects_data = st.session_state.get("pending_projects", [])
+            if not projects_data:
+                st.session_state.page = "input"
+                st.rerun()
+
+            with st.spinner("Computing capability rankings…"):
+                flat_roles, rankings = _prepare_manual(projects_data)
+
+            st.session_state.manual_flat_roles = flat_roles
+            st.session_state.manual_rankings = rankings
+
+        render_selection(st.session_state.manual_flat_roles)
+
     elif st.session_state.page == "results":
-        # Run matching on first visit to the results page
+        # Run matching on first visit to the results page (auto mode)
         if "assignments" not in st.session_state:
             projects_data = st.session_state.get("pending_projects", [])
             if not projects_data:

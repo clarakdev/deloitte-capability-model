@@ -150,3 +150,48 @@ def assign(employees: list[dict], roles: list[dict]) -> list[dict]:
         )
 
     return assignments
+
+
+def rank_employees(employees: list[dict], roles: list[dict]) -> list[list[dict]]:
+    """
+    For each role, return all employees ranked by descending similarity.
+
+    Returns a list of lists — one inner list per role — where each element is:
+        employee_id   (str)
+        employee_name (str)
+        employee_skills (list of dicts)
+        similarity    (float, clipped to [0, 1])
+        employee_vector (np.ndarray | None)
+
+    No assignment is performed; every employee appears in every role's list.
+    """
+    n_employees = len(employees)
+    emb_dim = get_skill_embeddings().shape[1]
+
+    emp_vectors = [_employee_vector(e) for e in employees]
+    emp_vecs_safe = [
+        v if v is not None else np.zeros(emb_dim) for v in emp_vectors
+    ]
+    role_vecs = [r["role_vector"] for r in roles]
+
+    emp_mat = np.stack(emp_vecs_safe)   # (E, D)
+    role_mat = np.stack(role_vecs)       # (R, D)
+    sim_matrix = np.clip(emp_mat @ role_mat.T, 0.0, 1.0)  # (E, R)
+
+    rankings: list[list[dict]] = []
+    for role_idx in range(len(roles)):
+        sims = sim_matrix[:, role_idx]  # (E,)
+        order = np.argsort(sims)[::-1]
+        ranked = [
+            {
+                "employee_id": employees[i]["id"],
+                "employee_name": employees[i]["name"],
+                "employee_skills": employees[i]["skills"],
+                "similarity": float(sims[i]),
+                "employee_vector": emp_vectors[i],
+            }
+            for i in order
+        ]
+        rankings.append(ranked)
+
+    return rankings
