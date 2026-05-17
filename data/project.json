@@ -1,0 +1,32 @@
+{
+  "id": "PROJ001",
+  "name": "Government Digital Services Modernisation",
+  "description": "A public-sector agency is replacing its legacy case-management platform with a cloud-native solution, consolidating three siloed systems into one.",
+  "roles": [
+    {
+      "id": "ROLE001",
+      "title": "Solution Architect",
+      "description": "Responsible for defining the end-to-end technical architecture of the new platform, including cloud infrastructure design, integration patterns and API strategy. Works with business stakeholders to translate requirements into architectural decisions and ensures alignment with government security and interoperability standards. Produces and maintains architecture documentation and guides the development team on design principles."
+    },
+    {
+      "id": "ROLE002",
+      "title": "Data Engineer",
+      "description": "Builds and maintains the data pipelines that migrate records from three legacy systems into the consolidated cloud data store. Designs the data model, implements ETL processes, and establishes data quality rules to ensure records are complete and consistent post-migration. Collaborates with the analyst team to expose data for reporting."
+    },
+    {
+      "id": "ROLE003",
+      "title": "Change & Adoption Lead",
+      "description": "Plans and executes the organisational change programme to help agency staff transition from the old systems to the new platform. Develops training materials, runs workshops, manages resistance, and tracks adoption metrics. Coordinates with HR and team managers to ensure the workforce is ready at each go-live milestone."
+    },
+    {
+      "id": "ROLE004",
+      "title": "Cybersecurity Analyst",
+      "description": "Assesses the security posture of the new platform throughout the delivery lifecycle, conducting threat modelling, vulnerability assessments and reviewing infrastructure configurations. Ensures compliance with government information security standards and works with the architect to embed security controls from the outset rather than retrofitting them."
+    },
+    {
+      "id": "ROLE005",
+      "title": "Project Manager",
+      "description": "Owns delivery of the full programme, managing scope, schedule, budget and stakeholder reporting. Facilitates sprint planning and retrospectives, escalates risks and issues to the steering group, and coordinates dependencies between the technical, data and change workstreams. Maintains the overall project plan and ensures the team has what it needs to hit each milestone."
+    }
+  ]
+}

@@ -1,0 +1,1850 @@
+[
+  {
+    "id": "EMP001",
+    "name": "Uma Brown",
+    "title": "Enterprise Architect",
+    "role_level": "Manager",
+    "business_unit": "Human Capital",
+    "location": "Manchester",
+    "summary": "Bringing more than 12 years of enterprise architecture and cloud design experience, Uma has built a strong reputation for bridging technical and business teams. They have overseen enterprise architecture transformations for major clients across multiple sectors.",
+    "years_experience": 12,
+    "current_role": "Enterprise Architect",
+    "prior_roles": [
+      "Solution Architect"
+    ],
+    "project_experience": [
+      "Legacy system replacement",
+      "API design and integration",
+      "Cloud migration"
+    ],
+    "industry_experience": [
+      "Telecommunications",
+      "Banking",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Cloud Architecture",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Terraform",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "API Design",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Confluence",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "AWS Solutions Architect",
+      "Azure Administrator"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP002",
+    "name": "Yasmin Johnson",
+    "title": "Solution Architect",
+    "role_level": "Senior Consultant",
+    "business_unit": "Strategy & Operations",
+    "location": "Manchester",
+    "summary": "With 6 years in enterprise architecture and cloud design, Yasmin combines deep expertise with strong client-facing skills. They have delivered platform modernisation projects and bring a reputation for stakeholder engagement at executive level.",
+    "years_experience": 6,
+    "current_role": "Solution Architect",
+    "prior_roles": [
+      "Solution Architect",
+      "Integration Architect"
+    ],
+    "project_experience": [
+      "Cloud migration",
+      "Microservices architecture"
+    ],
+    "industry_experience": [
+      "Government",
+      "Financial Services",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "DevOps",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Terraform",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Terraform",
+      "Confluence",
+      "JIRA",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "TOGAF",
+      "ITIL"
+    ],
+    "available": false
+  },
+  {
+    "id": "EMP003",
+    "name": "Victor Thomas",
+    "title": "Technical Architect",
+    "role_level": "Consultant",
+    "business_unit": "Human Capital",
+    "location": "Manchester",
+    "summary": "With 3 years in enterprise architecture and cloud design, Victor has contributed to platform modernisation projects at Deloitte and is building expertise in AWS.",
+    "years_experience": 3,
+    "current_role": "Technical Architect",
+    "prior_roles": [
+      "Solution Architect",
+      "Cloud Engineer"
+    ],
+    "project_experience": [
+      "API design and integration",
+      "Platform modernisation",
+      "Legacy system replacement",
+      "Microservices architecture"
+    ],
+    "industry_experience": [
+      "Technology Services",
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "API Design",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "AWS",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "AWS",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "ITIL"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP004",
+    "name": "Xavier Green",
+    "title": "Enterprise Architect",
+    "role_level": "Senior Consultant",
+    "business_unit": "Technology",
+    "location": "Bristol",
+    "summary": "Bringing more than 12 years of enterprise architecture and cloud design experience, Xavier has built a strong reputation for bridging technical and business teams. They have overseen platform modernisation projects for major clients across multiple sectors.",
+    "years_experience": 12,
+    "current_role": "Enterprise Architect",
+    "prior_roles": [
+      "Integration Architect"
+    ],
+    "project_experience": [
+      "Cloud migration",
+      "API design and integration",
+      "Microservices architecture",
+      "Platform modernisation"
+    ],
+    "industry_experience": [
+      "Telecommunications",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "API Design",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "AWS",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Microsoft Azure",
+      "AWS",
+      "Terraform"
+    ],
+    "certifications": [
+      "ITIL",
+      "Azure Administrator"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP005",
+    "name": "Connor Jackson",
+    "title": "Solution Architect",
+    "role_level": "Consultant",
+    "business_unit": "Risk Advisory",
+    "location": "Manchester",
+    "summary": "With 6 years in enterprise architecture and cloud design, Connor combines deep expertise with strong client-facing skills. They have delivered platform modernisation projects and bring a reputation for driving architectural governance across complex programmes.",
+    "years_experience": 6,
+    "current_role": "Solution Architect",
+    "prior_roles": [
+      "Cloud Engineer"
+    ],
+    "project_experience": [
+      "Cloud migration",
+      "Legacy system replacement",
+      "API design and integration",
+      "Platform modernisation"
+    ],
+    "industry_experience": [
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "DevOps",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "API Design",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Azure",
+      "Confluence",
+      "AWS"
+    ],
+    "certifications": [
+      "AWS Solutions Architect"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP006",
+    "name": "Ian Edwards",
+    "title": "Cloud Architect",
+    "role_level": "Analyst",
+    "business_unit": "Strategy & Operations",
+    "location": "Bristol",
+    "summary": "Ian is a enterprise architecture and cloud design professional with 4 years of experience. They have supported cloud migration programmes and bring hands-on proficiency in Terraform.",
+    "years_experience": 4,
+    "current_role": "Cloud Architect",
+    "prior_roles": [
+      "Technical Lead"
+    ],
+    "project_experience": [
+      "Cloud migration",
+      "Platform modernisation"
+    ],
+    "industry_experience": [
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "AWS",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "DevOps",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Terraform",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "AWS Solutions Architect",
+      "Azure Administrator"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP007",
+    "name": "Priya Evans",
+    "title": "Data Architect",
+    "role_level": "Manager",
+    "business_unit": "Financial Advisory",
+    "location": "Manchester",
+    "summary": "Bringing more than 16 years of data engineering and analytics experience, Priya has built a strong reputation for managing complex data dependencies and lineage. They have overseen analytics platform builds for major clients across multiple sectors.",
+    "years_experience": 16,
+    "current_role": "Data Architect",
+    "prior_roles": [
+      "Data Engineer"
+    ],
+    "project_experience": [
+      "ETL pipeline development",
+      "Analytics platform build"
+    ],
+    "industry_experience": [
+      "Financial Services"
+    ],
+    "skills": [
+      {
+        "name": "Power BI",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Data Modelling",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Python",
+      "AWS",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "Azure Administrator"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP008",
+    "name": "Bella Ward",
+    "title": "Senior Data Engineer",
+    "role_level": "Senior Consultant",
+    "business_unit": "Technology",
+    "location": "Leeds",
+    "summary": "Bella is a seasoned data engineering and analytics professional with 6 years of experience. Known for ensuring data quality and consistency across systems, they have led data governance programmes for clients across complex enterprise environments.",
+    "years_experience": 6,
+    "current_role": "Senior Data Engineer",
+    "prior_roles": [
+      "Data Engineer",
+      "Data Analyst"
+    ],
+    "project_experience": [
+      "Analytics platform build",
+      "Data warehouse design",
+      "ETL pipeline development"
+    ],
+    "industry_experience": [
+      "Banking",
+      "Retail"
+    ],
+    "skills": [
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Power BI",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Azure",
+      "Python"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP009",
+    "name": "Ben Jackson",
+    "title": "Data Engineer",
+    "role_level": "Consultant",
+    "business_unit": "Strategy & Operations",
+    "location": "Edinburgh",
+    "summary": "Ben is a data engineering and analytics professional with 5 years of experience. They have supported data warehouse modernisation projects and bring hands-on proficiency in SQL Server.",
+    "years_experience": 5,
+    "current_role": "Data Engineer",
+    "prior_roles": [
+      "Data Engineer",
+      "Data Analyst"
+    ],
+    "project_experience": [
+      "Data quality improvement",
+      "Data warehouse design",
+      "ETL pipeline development",
+      "Data migration"
+    ],
+    "industry_experience": [
+      "Retail"
+    ],
+    "skills": [
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Power BI",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Data Modelling",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "SQL Server",
+      "Microsoft Azure",
+      "Python",
+      "Power BI"
+    ],
+    "certifications": [
+      "Certified Data Management Professional",
+      "Azure Administrator"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP010",
+    "name": "Kevin Ward",
+    "title": "Data Architect",
+    "role_level": "Senior Consultant",
+    "business_unit": "Risk Advisory",
+    "location": "Manchester",
+    "summary": "With 9 years in data engineering and analytics, Kevin combines deep expertise with strong client-facing skills. They have delivered data governance programmes and bring a reputation for ensuring data quality and consistency across systems.",
+    "years_experience": 9,
+    "current_role": "Data Architect",
+    "prior_roles": [
+      "Data Analyst"
+    ],
+    "project_experience": [
+      "Data warehouse design",
+      "Data migration",
+      "Analytics platform build",
+      "ETL pipeline development"
+    ],
+    "industry_experience": [
+      "Health",
+      "Banking",
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Power BI",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Data Modelling",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ETL Development",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "SQL Server",
+      "Microsoft Azure",
+      "Power BI"
+    ],
+    "certifications": [
+      "Azure Administrator",
+      "ITIL"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP011",
+    "name": "Wendy Johnson",
+    "title": "Senior Data Engineer",
+    "role_level": "Consultant",
+    "business_unit": "Strategy & Operations",
+    "location": "Birmingham",
+    "summary": "Wendy is a data engineering and analytics professional with 5 years of experience. They have supported analytics platform builds and bring hands-on proficiency in Power BI.",
+    "years_experience": 5,
+    "current_role": "Senior Data Engineer",
+    "prior_roles": [
+      "Database Administrator",
+      "Data Analyst"
+    ],
+    "project_experience": [
+      "ETL pipeline development",
+      "Data migration"
+    ],
+    "industry_experience": [
+      "Banking"
+    ],
+    "skills": [
+      {
+        "name": "Power BI",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Requirements Gathering",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ETL Development",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Power BI",
+      "SQL Server",
+      "AWS",
+      "Microsoft Azure"
+    ],
+    "certifications": [
+      "ITIL",
+      "Azure Administrator"
+    ],
+    "available": false
+  },
+  {
+    "id": "EMP012",
+    "name": "Connor Ward",
+    "title": "Data Analyst",
+    "role_level": "Analyst",
+    "business_unit": "Strategy & Operations",
+    "location": "Birmingham",
+    "summary": "With 1 years in data engineering and analytics, Connor has contributed to analytics platform builds at Deloitte and is building expertise in Microsoft Azure.",
+    "years_experience": 1,
+    "current_role": "Data Analyst",
+    "prior_roles": [
+      "Data Analyst",
+      "Business Intelligence Developer"
+    ],
+    "project_experience": [
+      "ETL pipeline development",
+      "Data warehouse design",
+      "Data migration",
+      "Analytics platform build"
+    ],
+    "industry_experience": [
+      "Government",
+      "Retail",
+      "Health"
+    ],
+    "skills": [
+      {
+        "name": "ETL Development",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "SQL",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Azure",
+      "Python"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP013",
+    "name": "Adam Turner",
+    "title": "Change Lead",
+    "role_level": "Manager",
+    "business_unit": "Strategy & Operations",
+    "location": "Edinburgh",
+    "summary": "Bringing more than 18 years of change management and organisational transformation experience, Adam has built a strong reputation for engaging resistant stakeholders and building buy-in. They have overseen government digital adoption initiatives for major clients across multiple sectors.",
+    "years_experience": 18,
+    "current_role": "Change Lead",
+    "prior_roles": [
+      "Change & Adoption Lead"
+    ],
+    "project_experience": [
+      "Workforce transition",
+      "Digital transformation"
+    ],
+    "industry_experience": [
+      "Banking"
+    ],
+    "skills": [
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Change Management",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Planview",
+      "Mentimeter",
+      "Microsoft Teams",
+      "JIRA"
+    ],
+    "certifications": [],
+    "available": false
+  },
+  {
+    "id": "EMP014",
+    "name": "Tara Edwards",
+    "title": "Senior Change Manager",
+    "role_level": "Senior Consultant",
+    "business_unit": "Human Capital",
+    "location": "Leeds",
+    "summary": "With 6 years in change management and organisational transformation, Tara combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for designing and facilitating adoption workshops.",
+    "years_experience": 6,
+    "current_role": "Senior Change Manager",
+    "prior_roles": [
+      "Change & Adoption Lead"
+    ],
+    "project_experience": [
+      "Culture change initiative",
+      "Digital transformation",
+      "ERP system rollout",
+      "Workforce transition"
+    ],
+    "industry_experience": [
+      "Energy",
+      "Banking"
+    ],
+    "skills": [
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Teams",
+      "Planview"
+    ],
+    "certifications": [
+      "Prince2",
+      "ITIL"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP015",
+    "name": "Simon Roberts",
+    "title": "Change Manager",
+    "role_level": "Consultant",
+    "business_unit": "Technology",
+    "location": "Manchester",
+    "summary": "Simon is a seasoned change management and organisational transformation professional with 6 years of experience. Known for designing and facilitating adoption workshops, they have led ERP system change and adoption programmes for clients across complex enterprise environments.",
+    "years_experience": 6,
+    "current_role": "Change Manager",
+    "prior_roles": [
+      "Change & Adoption Lead",
+      "Organisational Development Consultant"
+    ],
+    "project_experience": [
+      "Workforce transition",
+      "Digital transformation",
+      "Change management programme",
+      "Culture change initiative"
+    ],
+    "industry_experience": [
+      "Government",
+      "Banking",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Change Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Mentimeter",
+      "Microsoft Teams"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP016",
+    "name": "Priya Lewis",
+    "title": "Change Lead",
+    "role_level": "Senior Consultant",
+    "business_unit": "Human Capital",
+    "location": "Bristol",
+    "summary": "With 9 years in change management and organisational transformation, Priya combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for aligning HR and leadership on change readiness.",
+    "years_experience": 9,
+    "current_role": "Change Lead",
+    "prior_roles": [
+      "Communications Manager",
+      "Training Manager"
+    ],
+    "project_experience": [
+      "ERP system rollout",
+      "Change management programme",
+      "Workforce transition",
+      "Culture change initiative"
+    ],
+    "industry_experience": [
+      "Energy",
+      "Technology Services",
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Workshop Facilitation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Mentimeter",
+      "JIRA"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP017",
+    "name": "Bella Hughes",
+    "title": "Senior Change Manager",
+    "role_level": "Consultant",
+    "business_unit": "Risk Advisory",
+    "location": "Edinburgh",
+    "summary": "With 7 years in change management and organisational transformation, Bella combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for aligning HR and leadership on change readiness.",
+    "years_experience": 7,
+    "current_role": "Senior Change Manager",
+    "prior_roles": [
+      "Organisational Development Consultant"
+    ],
+    "project_experience": [
+      "Culture change initiative",
+      "ERP system rollout"
+    ],
+    "industry_experience": [
+      "Health"
+    ],
+    "skills": [
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Workshop Facilitation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Teams",
+      "Planview"
+    ],
+    "certifications": [
+      "Prince2"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP018",
+    "name": "Natalie Jones",
+    "title": "Change Analyst",
+    "role_level": "Analyst",
+    "business_unit": "Financial Advisory",
+    "location": "Leeds",
+    "summary": "Natalie is a change management and organisational transformation professional with 2 years of experience. They have supported ERP system change and adoption programmes and bring hands-on proficiency in Planview.",
+    "years_experience": 2,
+    "current_role": "Change Analyst",
+    "prior_roles": [
+      "Communications Manager",
+      "Organisational Development Consultant"
+    ],
+    "project_experience": [
+      "Culture change initiative",
+      "Digital transformation"
+    ],
+    "industry_experience": [
+      "Technology Services",
+      "Energy"
+    ],
+    "skills": [
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Business Analysis",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Workshop Facilitation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Planview",
+      "JIRA",
+      "Mentimeter"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP019",
+    "name": "Simon Clarke",
+    "title": "Security Architect",
+    "role_level": "Manager",
+    "business_unit": "Technology",
+    "location": "Leeds",
+    "summary": "Simon is a highly experienced information security and risk management professional with over 12 years in the field. They have directed cyber resilience programmes at scale and are recognised for threat modelling and risk prioritisation.",
+    "years_experience": 12,
+    "current_role": "Security Architect",
+    "prior_roles": [
+      "Cybersecurity Analyst"
+    ],
+    "project_experience": [
+      "Penetration testing programme",
+      "Security assessment",
+      "Compliance audit"
+    ],
+    "industry_experience": [
+      "Government",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Network Security",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Penetration Testing",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "ServiceNow",
+      "Splunk",
+      "Qualys"
+    ],
+    "certifications": [
+      "CISSP"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP020",
+    "name": "Emma Wilson",
+    "title": "Senior Security Analyst",
+    "role_level": "Senior Consultant",
+    "business_unit": "Strategy & Operations",
+    "location": "London",
+    "summary": "With 7 years in information security and risk management, Emma combines deep expertise with strong client-facing skills. They have delivered compliance and audit engagements and bring a reputation for threat modelling and risk prioritisation.",
+    "years_experience": 7,
+    "current_role": "Senior Security Analyst",
+    "prior_roles": [
+      "Cybersecurity Analyst"
+    ],
+    "project_experience": [
+      "Penetration testing programme",
+      "Security assessment",
+      "Compliance audit",
+      "Incident response planning"
+    ],
+    "industry_experience": [
+      "Banking",
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Penetration Testing",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Nessus"
+    ],
+    "certifications": [
+      "ITIL"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP021",
+    "name": "Quinn Harris",
+    "title": "Information Security Consultant",
+    "role_level": "Consultant",
+    "business_unit": "Human Capital",
+    "location": "Edinburgh",
+    "summary": "With 5 years in information security and risk management, Quinn has contributed to security architecture reviews at Deloitte and is building expertise in JIRA.",
+    "years_experience": 5,
+    "current_role": "Information Security Consultant",
+    "prior_roles": [
+      "Cybersecurity Analyst",
+      "IT Auditor"
+    ],
+    "project_experience": [
+      "Security architecture review",
+      "Penetration testing programme",
+      "Incident response planning"
+    ],
+    "industry_experience": [
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Network Security",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Penetration Testing",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "ServiceNow",
+      "Qualys",
+      "Splunk"
+    ],
+    "certifications": [
+      "CompTIA Security+",
+      "CISM"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP022",
+    "name": "George Walker",
+    "title": "Security Architect",
+    "role_level": "Senior Consultant",
+    "business_unit": "Financial Advisory",
+    "location": "Birmingham",
+    "summary": "Bringing more than 12 years of information security and risk management experience, George has built a strong reputation for ensuring compliance with government security standards. They have overseen compliance and audit engagements for major clients across multiple sectors.",
+    "years_experience": 12,
+    "current_role": "Security Architect",
+    "prior_roles": [
+      "Network Engineer",
+      "IT Auditor"
+    ],
+    "project_experience": [
+      "Penetration testing programme",
+      "Compliance audit",
+      "Security architecture review",
+      "Incident response planning"
+    ],
+    "industry_experience": [
+      "Banking",
+      "Insurance"
+    ],
+    "skills": [
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Network Security",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Quality Assessment",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "ServiceNow",
+      "JIRA",
+      "Qualys",
+      "Nessus"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP023",
+    "name": "Julia Thomas",
+    "title": "Senior Security Analyst",
+    "role_level": "Consultant",
+    "business_unit": "Technology",
+    "location": "London",
+    "summary": "With 5 years in information security and risk management, Julia has contributed to cyber resilience programmes at Deloitte and is building expertise in Qualys.",
+    "years_experience": 5,
+    "current_role": "Senior Security Analyst",
+    "prior_roles": [
+      "Security Operations Analyst",
+      "Network Engineer"
+    ],
+    "project_experience": [
+      "Incident response planning",
+      "Penetration testing programme"
+    ],
+    "industry_experience": [
+      "Banking",
+      "Financial Services"
+    ],
+    "skills": [
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Network Security",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Qualys",
+      "Splunk"
+    ],
+    "certifications": [],
+    "available": true
+  },
+  {
+    "id": "EMP024",
+    "name": "Priya Hughes",
+    "title": "Security Analyst",
+    "role_level": "Analyst",
+    "business_unit": "Strategy & Operations",
+    "location": "Bristol",
+    "summary": "Priya is a information security and risk management professional with 4 years of experience. They have supported cyber resilience programmes and bring hands-on proficiency in Splunk.",
+    "years_experience": 4,
+    "current_role": "Security Analyst",
+    "prior_roles": [
+      "IT Auditor",
+      "Security Operations Analyst"
+    ],
+    "project_experience": [
+      "Security architecture review",
+      "Incident response planning",
+      "Penetration testing programme"
+    ],
+    "industry_experience": [
+      "Technology Services",
+      "Banking",
+      "Financial Services"
+    ],
+    "skills": [
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Network Security",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Python",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Delivery Reviews",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Vulnerability Assessment",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Splunk",
+      "Nessus",
+      "ServiceNow",
+      "JIRA"
+    ],
+    "certifications": [
+      "ITIL",
+      "CompTIA Security+"
+    ],
+    "available": false
+  },
+  {
+    "id": "EMP025",
+    "name": "Clara Davies",
+    "title": "Programme Manager",
+    "role_level": "Manager",
+    "business_unit": "Technology",
+    "location": "Manchester",
+    "summary": "Clara is a highly experienced project and programme management professional with over 13 years in the field. They have directed government digital transformation projects at scale and are recognised for steering group and executive stakeholder engagement.",
+    "years_experience": 13,
+    "current_role": "Programme Manager",
+    "prior_roles": [
+      "Project Manager"
+    ],
+    "project_experience": [
+      "Government digital transformation",
+      "Agile delivery"
+    ],
+    "industry_experience": [
+      "Supply Chain",
+      "Technology Services",
+      "Health"
+    ],
+    "skills": [
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Agile Delivery",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Project Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Microsoft Project",
+      "Confluence",
+      "JIRA"
+    ],
+    "certifications": [
+      "PMP",
+      "CAPM"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP026",
+    "name": "Zara Roberts",
+    "title": "Senior Project Manager",
+    "role_level": "Senior Consultant",
+    "business_unit": "Strategy & Operations",
+    "location": "Manchester",
+    "summary": "With 10 years in project and programme management, Zara combines deep expertise with strong client-facing skills. They have delivered agile delivery engagements and bring a reputation for coordinating dependencies across technical and change workstreams.",
+    "years_experience": 10,
+    "current_role": "Senior Project Manager",
+    "prior_roles": [
+      "Project Manager"
+    ],
+    "project_experience": [
+      "Government digital transformation",
+      "Multi-workstream technology programme",
+      "ERP implementation",
+      "Agile delivery"
+    ],
+    "industry_experience": [
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Programme Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Confluence",
+      "Microsoft Project",
+      "Planview"
+    ],
+    "certifications": [
+      "CAPM",
+      "Prince2"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP027",
+    "name": "Simon Thompson",
+    "title": "Project Manager",
+    "role_level": "Consultant",
+    "business_unit": "Risk Advisory",
+    "location": "Edinburgh",
+    "summary": "With 6 years in project and programme management, Simon combines deep expertise with strong client-facing skills. They have delivered government digital transformation projects and bring a reputation for managing scope and budget under pressure.",
+    "years_experience": 6,
+    "current_role": "Project Manager",
+    "prior_roles": [
+      "Project Manager",
+      "Scrum Master"
+    ],
+    "project_experience": [
+      "Cloud migration programme",
+      "Multi-workstream technology programme"
+    ],
+    "industry_experience": [
+      "Financial Services",
+      "Supply Chain"
+    ],
+    "skills": [
+      {
+        "name": "Project Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Programme Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Confluence",
+      "JIRA",
+      "Planview"
+    ],
+    "certifications": [],
+    "available": false
+  },
+  {
+    "id": "EMP028",
+    "name": "Uma White",
+    "title": "Programme Manager",
+    "role_level": "Senior Consultant",
+    "business_unit": "Human Capital",
+    "location": "Edinburgh",
+    "summary": "With 8 years in project and programme management, Uma combines deep expertise with strong client-facing skills. They have delivered agile delivery engagements and bring a reputation for driving delivery in complex public-sector environments.",
+    "years_experience": 8,
+    "current_role": "Programme Manager",
+    "prior_roles": [
+      "Business Analyst",
+      "Scrum Master"
+    ],
+    "project_experience": [
+      "Multi-workstream technology programme",
+      "Agile delivery",
+      "Cloud migration programme"
+    ],
+    "industry_experience": [
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Programme Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Agile Delivery",
+        "category": "Business Skills"
+      }
+    ],
+    "tools": [
+      "Power BI",
+      "JIRA",
+      "Microsoft Project"
+    ],
+    "certifications": [
+      "Prince2"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP029",
+    "name": "Rachel Taylor",
+    "title": "Senior Project Manager",
+    "role_level": "Consultant",
+    "business_unit": "Technology",
+    "location": "Birmingham",
+    "summary": "With 7 years in project and programme management, Rachel combines deep expertise with strong client-facing skills. They have delivered government digital transformation projects and bring a reputation for driving delivery in complex public-sector environments.",
+    "years_experience": 7,
+    "current_role": "Senior Project Manager",
+    "prior_roles": [
+      "Business Analyst"
+    ],
+    "project_experience": [
+      "ERP implementation",
+      "Agile delivery",
+      "Government digital transformation"
+    ],
+    "industry_experience": [
+      "Supply Chain",
+      "Health"
+    ],
+    "skills": [
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Agile Delivery",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Power BI",
+      "Confluence",
+      "JIRA",
+      "Planview"
+    ],
+    "certifications": [
+      "Scrum Master",
+      "CAPM"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP030",
+    "name": "Xavier Hughes",
+    "title": "Project Coordinator",
+    "role_level": "Analyst",
+    "business_unit": "Human Capital",
+    "location": "Bristol",
+    "summary": "With 4 years in project and programme management, Xavier has contributed to government digital transformation projects at Deloitte and is building expertise in Planview.",
+    "years_experience": 4,
+    "current_role": "Project Coordinator",
+    "prior_roles": [
+      "Business Analyst"
+    ],
+    "project_experience": [
+      "Government digital transformation",
+      "Cloud migration programme",
+      "Agile delivery",
+      "ERP implementation"
+    ],
+    "industry_experience": [
+      "Health",
+      "Government",
+      "Technology Services"
+    ],
+    "skills": [
+      {
+        "name": "Agile Delivery",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "Planview",
+      "JIRA",
+      "Power BI"
+    ],
+    "certifications": [
+      "CAPM"
+    ],
+    "available": true
+  }
+]
