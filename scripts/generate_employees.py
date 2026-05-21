@@ -46,7 +46,7 @@ LAST_NAMES = [
     "Patel", "Jackson", "Wood", "Turner", "Martin", "Cooper", "Hill", "Ward",
 ]
 
-LOCATIONS = ["London", "Manchester", "Birmingham", "Edinburgh", "Leeds", "Bristol"]
+LOCATIONS = ["Auckland", "Wellington", "Christchurch", "Sydney", "Melbourne", "Perth", "Brisbane"]
 
 BUSINESS_UNITS = [
     "Technology",

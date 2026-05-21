@@ -51,10 +51,11 @@ def main() -> None:
     total = len(df)
 
     # Filter by status and reuseLevel
-    df = df[
-        (df["status"].fillna("") == "released") &
-        (df["reuseLevel"].fillna("").isin(KEEP_LEVELS))
-    ].copy()
+    #df = df[
+    #    (df["status"].fillna("") == "released") &
+    #    (df["reuseLevel"].fillna("").isin(KEEP_LEVELS))
+    #].copy()
+    df = df[df["status"].fillna("") == "released"].copy() # Only filter by status, not reuseLevel, to keep more skills for now
     after_level_filter = len(df)
 
     # Fill missing description from definition field, then fall back to empty string

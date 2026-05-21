@@ -5,7 +5,7 @@
     "title": "Enterprise Architect",
     "role_level": "Manager",
     "business_unit": "Human Capital",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "Bringing more than 12 years of enterprise architecture and cloud design experience, Uma has built a strong reputation for bridging technical and business teams. They have overseen enterprise architecture transformations for major clients across multiple sectors.",
     "years_experience": 12,
     "current_role": "Enterprise Architect",
@@ -68,7 +68,7 @@
     "title": "Solution Architect",
     "role_level": "Senior Consultant",
     "business_unit": "Strategy & Operations",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "With 6 years in enterprise architecture and cloud design, Yasmin combines deep expertise with strong client-facing skills. They have delivered platform modernisation projects and bring a reputation for stakeholder engagement at executive level.",
     "years_experience": 6,
     "current_role": "Solution Architect",
@@ -133,7 +133,7 @@
     "title": "Technical Architect",
     "role_level": "Consultant",
     "business_unit": "Human Capital",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "With 3 years in enterprise architecture and cloud design, Victor has contributed to platform modernisation projects at Deloitte and is building expertise in AWS.",
     "years_experience": 3,
     "current_role": "Technical Architect",
@@ -196,7 +196,7 @@
     "title": "Enterprise Architect",
     "role_level": "Senior Consultant",
     "business_unit": "Technology",
-    "location": "Bristol",
+    "location": "Perth",
     "summary": "Bringing more than 12 years of enterprise architecture and cloud design experience, Xavier has built a strong reputation for bridging technical and business teams. They have overseen platform modernisation projects for major clients across multiple sectors.",
     "years_experience": 12,
     "current_role": "Enterprise Architect",
@@ -261,7 +261,7 @@
     "title": "Solution Architect",
     "role_level": "Consultant",
     "business_unit": "Risk Advisory",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "With 6 years in enterprise architecture and cloud design, Connor combines deep expertise with strong client-facing skills. They have delivered platform modernisation projects and bring a reputation for driving architectural governance across complex programmes.",
     "years_experience": 6,
     "current_role": "Solution Architect",
@@ -323,7 +323,7 @@
     "title": "Cloud Architect",
     "role_level": "Analyst",
     "business_unit": "Strategy & Operations",
-    "location": "Bristol",
+    "location": "Perth",
     "summary": "Ian is a enterprise architecture and cloud design professional with 4 years of experience. They have supported cloud migration programmes and bring hands-on proficiency in Terraform.",
     "years_experience": 4,
     "current_role": "Cloud Architect",
@@ -383,7 +383,7 @@
     "title": "Data Architect",
     "role_level": "Manager",
     "business_unit": "Financial Advisory",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "Bringing more than 16 years of data engineering and analytics experience, Priya has built a strong reputation for managing complex data dependencies and lineage. They have overseen analytics platform builds for major clients across multiple sectors.",
     "years_experience": 16,
     "current_role": "Data Architect",
@@ -443,7 +443,7 @@
     "title": "Senior Data Engineer",
     "role_level": "Senior Consultant",
     "business_unit": "Technology",
-    "location": "Leeds",
+    "location": "Melbourne",
     "summary": "Bella is a seasoned data engineering and analytics professional with 6 years of experience. Known for ensuring data quality and consistency across systems, they have led data governance programmes for clients across complex enterprise environments.",
     "years_experience": 6,
     "current_role": "Senior Data Engineer",
@@ -503,7 +503,7 @@
     "title": "Data Engineer",
     "role_level": "Consultant",
     "business_unit": "Strategy & Operations",
-    "location": "Edinburgh",
+    "location": "Sydney",
     "summary": "Ben is a data engineering and analytics professional with 5 years of experience. They have supported data warehouse modernisation projects and bring hands-on proficiency in SQL Server.",
     "years_experience": 5,
     "current_role": "Data Engineer",
@@ -568,7 +568,7 @@
     "title": "Data Architect",
     "role_level": "Senior Consultant",
     "business_unit": "Risk Advisory",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "With 9 years in data engineering and analytics, Kevin combines deep expertise with strong client-facing skills. They have delivered data governance programmes and bring a reputation for ensuring data quality and consistency across systems.",
     "years_experience": 9,
     "current_role": "Data Architect",
@@ -633,7 +633,7 @@
     "title": "Senior Data Engineer",
     "role_level": "Consultant",
     "business_unit": "Strategy & Operations",
-    "location": "Birmingham",
+    "location": "Christchurch",
     "summary": "Wendy is a data engineering and analytics professional with 5 years of experience. They have supported analytics platform builds and bring hands-on proficiency in Power BI.",
     "years_experience": 5,
     "current_role": "Senior Data Engineer",
@@ -696,7 +696,7 @@
     "title": "Data Analyst",
     "role_level": "Analyst",
     "business_unit": "Strategy & Operations",
-    "location": "Birmingham",
+    "location": "Christchurch",
     "summary": "With 1 years in data engineering and analytics, Connor has contributed to analytics platform builds at Deloitte and is building expertise in Microsoft Azure.",
     "years_experience": 1,
     "current_role": "Data Analyst",
@@ -758,7 +758,7 @@
     "title": "Change Lead",
     "role_level": "Manager",
     "business_unit": "Strategy & Operations",
-    "location": "Edinburgh",
+    "location": "Sydney",
     "summary": "Bringing more than 18 years of change management and organisational transformation experience, Adam has built a strong reputation for engaging resistant stakeholders and building buy-in. They have overseen government digital adoption initiatives for major clients across multiple sectors.",
     "years_experience": 18,
     "current_role": "Change Lead",
@@ -813,7 +813,7 @@
     "title": "Senior Change Manager",
     "role_level": "Senior Consultant",
     "business_unit": "Human Capital",
-    "location": "Leeds",
+    "location": "Melbourne",
     "summary": "With 6 years in change management and organisational transformation, Tara combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for designing and facilitating adoption workshops.",
     "years_experience": 6,
     "current_role": "Senior Change Manager",
@@ -872,7 +872,7 @@
     "title": "Change Manager",
     "role_level": "Consultant",
     "business_unit": "Technology",
-    "location": "Manchester",
+    "location": "Wellington",
     "summary": "Simon is a seasoned change management and organisational transformation professional with 6 years of experience. Known for designing and facilitating adoption workshops, they have led ERP system change and adoption programmes for clients across complex enterprise environments.",
     "years_experience": 6,
     "current_role": "Change Manager",
@@ -931,7 +931,7 @@
     "title": "Change Lead",
     "role_level": "Senior Consultant",
     "business_unit": "Human Capital",
-    "location": "Bristol",
+    "location": "Perth",
     "summary": "With 9 years in change management and organisational transformation, Priya combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for aligning HR and leadership on change readiness.",
     "years_experience": 9,
     "current_role": "Change Lead",
@@ -989,7 +989,7 @@
     "title": "Senior Change Manager",
     "role_level": "Consultant",
     "business_unit": "Risk Advisory",
-    "location": "Edinburgh",
+    "location": "Sydney",
     "summary": "With 7 years in change management and organisational transformation, Bella combines deep expertise with strong client-facing skills. They have delivered government digital adoption initiatives and bring a reputation for aligning HR and leadership on change readiness.",
     "years_experience": 7,
     "current_role": "Senior Change Manager",
@@ -1044,7 +1044,7 @@
     "title": "Change Analyst",
     "role_level": "Analyst",
     "business_unit": "Financial Advisory",
-    "location": "Leeds",
+    "location": "Melbourne",
     "summary": "Natalie is a change management and organisational transformation professional with 2 years of experience. They have supported ERP system change and adoption programmes and bring hands-on proficiency in Planview.",
     "years_experience": 2,
     "current_role": "Change Analyst",
@@ -1100,7 +1100,7 @@
     "title": "Security Architect",
     "role_level": "Manager",
     "business_unit": "Technology",
-    "location": "Leeds",
+    "location": "Melbourne",
     "summary": "Simon is a highly experienced information security and risk management professional with over 12 years in the field. They have directed cyber resilience programmes at scale and are recognised for threat modelling and risk prioritisation.",
     "years_experience": 12,
     "current_role": "Security Architect",
@@ -1162,7 +1162,7 @@
     "title": "Senior Security Analyst",
     "role_level": "Senior Consultant",
     "business_unit": "Strategy & Operations",
-    "location": "London",
+    "location": "Auckland",
     "summary": "With 7 years in information security and risk management, Emma combines deep expertise with strong client-facing skills. They have delivered compliance and audit engagements and bring a reputation for threat modelling and risk prioritisation.",
     "years_experience": 7,
     "current_role": "Senior Security Analyst",
@@ -1224,7 +1224,7 @@
     "title": "Information Security Consultant",
     "role_level": "Consultant",
     "business_unit": "Human Capital",
-    "location": "Edinburgh",
+    "location": "Sydney",
     "summary": "With 5 years in information security and risk management, Quinn has contributed to security architecture reviews at Deloitte and is building expertise in JIRA.",
     "years_experience": 5,
     "current_role": "Information Security Consultant",
@@ -1288,7 +1288,7 @@
     "title": "Security Architect",
     "role_level": "Senior Consultant",
     "business_unit": "Financial Advisory",
-    "location": "Birmingham",
+    "location": "Christchurch",
     "summary": "Bringing more than 12 years of information security and risk management experience, George has built a strong reputation for ensuring compliance with government security standards. They have overseen compliance and audit engagements for major clients across multiple sectors.",
     "years_experience": 12,
     "current_role": "Security Architect",
@@ -1351,7 +1351,7 @@
     "title": "Senior Security Analyst",
     "role_level": "Consultant",
     "business_unit": "Technology",
-    "location": "London",
+    "location": "Brisbane",
     "summary": "With 5 years in information security and risk management, Julia has contributed to cyber resilience programmes at Deloitte and is building expertise in Qualys.",
     "years_experience": 5,
     "current_role": "Senior Security Analyst",
@@ -1406,43 +1406,29 @@
   },
   {
     "id": "EMP024",
-    "name": "Priya Hughes",
+    "name": "Alice Hall",
     "title": "Security Analyst",
     "role_level": "Analyst",
     "business_unit": "Strategy & Operations",
-    "location": "Bristol",
-    "summary": "Priya is a information security and risk management professional with 4 years of experience. They have supported cyber resilience programmes and bring hands-on proficiency in Splunk.",
-    "years_experience": 4,
+    "location": "Brisbane",
+    "summary": "With 3 years in information security and risk management, Alice has contributed to security architecture reviews at Deloitte and is building expertise in JIRA.",
+    "years_experience": 3,
     "current_role": "Security Analyst",
     "prior_roles": [
-      "IT Auditor",
+      "Network Engineer",
       "Security Operations Analyst"
     ],
     "project_experience": [
-      "Security architecture review",
-      "Incident response planning",
-      "Penetration testing programme"
+      "Security assessment",
+      "Penetration testing programme",
+      "Incident response planning"
     ],
     "industry_experience": [
-      "Technology Services",
-      "Banking",
-      "Financial Services"
+      "Technology Services"
     ],
     "skills": [
       {
-        "name": "Risk Management",
-        "category": "Business Skills"
-      },
-      {
-        "name": "Stakeholder Engagement",
-        "category": "Business Skills"
-      },
-      {
         "name": "Network Security",
-        "category": "Technology Skills"
-      },
-      {
-        "name": "Python",
         "category": "Technology Skills"
       },
       {
@@ -1450,60 +1436,59 @@
         "category": "Business Skills"
       },
       {
-        "name": "ServiceNow",
-        "category": "Technology Skills"
+        "name": "Quality Assessment",
+        "category": "Business Skills"
       },
       {
-        "name": "Vulnerability Assessment",
+        "name": "Penetration Testing",
         "category": "Technology Skills"
-      }
-    ],
-    "tools": [
-      "Splunk",
-      "Nessus",
-      "ServiceNow",
-      "JIRA"
-    ],
-    "certifications": [
-      "ITIL",
-      "CompTIA Security+"
-    ],
-    "available": false
-  },
-  {
-    "id": "EMP025",
-    "name": "Clara Davies",
-    "title": "Programme Manager",
-    "role_level": "Manager",
-    "business_unit": "Technology",
-    "location": "Manchester",
-    "summary": "Clara is a highly experienced project and programme management professional with over 13 years in the field. They have directed government digital transformation projects at scale and are recognised for steering group and executive stakeholder engagement.",
-    "years_experience": 13,
-    "current_role": "Programme Manager",
-    "prior_roles": [
-      "Project Manager"
-    ],
-    "project_experience": [
-      "Government digital transformation",
-      "Agile delivery"
-    ],
-    "industry_experience": [
-      "Supply Chain",
-      "Technology Services",
-      "Health"
-    ],
-    "skills": [
+      },
       {
         "name": "Stakeholder Engagement",
         "category": "Business Skills"
       },
       {
-        "name": "Microsoft Project",
+        "name": "Vulnerability Assessment",
         "category": "Technology Skills"
       },
       {
-        "name": "Agile Delivery",
-        "category": "Business Skills"
+        "name": "Python",
+        "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Nessus"
+    ],
+    "certifications": [],
+    "available": false
+  },
+  {
+    "id": "EMP025",
+    "name": "Simon Thompson",
+    "title": "Programme Manager",
+    "role_level": "Manager",
+    "business_unit": "Financial Advisory",
+    "location": "Auckland",
+    "summary": "Simon is a highly experienced project and programme management professional with over 14 years in the field. They have directed ERP and cloud migration programmes at scale and are recognised for coordinating dependencies across technical and change workstreams.",
+    "years_experience": 14,
+    "current_role": "Programme Manager",
+    "prior_roles": [
+      "Project Manager",
+      "Delivery Lead"
+    ],
+    "project_experience": [
+      "ERP implementation",
+      "Government digital transformation"
+    ],
+    "industry_experience": [
+      "Financial Services",
+      "Government"
+    ],
+    "skills": [
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
       },
       {
         "name": "Project Management",
@@ -1514,50 +1499,7 @@
         "category": "Technology Skills"
       },
       {
-        "name": "JIRA",
-        "category": "Technology Skills"
-      },
-      {
         "name": "ServiceNow",
-        "category": "Technology Skills"
-      }
-    ],
-    "tools": [
-      "Microsoft Project",
-      "Confluence",
-      "JIRA"
-    ],
-    "certifications": [
-      "PMP",
-      "CAPM"
-    ],
-    "available": true
-  },
-  {
-    "id": "EMP026",
-    "name": "Zara Roberts",
-    "title": "Senior Project Manager",
-    "role_level": "Senior Consultant",
-    "business_unit": "Strategy & Operations",
-    "location": "Manchester",
-    "summary": "With 10 years in project and programme management, Zara combines deep expertise with strong client-facing skills. They have delivered agile delivery engagements and bring a reputation for coordinating dependencies across technical and change workstreams.",
-    "years_experience": 10,
-    "current_role": "Senior Project Manager",
-    "prior_roles": [
-      "Project Manager"
-    ],
-    "project_experience": [
-      "Government digital transformation",
-      "Multi-workstream technology programme",
-      "ERP implementation",
-      "Agile delivery"
-    ],
-    "industry_experience": [
-      "Technology Services"
-    ],
-    "skills": [
-      {
-        "name": "JIRA",
         "category": "Technology Skills"
       },
       {
@@ -1571,57 +1513,122 @@
       {
         "name": "Microsoft Project",
         "category": "Technology Skills"
+      }
+    ],
+    "tools": [
+      "JIRA",
+      "Confluence"
+    ],
+    "certifications": [
+      "MSP"
+    ],
+    "available": true
+  },
+  {
+    "id": "EMP026",
+    "name": "Rachel Wilson",
+    "title": "Senior Project Manager",
+    "role_level": "Senior Consultant",
+    "business_unit": "Risk Advisory",
+    "location": "Auckland",
+    "summary": "With 11 years in project and programme management, Rachel combines deep expertise with strong client-facing skills. They have delivered multi-workstream technology programmes and bring a reputation for coordinating dependencies across technical and change workstreams.",
+    "years_experience": 11,
+    "current_role": "Senior Project Manager",
+    "prior_roles": [
+      "Project Manager"
+    ],
+    "project_experience": [
+      "ERP implementation",
+      "Government digital transformation",
+      "Multi-workstream technology programme"
+    ],
+    "industry_experience": [
+      "Government",
+      "Supply Chain"
+    ],
+    "skills": [
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Agile Delivery",
+        "category": "Business Skills"
       },
       {
         "name": "Programme Management",
         "category": "Business Skills"
       },
       {
-        "name": "ServiceNow",
-        "category": "Technology Skills"
+        "name": "Benefits Realisation",
+        "category": "Business Skills"
       },
       {
         "name": "Planview",
         "category": "Technology Skills"
+      },
+      {
+        "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
       }
     ],
     "tools": [
-      "JIRA",
-      "Confluence",
       "Microsoft Project",
+      "Confluence",
       "Planview"
     ],
     "certifications": [
-      "CAPM",
-      "Prince2"
+      "MSP",
+      "Scrum Master"
     ],
     "available": true
   },
   {
     "id": "EMP027",
-    "name": "Simon Thompson",
+    "name": "Yasmin Wood",
     "title": "Project Manager",
     "role_level": "Consultant",
-    "business_unit": "Risk Advisory",
-    "location": "Edinburgh",
-    "summary": "With 6 years in project and programme management, Simon combines deep expertise with strong client-facing skills. They have delivered government digital transformation projects and bring a reputation for managing scope and budget under pressure.",
-    "years_experience": 6,
+    "business_unit": "Financial Advisory",
+    "location": "Auckland",
+    "summary": "With 4 years in project and programme management, Yasmin has contributed to multi-workstream technology programmes at Deloitte and is building expertise in JIRA.",
+    "years_experience": 4,
     "current_role": "Project Manager",
     "prior_roles": [
       "Project Manager",
-      "Scrum Master"
+      "Delivery Lead"
     ],
     "project_experience": [
-      "Cloud migration programme",
-      "Multi-workstream technology programme"
+      "ERP implementation",
+      "Government digital transformation"
     ],
     "industry_experience": [
-      "Financial Services",
-      "Supply Chain"
+      "Health",
+      "Government",
+      "Technology Services"
     ],
     "skills": [
       {
-        "name": "Project Management",
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "JIRA",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Benefits Realisation",
         "category": "Business Skills"
       },
       {
@@ -1629,43 +1636,31 @@
         "category": "Technology Skills"
       },
       {
-        "name": "Planview",
-        "category": "Technology Skills"
-      },
-      {
-        "name": "ServiceNow",
-        "category": "Technology Skills"
-      },
-      {
-        "name": "Programme Management",
-        "category": "Business Skills"
-      },
-      {
         "name": "Risk Management",
         "category": "Business Skills"
-      },
-      {
-        "name": "JIRA",
-        "category": "Technology Skills"
       }
     ],
     "tools": [
-      "Confluence",
       "JIRA",
-      "Planview"
+      "Planview",
+      "Confluence",
+      "Microsoft Project"
     ],
-    "certifications": [],
+    "certifications": [
+      "Scrum Master",
+      "CAPM"
+    ],
     "available": false
   },
   {
     "id": "EMP028",
-    "name": "Uma White",
+    "name": "George Edwards",
     "title": "Programme Manager",
     "role_level": "Senior Consultant",
     "business_unit": "Human Capital",
-    "location": "Edinburgh",
-    "summary": "With 8 years in project and programme management, Uma combines deep expertise with strong client-facing skills. They have delivered agile delivery engagements and bring a reputation for driving delivery in complex public-sector environments.",
-    "years_experience": 8,
+    "location": "Sydney",
+    "summary": "Bringing more than 13 years of project and programme management experience, George has built a strong reputation for driving delivery in complex public-sector environments. They have overseen agile delivery engagements for major clients across multiple sectors.",
+    "years_experience": 13,
     "current_role": "Programme Manager",
     "prior_roles": [
       "Business Analyst",
@@ -1681,7 +1676,23 @@
     ],
     "skills": [
       {
+        "name": "Risk Management",
+        "category": "Business Skills"
+      },
+      {
         "name": "Microsoft Project",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "ServiceNow",
+        "category": "Technology Skills"
+      },
+      {
+        "name": "Stakeholder Engagement",
+        "category": "Business Skills"
+      },
+      {
+        "name": "Planview",
         "category": "Technology Skills"
       },
       {
@@ -1691,30 +1702,16 @@
       {
         "name": "Benefits Realisation",
         "category": "Business Skills"
-      },
-      {
-        "name": "Programme Management",
-        "category": "Business Skills"
-      },
-      {
-        "name": "Planview",
-        "category": "Technology Skills"
-      },
-      {
-        "name": "ServiceNow",
-        "category": "Technology Skills"
-      },
-      {
-        "name": "Agile Delivery",
-        "category": "Business Skills"
       }
     ],
     "tools": [
-      "Power BI",
-      "JIRA",
-      "Microsoft Project"
+      "Planview",
+      "Microsoft Project",
+      "Confluence",
+      "JIRA"
     ],
     "certifications": [
+      "Scrum Master",
       "Prince2"
     ],
     "available": true
@@ -1725,7 +1722,7 @@
     "title": "Senior Project Manager",
     "role_level": "Consultant",
     "business_unit": "Technology",
-    "location": "Birmingham",
+    "location": "Christchurch",
     "summary": "With 7 years in project and programme management, Rachel combines deep expertise with strong client-facing skills. They have delivered government digital transformation projects and bring a reputation for driving delivery in complex public-sector environments.",
     "years_experience": 7,
     "current_role": "Senior Project Manager",
@@ -1789,7 +1786,7 @@
     "title": "Project Coordinator",
     "role_level": "Analyst",
     "business_unit": "Human Capital",
-    "location": "Bristol",
+    "location": "Perth",
     "summary": "With 4 years in project and programme management, Xavier has contributed to government digital transformation projects at Deloitte and is building expertise in Planview.",
     "years_experience": 4,
     "current_role": "Project Coordinator",
