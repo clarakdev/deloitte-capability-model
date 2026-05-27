@@ -30,6 +30,9 @@ export default function Frame1({ onSelectRole }) {
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
+
+  // Tracks which role row is expanded (by role id, or null if none)
+  const [expanded, setExpanded] = useState(null)
   
   // useEffect with empty [] runs once when the component first mounts.
   // This is where we fetch the project data from the backend.
@@ -66,35 +69,75 @@ export default function Frame1({ onSelectRole }) {
         </div>
         {project.roles.map((role, i) => {
           const c = ROLE_COLORS[i % ROLE_COLORS.length]
+          const isExpanded = expanded === role.id
+
           return (
             <div
               key={role.id}
-              onClick={() => onSelectRole(role.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 14,
-                padding: '12px 0',
                 borderBottom: i < project.roles.length - 1 ? '1px solid #1f1f1f' : 'none',
-                cursor: 'pointer',
               }}
             >
-              {/* Roles list — one row per role, clicking any row selects that role */}
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: c.bg, color: c.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, flexShrink: 0,
-              }}>{c.initials}</div>
-              <div style={{ flex: 1 }}>
-                {/* Roles list — one row per role, clicking any row selects that role */}
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>{role.title}</div>
-                {/* First 90 characters of the role description as a preview */}
-                <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{role.description.slice(0, 90)}…</div>
+              {/* Entire row is clickable — toggles expanded state */}
+              <div
+                onClick={() => setExpanded(isExpanded ? null : role.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '12px 0',
+                  cursor: 'pointer',
+                }}
+              >
+                {/* Avatar */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: c.bg, color: c.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, fontWeight: 700, flexShrink: 0,
+                }}>{c.initials}</div>
+
+                {/* Title only — no preview text, description shows when expanded */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
+                    {role.title}
+                  </div>
+                </div>
+
+                {/* Chevron — rotates when expanded */}
+                <span style={{
+                  color: '#555', fontSize: 14,
+                  transition: 'transform 0.2s',
+                  display: 'inline-block',
+                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}>›</span>
               </div>
-              <span style={{ fontSize: 18, color: '#333' }}>›</span>
+
+              {/* Expanded content — full description + start button */}
+              {isExpanded && (
+                <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
+                  <p style={{
+                    fontSize: 12, color: '#888', lineHeight: 1.8,
+                    borderLeft: '2px solid #2a2a2a',
+                    paddingLeft: 12, marginBottom: 14,
+                  }}>
+                    {role.description}
+                  </p>
+                  <button
+                    className="btn-primary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectRole(role.id)
+                    }}
+                    style={{ fontSize: 11, padding: '7px 16px' }}
+                  >
+                    Start matching this role →
+                  </button>
+                </div>
+              )}
             </div>
           )
         })}
       </div>
+
       {/* Required ESCO attribution — must appear on any screen using ESCO data */}
       <div className="esco-attribution">
         This service uses the ESCO classification of the European Commission.

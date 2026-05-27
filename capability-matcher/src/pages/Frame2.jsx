@@ -181,11 +181,16 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
               >✕</button>
             </div>
 
-            {/* Row 2: ESCO description (truncated) */}
+            {/* Full ESCO description — always visible */}
             {cap.esco_description && (
-              <div style={{ fontSize: 11, color: '#555', marginBottom: 10, lineHeight: 1.5 }}>
-                {cap.esco_description.slice(0, 120)}…
-              </div>
+            <p style={{
+                fontSize: 11, color: '#777', lineHeight: 1.7,
+                marginBottom: 10,
+                paddingLeft: 10,
+                borderLeft: '2px solid #2a2a2a',
+            }}>
+                {cap.esco_description}
+            </p>
             )}
 
             {/* Row 3: weight slider
