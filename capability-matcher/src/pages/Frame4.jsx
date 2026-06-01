@@ -126,7 +126,7 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
               <div style={{ fontSize: 14, fontWeight: 600, color: '#d0d0d0' }}>
                 {employee.name}
               </div>
-              <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
                 {employee.title} · {employee.business_unit} · {employee.location}
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
               <div style={{ fontSize: 20, fontWeight: 700, color: '#86BC25' }}>
                 {Math.round(employee.match_score * 100)}%
               </div>
-              <div style={{ fontSize: 10, color: '#555' }}>overall match</div>
+              <div style={{ fontSize: 10, color: '#999999' }}>overall match</div>
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
               {s.num}
             </div>
             <div style={{
-              fontSize: 10, color: '#555',
+              fontSize: 10, color: '#aaaaaa',
               textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 3,
             }}>
               {s.label}
@@ -186,7 +186,7 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
           display: 'grid',
           gridTemplateColumns: '1fr 60px 120px 80px',
           gap: 8,
-          fontSize: 10, fontWeight: 600, color: '#444',
+          fontSize: 10, fontWeight: 600, color: '#aaaaaa',
           textTransform: 'uppercase', letterSpacing: '0.06em',
           paddingBottom: 8,
           borderBottom: '1px solid #1e1e1e',

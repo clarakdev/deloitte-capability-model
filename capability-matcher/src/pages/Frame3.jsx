@@ -161,8 +161,8 @@ export default function Frame3({ roleId, onBack, onNext }) {
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: '12px 16px',
-              background: isSelected ? '#131a0d' : '#1a1a1a',
-              border: `1px solid ${isSelected ? '#86BC25' : '#222'}`,
+              background: isSelected ? '#131a0d' : '#161616',
+              border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
               borderRadius: 8,
               marginBottom: 8,
               cursor: 'pointer',
@@ -183,7 +183,7 @@ export default function Frame3({ roleId, onBack, onNext }) {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
                 {c.name}
               </div>
-              <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
                 {c.title} · {c.business_unit} · {c.location}
               </div>
 

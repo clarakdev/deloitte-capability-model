@@ -1,3 +1,6 @@
+/* App.css — global dark theme for the Deloitte Capability Matcher that match Deloitte aesthetic
+   All colour values are defined as CSS variables here so every component
+   can use them consistently. To change the theme, only edit this file. */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
 * {
@@ -7,14 +10,14 @@
 }
 
 :root {
-  --bg:        #0e0e0e;
-  --surface:   #141414;
-  --surface2:  #1a1a1a;
-  --border:    #222222;
-  --border2:   #2a2a2a;
-  --text:      #e8e8e8;
-  --muted:     #555555;
-  --muted2:    #888888;
+  --bg:        #0a0a0a;
+  --surface:   #111111;
+  --surface2:  #1c1c1c;
+  --border:    #2a2a2a;
+  --border2:   #333333;
+  --text:      #f0f0f0;
+  --muted:     #888888;
+  --muted2:    #aaaaaa;
   --green:     #86BC25;
   --green-dim: #1e2a14;
   --green-txt: #5a8a00;
@@ -28,6 +31,8 @@ body {
   line-height: 1.5;
 }
 
+/* Top navigation bar */
+/* Sticky bar at the top with the logo, app name, and Auto/Hands-on toggle */
 .topbar {
   background: #0a0a0a;
   border-bottom: 1px solid var(--border);
@@ -68,6 +73,8 @@ body {
   background: var(--border2);
 }
 
+/* Step progress bar*/
+/* Shows which of the 4 frames the user is currently on */
 .stepbar {
   background: #0d0d0d;
   border-bottom: 1px solid var(--border);
@@ -95,6 +102,7 @@ body {
   font-weight: 700;
 }
 
+/* Three states for each step number circle */
 .step-num.idle    { background: #222; color: #444; }
 .step-num.active  { background: var(--green); color: #0a0a0a; }
 .step-num.done    { background: var(--green); color: #0a0a0a; }
@@ -112,6 +120,8 @@ body {
 
 .step-arrow { color: #2a2a2a; font-size: 11px; margin: 0 4px; }
 
+/* Page layout*/
+/* Centred content area used by all four frames */
 .page {
   max-width: 860px;
   margin: 0 auto;
@@ -129,6 +139,8 @@ body {
   margin-bottom: 14px;
 }
 
+/* Cards*/
+/* The main content container used throughout the app */
 .card-head {
   display: flex;
   align-items: center;
@@ -138,6 +150,8 @@ body {
 
 .card-title { font-size: 12px; font-weight: 600; color: #c8c8c8; }
 
+/* Badges*/
+/* Small coloured pill labels used in card headers */
 .badge {
   font-size: 10px;
   font-weight: 600;
@@ -151,6 +165,7 @@ body {
 .badge-amber { background: #2a1e0a; color: #d4922a; }
 .badge-red   { background: #2a0d0d; color: #e05252; }
 
+/* Buttons*/
 .btn-primary {
   background: var(--green);
   border: none;
@@ -190,6 +205,7 @@ body {
   margin-top: 20px;
 }
 
+/* States*/
 .loading {
   color: var(--muted2);
   font-size: 13px;
@@ -204,6 +220,8 @@ body {
   text-align: center;
 }
 
+/* ESCO attribution*/
+/* Legally required on any page that uses ESCO data */
 .esco-attribution {
   text-align: center;
   font-size: 10px;

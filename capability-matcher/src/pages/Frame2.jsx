@@ -153,8 +153,11 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
           <div
             key={cap.cap_id}
             style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #1e1e1e',
+              padding: '14px 16px',
+              marginBottom: 8,
+              background: '#141414',
+              borderRadius: 8,
+              border: '1px solid #2a2a2a',
             }}
           >
             {/* Row 1: skill name + is_inferred badge + remove button */}
@@ -184,10 +187,10 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
             {/* Full ESCO description — always visible */}
             {cap.esco_description && (
             <p style={{
-                fontSize: 11, color: '#777', lineHeight: 1.7,
+                fontSize: 11, color: '#c8c8c8', lineHeight: 1.7,
                 marginBottom: 10,
                 paddingLeft: 10,
-                borderLeft: '2px solid #2a2a2a',
+                borderLeft: '2px solid #3a3a3a',
             }}>
                 {cap.esco_description}
             </p>
