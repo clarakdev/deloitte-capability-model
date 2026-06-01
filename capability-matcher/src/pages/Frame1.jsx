@@ -129,7 +129,7 @@ export default function Frame1({ onSelectRole }) {
                     }}
                     style={{ fontSize: 11, padding: '7px 16px' }}
                   >
-                    Start matching this role →
+                    Check capabilities for this role
                   </button>
                 </div>
               )}
