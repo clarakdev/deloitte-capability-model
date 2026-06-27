@@ -3,6 +3,7 @@ import Frame1 from './pages/Frame1'
 import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
 import Frame4 from './pages/Frame4'
+import { requestAutoSelect } from './api/api'
 import './App.css'
 
 const STEPS = [
@@ -17,6 +18,9 @@ export default function App() {
   const [roleId, setRoleId] = useState(null)
   const [empId, setEmpId]   = useState(null)
   const [mode, setMode]     = useState('hands') // 'auto' | 'hands'
+  // Sprint 2 — Auto mode LLM selection result (passed to Frame4 so it no
+  // longer silently falls back to candidates[0]).
+  const [autoSelect, setAutoSelect] = useState(null)
 
   function goTo(f) { setFrame(f) }
 
@@ -70,7 +74,19 @@ export default function App() {
           roleId={roleId}
           mode={mode}
           onBack={() => goTo(1)}
-          onNext={(id) => { setRoleId(id); goTo(mode === 'auto' ? 4 : 3) }}
+          onNext={(id) => {
+            setRoleId(id)
+            if (mode === 'auto') {
+              // Ask the LLM to pick the best of the top 5 before showing Frame4.
+              setAutoSelect(null) // clear any previous result + trigger loading
+              requestAutoSelect(id)
+                .then(setAutoSelect)
+                .catch(() => setAutoSelect({ error: 'unavailable' }))
+              goTo(4)
+            } else {
+              goTo(3)
+            }
+          }}
         />
       )}
       {frame === 3 && (
@@ -85,6 +101,7 @@ export default function App() {
           roleId={roleId}
           empId={empId}
           mode={mode}
+          autoSelect={autoSelect}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
         />
       )}

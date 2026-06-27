@@ -18,7 +18,7 @@
 //   onNext(empId)— navigate to Frame 4 with the selected employee id
 
 import { useEffect, useState } from 'react'
-import { getCandidates } from '../api/api'
+import { getCandidates, requestLLMReport } from '../api/api'
 
 // Generates initials from a full name e.g. "Jane Smith" → "JS"
 function getInitials(name) {
@@ -64,6 +64,10 @@ export default function Frame3({ roleId, onBack, onNext }) {
   const [availableOnly, setAvailableOnly]   = useState(false)
   const [priorExpOnly, setPriorExpOnly]     = useState(false)
 
+  // Per-employee LLM report state: empId → { status, data, error }
+  // status is 'idle' | 'loading' | 'done' | 'error'
+  const [reports, setReports] = useState({})
+
   // ── Fetch candidates whenever filters change ─────────────────────────────
   // The dependency array [roleId, availableOnly, priorExpOnly] means this
   // runs on mount AND whenever either filter toggle is switched.
@@ -77,6 +81,28 @@ export default function Frame3({ roleId, onBack, onNext }) {
       .catch(() => setError('Could not load candidates. Is the backend running?'))
       .finally(() => setLoading(false))
   }, [roleId, availableOnly, priorExpOnly])
+
+  // ── Generate / toggle the LLM report for one candidate ───────────────────
+  async function handleGenerateReport(empId) {
+    // If the report is already loaded, toggle it closed (re-click shows it again).
+    const existing = reports[empId]
+    if (existing?.status === 'done' || existing?.status === 'error') {
+      setReports(r => ({ ...r, [empId]: { ...existing, hidden: !existing.hidden } }))
+      return
+    }
+    if (existing?.status === 'loading') return // debounce double-clicks
+
+    setReports(r => ({ ...r, [empId]: { status: 'loading', hidden: false } }))
+    try {
+      const data = await requestLLMReport(roleId, empId)
+      setReports(r => ({ ...r, [empId]: { status: 'done', data, hidden: false } }))
+    } catch (err) {
+      const msg = err?.message?.includes('503')
+        ? 'AI report unavailable — check OPENROUTER_API_KEY. Deterministic matching still works.'
+        : 'Could not generate AI report. Is the backend running?'
+      setReports(r => ({ ...r, [empId]: { status: 'error', error: msg, hidden: false } }))
+    }
+  }
 
   if (error) return <div className="error">{error}</div>
 
@@ -153,10 +179,12 @@ export default function Frame3({ roleId, onBack, onNext }) {
         const av  = avatarColor(c.employee_id)
         const sc  = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId
+        const rpt = reports[c.employee_id]
+        const showPanel = rpt && !rpt.hidden && (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
 
         return (
+          <div key={c.employee_id} style={{ marginBottom: 8 }}>
           <div
-            key={c.employee_id}
             onClick={() => setSelectedId(c.employee_id)}
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
@@ -164,7 +192,6 @@ export default function Frame3({ roleId, onBack, onNext }) {
               background: isSelected ? '#131a0d' : '#161616',
               border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
               borderRadius: 8,
-              marginBottom: 8,
               cursor: 'pointer',
             }}
           >
@@ -233,6 +260,26 @@ export default function Frame3({ roleId, onBack, onNext }) {
                   </span>
                 )}
               </div>
+
+              {/* Sprint 2 — Generate AI report button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleGenerateReport(c.employee_id) }}
+                disabled={rpt?.status === 'loading'}
+                style={{
+                  marginTop: 4, fontSize: 10, fontWeight: 600,
+                  padding: '4px 10px', borderRadius: 10, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  border: `1px solid ${rpt?.status === 'done' ? '#86BC25' : '#333'}`,
+                  background: rpt?.status === 'done' ? '#1e2a14' : 'transparent',
+                  color:      rpt?.status === 'done' ? '#86BC25' : '#888',
+                  opacity: rpt?.status === 'loading' ? 0.5 : 1,
+                }}
+              >
+                {rpt?.status === 'loading' ? 'Generating…'
+                  : rpt?.status === 'done' ? 'AI report ✓'
+                  : rpt?.status === 'error' ? 'AI report — retry'
+                  : 'Generate AI report'}
+              </button>
             </div>
 
             {/* Selection checkmark */}
@@ -245,6 +292,42 @@ export default function Frame3({ roleId, onBack, onNext }) {
             }}>
               {isSelected && '✓'}
             </div>
+          </div>
+
+          {/* ── Sprint 2: inline AI report panel ── */}
+          {showPanel && (
+            <div style={{
+              marginTop: -1, padding: '12px 16px',
+              background: '#0f0f0f',
+              border: `1px solid #2a2a2a`,
+              borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
+            }}>
+              {rpt.status === 'loading' && (
+                <div style={{ fontSize: 12, color: '#888' }}>Generating AI report…</div>
+              )}
+              {rpt.status === 'error' && (
+                <div style={{ fontSize: 12, color: '#e05252' }}>{rpt.error}</div>
+              )}
+              {rpt.status === 'done' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+                    <span style={{ fontSize: 22, fontWeight: 700, color: '#86BC25' }}>
+                      {rpt.data.overall_fit_score}
+                    </span>
+                    <span style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      overall fit
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: 12, lineHeight: 1.5, color: '#c0c0c0',
+                    margin: 0, whiteSpace: 'pre-wrap',
+                  }}>
+                    {rpt.data.report}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
           </div>
         )
       })}
