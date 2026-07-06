@@ -340,6 +340,43 @@ def _build_auto_prompt(
 
 # ── Schema validation ─────────────────────────────────────────────────────────
 
+# Common typographic characters LLMs emit (smart quotes, non-breaking hyphens,
+# en/em dashes, ellipses). We normalise to plain ASCII so downstream consumers
+# (CSV export, copy-paste into government templates, string-equality tests)
+# never see surprising bytes regardless of which model is hot-swapped in.
+_ASCII_REPLACEMENTS = {
+    "\u2010": "-",   # hyphen
+    "\u2011": "-",   # non-breaking hyphen
+    "\u2012": "-",   # figure dash
+    "\u2013": "-",   # en dash
+    "\u2014": "-",   # em dash
+    "\u2018": "'",   # left single quote
+    "\u2019": "'",   # right single quote / apostrophe
+    "\u201A": "'",   # single low-9 quote
+    "\u201B": "'",   # single high-reversed-9 quote
+    "\u201C": '"',   # left double quote
+    "\u201D": '"',   # right double quote
+    "\u201E": '"',   # double low-9 quote
+    "\u201F": '"',   # double high-reversed-9 quote
+    "\u2026": "...", # horizontal ellipsis
+    "\u00A0": " ",   # non-breaking space
+}
+
+
+def _sanitise_text(text: str) -> str:
+    """Normalise common non-ASCII typographic characters to ASCII equivalents.
+
+    Any remaining non-ASCII bytes are stripped. This keeps the report safe for
+    plain-text consumers without losing meaning — the replacements above cover
+    every non-ASCII character observed across tested models (DeepSeek, Mercury).
+    """
+    if not text:
+        return text
+    for src, dst in _ASCII_REPLACEMENTS.items():
+        text = text.replace(src, dst)
+    # Drop anything still non-ASCII (rare; defensive catch-all).
+    return text.encode("ascii", "ignore").decode("ascii")
+
 
 def _validate_hands_on_response(raw: dict, employee_id: str | None = None) -> dict:
     """Validate and normalise the hands-on LLM response. Raises LLMReportError."""
@@ -358,7 +395,7 @@ def _validate_hands_on_response(raw: dict, employee_id: str | None = None) -> di
     if not isinstance(report, str) or not report.strip():
         raise LLMReportError("'report' must be a non-empty string.")
 
-    return {"overall_fit_score": score, "report": report.strip()}
+    return {"overall_fit_score": score, "report": _sanitise_text(report.strip())}
 
 
 def _validate_auto_response(
@@ -383,7 +420,7 @@ def _validate_auto_response(
 
     return {
         "selected_employee_id": selected,
-        "rationale": rationale.strip(),
+        "rationale": _sanitise_text(rationale.strip()),
     }
 
 
@@ -495,4 +532,5 @@ __all__ = [
     "_validate_hands_on_response",
     "_validate_auto_response",
     "_condense_fit",
+    "_sanitise_text",
 ]
