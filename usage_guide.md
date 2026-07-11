@@ -112,3 +112,35 @@ State is in-memory and resets on server restart. The model loads on startup (~5s
 - **State is shared** across all browser tabs for the duration of the server session. Changes made via POST/PUT/DELETE persist until the server restarts.
 - **Capabilities are inferred lazily** — a role's list is only created when you first call `GET /roles/{id}/capabilities`. You can call candidates directly and it will trigger inference automatically.
 - **ESCO attribution** (required in any frontend): *"This service uses the ESCO classification of the European Commission."*
+
+---
+
+## US019 & US020 - Authentication & Security Evaluation Notes
+
+### 1. Available Test Environment Accounts
+
+| Username | Password | Role |
+|---|---|---|
+| `admin_user` | `password123` | Admin |
+| `hr_user` | `password123` | HR User |
+| `pm_user` | `password123` | Project Manager |
+| `xavier_green` | `password123` | Employee |
+
+### 2. Backend Header Injection Instructions
+
+Client applications must first call the login endpoint and read the returned token string from the `access_token` field. Once received, the token must be injected into the outgoing request pipeline as a bearer token in the `Authorization` header.
+
+```http
+Authorization: Bearer <token>
+```
+
+This header should be attached to every protected request. In practical client implementations, this is typically handled by storing the token after login and adding it to each request before the API call is issued.
+
+### 3. Role-Based Views Mapping Rules
+
+The frontend and API layer work together to enforce access restrictions. Lower-privilege accounts cannot access all dashboard widgets or structural action vectors, and protected endpoints are screened by the backend RBAC validators before data is returned.
+
+- **Admin:** Full dashboard access, structural editing actions, and advanced management widgets remain available.
+- **HR User:** Access is permitted for workforce visibility and review functions, but permission-sensitive operational controls are suppressed or disabled.
+- **Project Manager:** Access is granted to project-aligned workforce views, while high-risk administrative functions remain blocked.
+- **Employee:** Access is restricted to personal or role-limited views; structural management elements are hidden to reduce exposure of sensitive workforce data.
