@@ -59,6 +59,7 @@ function App() {
       </header>
 
       <main style={styles.content}>
+        {/* PANEL 1: CAPABILITY RANKING */}
         <section style={styles.panel}>
           <div style={styles.panelHeader}>
             <h2 style={styles.panelTitle}>Capability Ranking</h2>
@@ -70,15 +71,16 @@ function App() {
           <button
             style={{
               ...styles.secondaryButton,
-              opacity: userRole === 'admin' ? 1 : 0.5,
-              cursor: userRole === 'admin' ? 'pointer' : 'not-allowed',
+              opacity: userRole === 'Admin' ? 1 : 0.5,
+              cursor: userRole === 'Admin' ? 'pointer' : 'not-allowed',
             }}
-            disabled={userRole !== 'admin'}
+            disabled={userRole !== 'Admin'}
           >
             Manage Role Capabilities
           </button>
         </section>
 
+        {/* PANEL 2: MATCHING WORKSPACE */}
         <section style={styles.panel}>
           <div style={styles.panelHeader}>
             <h2 style={styles.panelTitle}>Matching Workspace</h2>
@@ -90,14 +92,30 @@ function App() {
           <button
             style={{
               ...styles.secondaryButton,
-              opacity: userRole === 'analyst' || userRole === 'admin' ? 1 : 0.5,
-              cursor: userRole === 'analyst' || userRole === 'admin' ? 'pointer' : 'not-allowed',
+              opacity: ['Admin', 'HR User', 'Project Manager'].includes(userRole) ? 1 : 0.5,
+              cursor: ['Admin', 'HR User', 'Project Manager'].includes(userRole) ? 'pointer' : 'not-allowed',
             }}
-            disabled={userRole !== 'analyst' && userRole !== 'admin'}
+            disabled={!['Admin', 'HR User', 'Project Manager'].includes(userRole)}
           >
             Open Matching Screen
           </button>
         </section>
+
+        {/* PANEL 3: DEDICATED EMPLOYEE SELF-SERVICE PORTAL */}
+        {userRole === 'Employee' && (
+          <section style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <h2 style={styles.panelTitle}>My Career Growth</h2>
+              <span style={{ ...styles.badge, background: '#e2e8f0', color: '#475569' }}>Self Service</span>
+            </div>
+            <p style={styles.panelText}>
+              View your personal compatibility breakdown against active firm roles and discover targeted ESCO upskilling pathways.
+            </p>
+            <button style={styles.secondaryButton}>
+              View My Skill Gaps
+            </button>
+          </section>
+        )}
       </main>
     </div>
   );

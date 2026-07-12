@@ -112,6 +112,11 @@ State is in-memory and resets on server restart. The model loads on startup (~5s
 - **State is shared** across all browser tabs for the duration of the server session. Changes made via POST/PUT/DELETE persist until the server restarts.
 - **Capabilities are inferred lazily** — a role's list is only created when you first call `GET /roles/{id}/capabilities`. You can call candidates directly and it will trigger inference automatically.
 - **ESCO attribution** (required in any frontend): *"This service uses the ESCO classification of the European Commission."*
+- **Testing Protected Endpoints in Swagger UI:** Because the API layer is now secure, running endpoints will return a `401 Unauthorized` or `403 Forbidden` error by default. To unlock them:
+  1. Scroll to the top of the Swagger UI page and click the green **Authorize** padlock button on the right.
+  2. Enter one of the test usernames (e.g., `pm_user`) and the password `password123` into the form.
+  3. Click **Authorize**, then click **Close**. 
+  Now, all subsequent endpoint executions will automatically pass the secure Bearer token in the background!
 
 ---
 
