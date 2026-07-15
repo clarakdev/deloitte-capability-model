@@ -47,7 +47,9 @@ export default function Frame1({ onSelectRole }) {
   const [formError, setFormError]     = useState('')
   const [editingRole, setEditingRole]   = useState(null)  // id of role being edited
   const [editFields, setEditFields]     = useState({ title: '', description: '' })
-
+  const [dragOverId, setDragOverId] = useState(null)  // role being dragged over
+  const [dragId, setDragId]         = useState(null)   // role being dragged
+  
   useEffect(() => {
     getProject()
       .then(setProject)
@@ -121,6 +123,51 @@ export default function Frame1({ onSelectRole }) {
     setLocalRoles(prev => [...prev, duplicate])
   }
 
+  // Drag and drop reordering
+  // Only local roles can be reordered for now.
+  // When the backend is ready, this will call reorderRoles() from api.js.
+  // We reorder the full allRoles list but only move local roles backend roles stay fixed at the top.
+  function handleDragStart(roleId) {
+    setDragId(roleId)
+  }
+
+  function handleDragOver(e, roleId) {
+    e.preventDefault() // required to allow drop
+    setDragOverId(roleId)
+  }
+
+  function handleDrop(targetId) {
+    if (!dragId || dragId === targetId) {
+      setDragId(null)
+      setDragOverId(null)
+      return
+    }
+
+    // Only reorder within localRoles
+    const from = localRoles.findIndex(r => r.id === dragId)
+    const to   = localRoles.findIndex(r => r.id === targetId)
+
+    if (from === -1 || to === -1) {
+      // Can't drag backend roles or drag onto backend roles
+      setDragId(null)
+      setDragOverId(null)
+      return
+    }
+
+    const reordered = [...localRoles]
+    const [moved]   = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+
+    setLocalRoles(reordered)
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  function handleDragEnd() {
+    setDragId(null)
+    setDragOverId(null)
+  }
+
   if (loading) return <div className="loading">Loading project...</div>
   if (error)   return <div className="error">{error}</div>
 
@@ -157,8 +204,18 @@ export default function Frame1({ onSelectRole }) {
           return (
             <div
               key={role.id}
+              draggable={role.isLocal}
+              onDragStart={() => handleDragStart(role.id)}
+              onDragOver={(e) => handleDragOver(e, role.id)}
+              onDrop={() => handleDrop(role.id)}
+              onDragEnd={handleDragEnd}
               style={{
                 borderBottom: i < allRoles.length - 1 ? '1px solid #1f1f1f' : 'none',
+                opacity: dragId === role.id ? 0.4 : 1,
+                borderTop: dragOverId === role.id && dragId !== role.id
+                  ? '2px solid #86BC25'
+                  : '2px solid transparent',
+                transition: 'opacity 0.15s',
               }}
             >
               {/* Role row — click to expand */}
@@ -169,6 +226,14 @@ export default function Frame1({ onSelectRole }) {
                   padding: '12px 0', cursor: 'pointer',
                 }}
               >
+                {/* Drag handle — only shown for local roles */}
+                {role.isLocal && (
+                  <span style={{
+                    color: '#333', fontSize: 14, cursor: 'grab',
+                    flexShrink: 0, userSelect: 'none', paddingRight: 2,
+                  }}>⠿</span>
+                )}
+
                 {/* Avatar */}
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%',
