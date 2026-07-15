@@ -45,6 +45,8 @@ export default function Frame1({ onSelectRole }) {
   const [newTitle, setNewTitle]       = useState('')
   const [newDesc, setNewDesc]         = useState('')
   const [formError, setFormError]     = useState('')
+  const [editingRole, setEditingRole]   = useState(null)  // id of role being edited
+  const [editFields, setEditFields]     = useState({ title: '', description: '' })
 
   useEffect(() => {
     getProject()
@@ -83,6 +85,27 @@ export default function Frame1({ onSelectRole }) {
   // Backend roles are managed server-side.
   function handleRemoveLocalRole(roleId) {
     setLocalRoles(prev => prev.filter(r => r.id !== roleId))
+  }
+
+  // Saves the edited title and description back into localRoles.
+  // When the backend is ready, this will call updateRole() from api.js instead.
+  function handleSaveEdit() {
+    if (!editFields.title.trim()) {
+      setFormError('Role title is required.')
+      return
+    }
+    if (!editFields.description.trim()) {
+      setFormError('Role description is required.')
+      return
+    }
+    setLocalRoles(prev => prev.map(r =>
+      r.id === editingRole
+        ? { ...r, title: editFields.title.trim(), description: editFields.description.trim() }
+        : r
+    ))
+    setEditingRole(null)
+    setEditFields({ title: '', description: '' })
+    setFormError('')
   }
 
   if (loading) return <div className="loading">Loading project...</div>
@@ -150,6 +173,24 @@ export default function Frame1({ onSelectRole }) {
                   </div>
                 </div>
 
+                {/* Edit button — only for locally added roles */}
+                {role.isLocal && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditingRole(role.id)
+                      setEditFields({ title: role.title, description: role.description })
+                      setExpanded(role.id)  // auto-expand so the form appears in context
+                    }}
+                    style={{
+                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                      color: '#888888', fontSize: 11, padding: '3px 10px',
+                      fontFamily: 'inherit', borderRadius: 5,
+                    }}
+                    title="Edit role"
+                  >Edit</button>
+                )}
+
                 {/* Remove button — only for locally added roles */}
                 {role.isLocal && (
                   <button
@@ -158,11 +199,12 @@ export default function Frame1({ onSelectRole }) {
                       handleRemoveLocalRole(role.id)
                     }}
                     style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: '#555', fontSize: 14, padding: '0 4px',
+                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                      color: '#888888', fontSize: 11, padding: '3px 10px',
+                      fontFamily: 'inherit', borderRadius: 5,
                     }}
                     title="Remove role"
-                  >✕</button>
+                  >Remove</button>
                 )}
 
                 {/* Expand chevron */}
@@ -177,23 +219,102 @@ export default function Frame1({ onSelectRole }) {
               {/* Expanded content */}
               {isExpanded && (
                 <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
-                  <p style={{
-                    fontSize: 12, color: '#999999', lineHeight: 1.8,
-                    borderLeft: '2px solid #2a2a2a',
-                    paddingLeft: 12, marginBottom: 14,
-                  }}>
-                    {role.description}
-                  </p>
-                  <button
-                    className="btn-primary"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSelectRole(role.id)
-                    }}
-                    style={{ fontSize: 11, padding: '7px 16px' }}
-                  >
-                    Start matching role
-                  </button>
+                  {editingRole === role.id ? (
+
+                    // ── Edit form ──────────────────────────────────────────────────
+                    <div style={{
+                      padding: 16, background: '#141414',
+                      border: '1px solid #2a2a2a', borderRadius: 8,
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#e0e0e0', marginBottom: 12 }}>
+                        Edit role
+                      </div>
+
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={{
+                          fontSize: 10, fontWeight: 600, color: '#888888',
+                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                          display: 'block', marginBottom: 5,
+                        }}>
+                          Role title <span style={{ color: '#e05252' }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editFields.title}
+                          onChange={e => { setEditFields(f => ({ ...f, title: e.target.value })); setFormError('') }}
+                          style={{
+                            width: '100%', background: '#111', border: '1px solid #2a2a2a',
+                            borderRadius: 6, padding: '8px 11px', fontSize: 12,
+                            color: '#e0e0e0', fontFamily: 'inherit',
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: 14 }}>
+                        <label style={{
+                          fontSize: 10, fontWeight: 600, color: '#888888',
+                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                          display: 'block', marginBottom: 5,
+                        }}>
+                          Description <span style={{ color: '#e05252' }}>*</span>
+                        </label>
+                        <textarea
+                          value={editFields.description}
+                          onChange={e => { setEditFields(f => ({ ...f, description: e.target.value })); setFormError('') }}
+                          rows={3}
+                          style={{
+                            width: '100%', background: '#111', border: '1px solid #2a2a2a',
+                            borderRadius: 6, padding: '8px 11px', fontSize: 12,
+                            color: '#e0e0e0', fontFamily: 'inherit', resize: 'vertical',
+                          }}
+                        />
+                        {formError && (
+                          <div style={{ fontSize: 11, color: '#e05252', marginTop: 4 }}>
+                            {formError}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="btn-primary" onClick={handleSaveEdit}>
+                          Save changes
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          onClick={() => {
+                            setEditingRole(null)
+                            setEditFields({ title: '', description: '' })
+                            setFormError('')
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+
+                  ) : (
+
+                    // ── Normal expanded view ────────────────────────────────────────
+                    <>
+                      <p style={{
+                        fontSize: 12, color: '#999999', lineHeight: 1.8,
+                        borderLeft: '2px solid #2a2a2a',
+                        paddingLeft: 12, marginBottom: 14,
+                      }}>
+                        {role.description}
+                      </p>
+                      <button
+                        className="btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onSelectRole(role.id)
+                        }}
+                        style={{ fontSize: 11, padding: '7px 16px' }}
+                      >
+                        Start matching this role →
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
