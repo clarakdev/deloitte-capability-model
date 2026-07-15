@@ -1,0 +1,100 @@
+// api.js — the ONLY file in the React app that talks to the Python backend.
+// Every fetch() call lives here. Components never call fetch() directly.
+// If the backend URL ever changes (e.g. deployed to a server), you only
+// change BASE_URL here — nothing else needs to touch.
+
+const BASE_URL = 'http://localhost:8000';
+
+// Internal helper — all API calls go through this.
+// If the server returns an error status (4xx, 5xx), it throws so the
+// calling component can catch it and show an error message.
+async function request(path, options = {}) {
+  const res = await fetch(`${BASE_URL}${path}`, options);
+  if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
+  return res.json();
+}
+
+// Frame 1
+// Loads the demo project and its 5 roles from data/project.json via the backend.
+// Backend endpoint: GET /project
+export function getProject() {
+  return request('/project');
+}
+
+// Frame 2
+// Loads the capability list for a role.
+// On the FIRST call, the backend auto-infers the top 5 ESCO skills using AI.
+// On subsequent calls, it returns the current (possibly edited) list.
+// Backend endpoint: GET /roles/{roleId}/capabilities
+export function getCapabilities(roleId) {
+  return request(`/roles/${roleId}/capabilities`);
+}
+
+// Adds a new ESCO skill to a role's capability list.
+// escoUri comes from searchEsco() below — it's the skill's unique ESCO identifier.
+// weight is importance 1–5 (default 3).
+// Backend endpoint: POST /roles/{roleId}/capabilities
+export function addCapability(roleId, escoUri, weight = 3) {
+  return request(`/roles/${roleId}/capabilities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ esco_uri: escoUri, weight }),
+  });
+}
+
+// Updates an existing capability — change its weight (1–5) or swap it for a
+// different ESCO skill. Pass only the fields you want to change in `updates`.
+// e.g. updateCapability(roleId, capId, { weight: 5 })
+// e.g. updateCapability(roleId, capId, { esco_uri: '...', weight: 2 })
+// NOTE: capId is a full ESCO URI like http://data.europa.eu/esco/skill/abc
+// encodeURIComponent() is REQUIRED — the slashes in the URI break the URL otherwise.
+// Backend endpoint: PUT /roles/{roleId}/capabilities/{capId}
+export function updateCapability(roleId, capId, updates) {
+  return request(`/roles/${roleId}/capabilities/${encodeURIComponent(capId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+}
+
+// Removes a capability from a role's list entirely.
+// Same encodeURIComponent() requirement as updateCapability.
+// Backend endpoint: DELETE /roles/{roleId}/capabilities/{capId}
+export function deleteCapability(roleId, capId) {
+  return request(`/roles/${roleId}/capabilities/${encodeURIComponent(capId)}`, {
+    method: 'DELETE',
+  });
+}
+
+// Searches the ESCO skill database by keyword.
+// Used in Frame 2 when the user wants to add a custom skill.
+// Returns up to 20 matches. Falls back to semantic (AI) search if text
+// search finds fewer than 5 results.
+// Backend endpoint: GET /esco/search?q={query}
+export function searchEsco(query) {
+  return request(`/esco/search?q=${encodeURIComponent(query)}`);
+}
+
+// Frame 3
+// Returns all 30 employees ranked by their fit to the role's capabilities.
+// Two optional boolean filters:
+//   availableOnly — only show employees marked available: true
+//   requirePriorExp — only show employees who have held this role title before
+// The match_score (0–1) is computed by the backend's matching engine.
+// Backend endpoint: GET /roles/{roleId}/candidates
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false) {
+  return request(
+    `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
+  );
+}
+
+// Frame 4
+// Returns a per-capability gap breakdown for one specific employee.
+// For each required capability, shows:
+//   - best_match_skill: the employee's closest matching skill
+//   - similarity: cosine similarity score 0–1
+//   - is_gap: true if similarity < 0.6 (the employee lacks adequate coverage)
+// Backend endpoint: GET /roles/{roleId}/candidates/{empId}/fit
+export function getCandidateFit(roleId, empId) {
+  return request(`/roles/${roleId}/candidates/${empId}/fit`);
+}
