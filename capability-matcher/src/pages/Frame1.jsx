@@ -108,6 +108,19 @@ export default function Frame1({ onSelectRole }) {
     setFormError('')
   }
 
+  // Creates a copy of an existing local role with "(copy)" appended to the title.
+  // The duplicate does not inherit any capabilities — those are generated fresh.
+  // When the backend is ready, this will call duplicateRole() from api.js instead.
+  function handleDuplicateRole(role) {
+    const duplicate = {
+      id:          `LOCAL_${Date.now()}`,
+      title:       `${role.title} (copy)`,
+      description: role.description,
+      isLocal:     true,
+    }
+    setLocalRoles(prev => [...prev, duplicate])
+  }
+
   if (loading) return <div className="loading">Loading project...</div>
   if (error)   return <div className="error">{error}</div>
 
@@ -191,6 +204,22 @@ export default function Frame1({ onSelectRole }) {
                   >Edit</button>
                 )}
 
+                {/* Duplicate button — only for locally added roles */}
+                {role.isLocal && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDuplicateRole(role)
+                    }}
+                    style={{
+                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                      color: '#888888', fontSize: 11, padding: '3px 10px',
+                      fontFamily: 'inherit', borderRadius: 5,
+                    }}
+                    title="Duplicate role"
+                  >Duplicate</button>
+                )}
+
                 {/* Remove button — only for locally added roles */}
                 {role.isLocal && (
                   <button
@@ -221,7 +250,7 @@ export default function Frame1({ onSelectRole }) {
                 <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
                   {editingRole === role.id ? (
 
-                    // ── Edit form ──────────────────────────────────────────────────
+                    // Edit form 
                     <div style={{
                       padding: 16, background: '#141414',
                       border: '1px solid #2a2a2a', borderRadius: 8,
@@ -294,7 +323,7 @@ export default function Frame1({ onSelectRole }) {
 
                   ) : (
 
-                    // ── Normal expanded view ────────────────────────────────────────
+                    // Normal expanded view
                     <>
                       <p style={{
                         fontSize: 12, color: '#999999', lineHeight: 1.8,
