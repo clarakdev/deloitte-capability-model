@@ -58,3 +58,21 @@ export function getCandidates(roleId, availableOnly = false, requirePriorExp = f
 export function getCandidateFit(roleId, empId) {
   return request(`/roles/${roleId}/candidates/${empId}/fit`);
 }
+
+// Sprint 2 — LLM gap analysis (hands-on report + auto selection)
+
+// Request an objective prose fit report + 0–100 score for one candidate.
+// Returns { employee_id, overall_fit_score, report }.
+export function requestLLMReport(roleId, empId) {
+  return request(`/roles/${roleId}/candidates/${empId}/llm-report`, {
+    method: 'POST',
+  });
+}
+
+// Ask the LLM to pick the best candidate from the top 5 (auto mode).
+// Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
+export function requestAutoSelect(roleId) {
+  return request(`/roles/${roleId}/auto-select`, {
+    method: 'POST',
+  });
+}

@@ -45,7 +45,7 @@ function WeightDots({ weight }) {
   )
 }
 
-export default function Frame4({ roleId, empId, mode, onBack }) {
+export default function Frame4({ roleId, empId, mode, autoSelect, onBack }) {
   // fitData  — array of per-capability fit items from the backend
   // employee — basic employee info (fetched from candidates list)
   // loading  — true while fetching
@@ -54,32 +54,46 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
   const [employee, setEmployee]   = useState(null)
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
+  // Sprint 2 — auto mode: other top candidates the LLM considered, and a
+  // flag for whether that list is expanded.
+  const [others, setOthers]       = useState([])
+  const [showOthers, setShowOthers] = useState(false)
 
   // ── Fetch fit data on mount ───────────────────────────────────────────────
   // In Hands-on mode: empId comes from Frame 3 (user's selection).
-  // In Auto mode: empId is null, so we first fetch the top candidate
-  //   from GET /roles/{roleId}/candidates and use the first result.
+  // In Auto mode: App.jsx calls /auto-select and passes the result down as
+  //   `autoSelect`. We wait for it, then use selected_employee_id. If the
+  //   LLM is unavailable (autoSelect.error), we fall back to embedding
+  //   rank #1 with a notice — the deterministic pipeline still works.
   useEffect(() => {
     async function load() {
       try {
         let resolvedEmpId = empId
 
-        // Auto mode — no empId passed in, pick the top-ranked candidate
         if (!resolvedEmpId) {
-          const candidates = await getCandidates(roleId, false, false)
-          if (candidates.length === 0) {
-            setError('No candidates found for this role.')
+          // Auto mode — wait for the LLM selection to arrive from App.jsx.
+          if (!autoSelect) {
+            setLoading(true) // still waiting on requestAutoSelect
             return
           }
-          resolvedEmpId = candidates[0].employee_id
-          setEmployee(candidates[0])
+          if (autoSelect.error) {
+            // LLM unavailable — fall back to embedding rank #1.
+            const candidates = await getCandidates(roleId, false, false)
+            if (candidates.length === 0) { setError('No candidates found for this role.'); return }
+            resolvedEmpId = candidates[0].employee_id
+            setEmployee({ ...candidates[0], _fallback: true })
+          } else {
+            resolvedEmpId = autoSelect.selected_employee_id
+            const candidates = await getCandidates(roleId, false, false)
+            setEmployee(candidates.find(c => c.employee_id === resolvedEmpId) || null)
+            setOthers(autoSelect.all_top_candidates || [])
+          }
         } else {
           // Hands-on mode — fetch candidates just to get this employee's info
           const candidates = await getCandidates(roleId, false, false)
           setEmployee(candidates.find(c => c.employee_id === resolvedEmpId) || null)
         }
 
-        // Fetch the per-capability fit breakdown for this employee
         const fit = await getCandidateFit(roleId, resolvedEmpId)
         setFitData(fit)
       } catch {
@@ -89,8 +103,11 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
       }
     }
     load()
-  }, [roleId, empId])
+  }, [roleId, empId, autoSelect])
 
+  // In auto mode, load() returns early (leaving loading=true) until
+  // autoSelect arrives from App.jsx, so this single guard covers both
+  // the waiting state and the normal fetch.
   if (loading) return <div className="loading">Running gap analysis…</div>
   if (error)   return <div className="error">{error}</div>
 
@@ -107,6 +124,56 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
       <div className="page-sub">
         {mode === 'auto' ? 'Auto-matched top candidate' : 'Manually selected candidate'} · per-capability fit breakdown
       </div>
+
+      {/* ── Sprint 2: Auto-mode LLM rationale (and fallback notice) ── */}
+      {mode === 'auto' && autoSelect && !autoSelect.error && (
+        <div className="card" style={{ marginBottom: 14, borderLeft: '3px solid #5b9bd5' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#5b9bd5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+            AI selection rationale
+          </div>
+          <p style={{ fontSize: 12, lineHeight: 1.5, color: '#c0c0c0', margin: 0, whiteSpace: 'pre-wrap' }}>
+            {autoSelect.rationale}
+          </p>
+
+          {/* Collapsible: other candidates the LLM considered */}
+          {others.length > 1 && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={() => setShowOthers(s => !s)}
+                style={{
+                  fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  background: 'transparent', border: '1px solid #333', color: '#888',
+                  padding: '4px 10px', borderRadius: 10,
+                }}
+              >
+                {showOthers ? 'Hide' : `Show ${others.length - 1} other candidates considered`}
+              </button>
+              {showOthers && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {others.filter(o => o.employee_id !== autoSelect.selected_employee_id).map(o => (
+                    <div key={o.employee_id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      fontSize: 11, padding: '4px 8px', background: '#0f0f0f', borderRadius: 6,
+                    }}>
+                      <span style={{ color: '#aaa' }}>{o.name}</span>
+                      <span style={{ color: '#666' }}>{Math.round(o.match_score * 100)}% match</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Auto-mode LLM unavailable — fallback notice */}
+      {mode === 'auto' && autoSelect && autoSelect.error && (
+        <div className="card" style={{ marginBottom: 14, borderLeft: '3px solid #d4922a' }}>
+          <div style={{ fontSize: 12, color: '#d4922a' }}>
+            AI selection unavailable — showing embedding rank #1 instead. Set OPENROUTER_API_KEY to enable LLM selection.
+          </div>
+        </div>
+      )}
 
       {/* ── Employee summary card ── */}
       {employee && (
