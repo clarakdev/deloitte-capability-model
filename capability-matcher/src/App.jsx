@@ -94,7 +94,16 @@ export default function App() {
       {frame === 1 && (
         <Frame1
           project={selectedProject}
-          onSelectRole={(role) => { setSelectedRole(role); setRoleId(role.id); goTo(2) }}
+          onSelectRole={(role, hasAssignment) => {
+            setSelectedRole(role)
+            setRoleId(role.id)
+            if (hasAssignment) {
+              setEmpId(null)
+              goTo(4)
+            } else {
+              goTo(2)
+            }
+          }}
           onBack={() => goTo(0)}
         />
       )}
@@ -110,6 +119,7 @@ export default function App() {
       {frame === 3 && (
         <Frame3
           roleId={roleId}
+          projectId={selectedProject?.id}
           onBack={() => goTo(2)}
           onNext={(eid) => { setEmpId(eid); goTo(4) }}
         />
@@ -120,6 +130,7 @@ export default function App() {
           empId={empId}
           mode={mode}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
+          onBackToRoles={() => goTo(1)}
         />
       )}
     </>

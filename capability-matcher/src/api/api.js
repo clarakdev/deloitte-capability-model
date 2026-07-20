@@ -2,7 +2,7 @@
 // Every fetch() call lives here. Components never call fetch() directly.
 // If the backend URL ever changes (e.g. deployed to a server), you only
 // change BASE_URL here — nothing else needs to touch.
-
+import { supabase } from '../supabase'
 const BASE_URL = 'http://localhost:8000';
 
 // Internal helper — all API calls go through this.
@@ -100,8 +100,6 @@ export function getCandidateFit(roleId, empId) {
 }
 
 // Frame 0 — Project management
-
-import { supabase } from '../supabase'
 
 // Temporary user id — replace with real user id from login session later
 const CURRENT_USER_ID = 'dev-user-001'
@@ -208,4 +206,84 @@ export function inferCapabilities(roleId, title, description) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, description }),
   })
+}
+
+// Capabilities persistence
+// Saves the final capability list for a role to Supabase after Frame 2.
+// On revisit, Frame 2 loads from Supabase instead of re-inferring from AI.
+
+// Save all capabilities for a role (replaces existing ones)
+export async function saveCapabilities(roleId, capabilities) {
+  // Delete existing capabilities for this role first
+  await supabase.from('capabilities').delete().eq('role_id', roleId)
+
+  if (capabilities.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('capabilities')
+    .insert(
+      capabilities.map(cap => ({
+        role_id:          roleId,
+        cap_id:           cap.cap_id,
+        name:             cap.name,
+        esco_description: cap.esco_description || '',
+        weight:           cap.weight,
+        is_inferred:      cap.is_inferred,
+      }))
+    )
+    .select()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Load saved capabilities for a role from Supabase
+export async function getSavedCapabilities(roleId) {
+  const { data, error } = await supabase
+    .from('capabilities')
+    .select('*')
+    .eq('role_id', roleId)
+    .order('created_at', { ascending: true })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Assignments
+// Stores the employee chosen for a role after Frame 3.
+
+// Save or update the employee assigned to a role
+export async function saveAssignment(roleId, projectId, employee) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .upsert({
+      role_id:       roleId,
+      project_id:    projectId,
+      employee_id:   employee.employee_id,
+      employee_name: employee.name,
+      match_score:   employee.match_score,
+    }, { onConflict: 'role_id' })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Load the assignment for a role
+export async function getAssignment(roleId) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*')
+    .eq('role_id', roleId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Load all assignments for a project
+export async function getProjectAssignments(projectId) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*')
+    .eq('project_id', projectId)
+  if (error) throw new Error(error.message)
+  return data
 }

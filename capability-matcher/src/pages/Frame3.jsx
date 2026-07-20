@@ -1,24 +1,7 @@
 // Frame3.jsx — Candidate selection screen (Step 3 of 4). Hands-on mode only.
-//
-// What it does:
-//   1. On mount, calls getCandidates(roleId) → GET /roles/{roleId}/candidates
-//      The backend ranks all 30 employees by semantic fit to the role's
-//      current capability list (weighted cosine similarity).
-//   2. Displays employees as cards ranked by match_score (highest first).
-//   3. Two filter toggles:
-//      - Available only   → ?available_only=true   (removes unavailable employees)
-//      - Prior experience → ?require_prior_experience=true (only employees who
-//        have held this role title before — exactly 3 per role in demo data)
-//   4. User clicks a candidate card to select them, then clicks Submit to
-//      call onNext(empId) which stores the empId in App.jsx and goes to Frame 4.
-//
-// Props:
-//   roleId       — e.g. "ROLE001"
-//   onBack()     — navigate back to Frame 2
-//   onNext(empId)— navigate to Frame 4 with the selected employee id
 
 import { useEffect, useState } from 'react'
-import { getCandidates } from '../api/api'
+import { getCandidates, saveAssignment } from '../api/api'
 
 // Generates initials from a full name e.g. "Jane Smith" → "JS"
 function getInitials(name) {
@@ -49,7 +32,7 @@ function scoreColor(score) {
   return { bg: '#2a1e0a', color: '#d4922a' }                    // moderate
 }
 
-export default function Frame3({ roleId, onBack, onNext }) {
+export default function Frame3({ roleId, projectId, onBack, onNext }) {
   // candidates   — full list returned from the backend (sorted by match_score)
   // loading      — true while fetching
   // error        — error message if fetch fails
@@ -256,7 +239,15 @@ export default function Frame3({ roleId, onBack, onNext }) {
         <button
           className="btn-primary"
           disabled={!selectedId}
-          onClick={() => onNext(selectedId)}
+          onClick={async () => {
+            const selected = candidates.find(c => c.employee_id === selectedId)
+            try {
+              await saveAssignment(roleId, projectId, selected)
+            } catch (e) {
+              console.error('Failed to save assignment:', e)
+            }
+            onNext(selectedId)
+          }}
           style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
           View gap analysis →

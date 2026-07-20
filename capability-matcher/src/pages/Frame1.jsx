@@ -1,7 +1,7 @@
 // Frame1.jsx — Project overview screen (Step 1 of 4).
 
 import { useEffect, useState } from 'react'
-import { getRoles, createRole, updateRole, deleteRole } from '../api/api'
+import { getRoles, createRole, updateRole, deleteRole, getSavedCapabilities, getAssignment, getProjectAssignments  } from '../api/api'
 
 const ROLE_COLORS = [
   { bg: '#1e2a14', color: '#86BC25', initials: 'SA' },
@@ -37,16 +37,41 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
   const [dragId, setDragId]       = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
 
-  // ── Load roles from Supabase ──────────────────────────────────────────
+  const [assignments, setAssignments]   = useState({}) // roleId -> assignment
+  const [savedCaps, setSavedCaps]       = useState({})  // roleId -> caps array
+
+  // Load assignments for this project
   useEffect(() => {
     if (!initialProject?.id) return
-    getRoles(initialProject.id)
-      .then(setRoles)
-      .catch(() => setError('Could not load roles.'))
-      .finally(() => setRolesLoading(false))
+    getProjectAssignments(initialProject.id)
+      .then(data => {
+        const map = {}
+        data.forEach(a => { map[a.role_id] = a })
+        setAssignments(map)
+      })
+      .catch(console.error)
   }, [initialProject?.id])
 
-  // ── Add role ──────────────────────────────────────────────────────────
+  // Load roles from Supabase
+  useEffect(() => {
+    if (!initialProject?.id) return
+    console.log('Loading roles for project:', initialProject.id)
+    getRoles(initialProject.id)
+      .then(data => {
+        console.log('Roles loaded:', data)
+        setRoles(data)
+      })
+      .catch(e => {
+        console.error('Roles error:', e)
+        setError('Could not load roles.')
+      })
+      .finally(() => {
+        console.log('Roles loading done')
+        setRolesLoading(false)
+      })
+  }, [initialProject?.id])
+
+  //Add role
   async function handleAddRole() {
     if (!newTitle.trim()) { setFormError('Role title is required.'); return }
     if (!newDesc.trim())  { setFormError('Role description is required.'); return }
@@ -95,7 +120,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
     }
   }
 
-  // ── Duplicate role ────────────────────────────────────────────────────
+  // Duplicate role
   async function handleDuplicateRole(role) {
     try {
       const duplicate = await createRole(initialProject.id, {
@@ -109,7 +134,20 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
     }
   }
 
-  // ── Drag and drop reordering ──────────────────────────────────────────
+  //Expand role details
+  async function handleExpand(roleId) {
+    setExpanded(prev => prev === roleId ? null : roleId)
+    if (!savedCaps[roleId]) {
+      try {
+        const caps = await getSavedCapabilities(roleId)
+        setSavedCaps(prev => ({ ...prev, [roleId]: caps }))
+      } catch (e) {
+        console.error('Failed to load caps for role', roleId)
+      }
+    }
+  }
+
+  // Drag and drop reordering
   function handleDragStart(roleId) { setDragId(roleId) }
 
   function handleDragOver(e, roleId) {
@@ -202,7 +240,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
             >
               {/* Role row */}
               <div
-                onClick={() => setExpanded(isExpanded ? null : role.id)}
+                onClick={() => handleExpand(role.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '12px 0', cursor: 'pointer',
@@ -343,20 +381,98 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
 
                     // Normal view
                     <>
-                      <p style={{
-                        fontSize: 12, color: '#999999', lineHeight: 1.8,
-                        borderLeft: '2px solid #2a2a2a',
-                        paddingLeft: 12, marginBottom: 14, textAlign: 'left',
-                      }}>
-                        {role.description}
-                      </p>
-                      <button
-                        className="btn-primary"
-                        onClick={(e) => { e.stopPropagation(); onSelectRole(role) }}
-                        style={{ fontSize: 11, padding: '7px 16px' }}
-                      >
-                        Start matching this role →
-                      </button>
+                      {/* Capabilities preview */}
+                      {savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
+                        <div style={{ marginBottom: 12 }}>
+                          <div style={{
+                            fontSize: 10, fontWeight: 600, color: '#888888',
+                            textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+                          }}>
+                            Required capabilities ({savedCaps[role.id].length})
+                          </div>
+                          {savedCaps[role.id].slice(0, 3).map(cap => (
+                            <div key={cap.cap_id} style={{
+                              display: 'flex', alignItems: 'center', gap: 8,
+                              fontSize: 12, color: '#aaaaaa', padding: '3px 0',
+                            }}>
+                              <span style={{ color: '#86BC25', fontSize: 10 }}>›</span>
+                              {cap.name}
+                              <span style={{
+                                fontSize: 10, background: '#1e2a14', color: '#86BC25',
+                                borderRadius: 3, padding: '1px 6px', marginLeft: 'auto',
+                              }}>{cap.weight}</span>
+                            </div>
+                          ))}
+                          {savedCaps[role.id].length > 3 && (
+                            <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>
+                              +{savedCaps[role.id].length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{
+                          fontSize: 12, color: '#999999', lineHeight: 1.8,
+                          borderLeft: '2px solid #2a2a2a',
+                          paddingLeft: 12, marginBottom: 14, textAlign: 'left',
+                        }}>
+                          {role.description}
+                        </p>
+                      )}
+
+                      {/* Assigned employee */}
+                      {assignments[role.id] && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          background: '#1e2a14', border: '1px solid #2a3a18',
+                          borderRadius: 7, padding: '8px 12px', marginBottom: 12,
+                        }}>
+                          <span style={{ fontSize: 11, color: '#86BC25', fontWeight: 600 }}>
+                            {assignments[role.id].employee_name}
+                          </span>
+                          <span style={{ fontSize: 10, color: '#5a8a00', marginLeft: 'auto' }}>
+                            {Math.round(assignments[role.id].match_score * 100)}% match
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Action button — changes based on progress */}
+                      {assignments[role.id] ? (
+                        // Employee already assigned — show view analysis + option to redo
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className="btn-primary"
+                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, true) }}
+                            style={{ fontSize: 11, padding: '7px 16px' }}
+                          >
+                            View analysis →
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                            style={{ fontSize: 11, padding: '7px 16px' }}
+                          >
+                            Redo matching
+                          </button>
+                        </div>
+                      ) : savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
+                        // Capabilities saved but no employee yet
+                        <button
+                          className="btn-primary"
+                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                          style={{ fontSize: 11, padding: '7px 16px' }}
+                        >
+                          Continue matching →
+                        </button>
+                      ) : (
+                        // Nothing done yet
+                        <button
+                          className="btn-primary"
+                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                          style={{ fontSize: 11, padding: '7px 16px' }}
+                        >
+                          Match this role →
+                        </button>
+                      )}
                     </>
                   )}
                 </div>

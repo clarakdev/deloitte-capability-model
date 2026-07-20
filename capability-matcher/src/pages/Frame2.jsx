@@ -9,6 +9,8 @@ import {
   deleteCapability,
   addCapability,
   searchEsco,
+  saveCapabilities,
+  getSavedCapabilities,
 } from '../api/api'
 
 export default function Frame2({ roleId, role, mode, onBack, onNext }) {
@@ -31,23 +33,46 @@ export default function Frame2({ roleId, role, mode, onBack, onNext }) {
   const [saving, setSaving] = useState(null)
 
   // Load capabilities on mount
-  // Runs once when Frame 2 first appears. Triggers AI inference on the backend
-  // if this is the first time this role's capabilities have been requested.
   useEffect(() => {
-    // If we have a full role object from Supabase, use inferCapabilities
-    // which accepts title and description directly.
-    // If we only have a roleId (legacy hardcoded roles), use getCapabilities.
-    const loadCaps = role?.title
-      ? inferCapabilities(roleId, role.title, role.description)
-      : getCapabilities(roleId)
+    async function loadCaps() {
+      try {
+        // Check if capabilities are already saved in Supabase for this role
+        // If so, load them and also sync them to the FastAPI backend memory
+        if (role?.title) {
+          const saved = await getSavedCapabilities(roleId)
+          if (saved && saved.length > 0) {
+            // Load saved caps into FastAPI memory so weights/edits work
+            await inferCapabilities(roleId, role.title, role.description)
+            // Use the saved caps for display
+            setCaps(saved.map(c => ({
+              cap_id:           c.cap_id,
+              name:             c.name,
+              esco_description: c.esco_description,
+              weight:           c.weight,
+              is_inferred:      c.is_inferred,
+            })))
+            setLoading(false)
+            return
+          }
+        }
 
-    loadCaps
-      .then(setCaps)
-      .catch(() => setError('Could not load capabilities. Is the backend running?'))
-      .finally(() => setLoading(false))
+        // No saved caps — infer from AI or load from backend
+        const loadFn = role?.title
+          ? inferCapabilities(roleId, role.title, role.description)
+          : getCapabilities(roleId)
+
+        const data = await loadFn
+        setCaps(data)
+      } catch (e) {
+        setError('Could not load capabilities. Is the backend running?')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCaps()
   }, [roleId])
 
-  // ── Weight change ───────────────────────────────────────────────────────
+  // Weight change
   // Called when the user moves a weight slider.
   // Sends PUT /roles/{roleId}/capabilities/{capId} with the new weight.
   // Updates the local caps list immediately so the UI feels instant.
@@ -280,7 +305,18 @@ export default function Frame2({ roleId, role, mode, onBack, onNext }) {
       {/* ── Navigation ── */}
       <div className="actions">
         <button className="btn-secondary" onClick={onBack}>← Back</button>
-        <button className="btn-primary" onClick={() => onNext(roleId)}>
+        <button
+          className="btn-primary"
+          onClick={async () => {
+            // Save current capability list to Supabase before moving on
+            try {
+              await saveCapabilities(roleId, caps)
+            } catch (e) {
+              console.error('Failed to save capabilities:', e)
+            }
+            onNext(roleId)
+          }}
+        >
           {mode === 'auto' ? 'Run auto-match →' : 'Browse candidates →'}
         </button>
       </div>

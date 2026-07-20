@@ -1,24 +1,4 @@
 // Frame4.jsx — Gap analysis screen (Step 4 of 4).
-//
-// What it does:
-//   1. On mount, calls getCandidateFit(roleId, empId)
-//      → GET /roles/{roleId}/candidates/{empId}/fit
-//      The backend compares each required capability against the employee's
-//      skills using cosine similarity and flags gaps (similarity < 0.6).
-//   2. Shows a summary stat row: overall score, gaps count, strong matches.
-//   3. Shows one row per capability with:
-//      - cap_name: the required ESCO skill
-//      - weight: how important it is (1–5)
-//      - best_match_skill: the employee's closest matching skill
-//      - similarity: score 0–1 shown as a bar
-//      - is_gap: red row if true (similarity < 0.6), green if covered
-//   4. Export button is a placeholder for now (Sprint 2).
-//
-// Props:
-//   roleId  — e.g. "ROLE001"
-//   empId   — e.g. "EMP007", selected in Frame 3 (null in Auto mode)
-//   mode    — "auto" | "hands"
-//   onBack()— navigate back to Frame 2 (auto) or Frame 3 (hands)
 
 import { useEffect, useState } from 'react'
 import { getCandidateFit, getCandidates } from '../api/api'
@@ -45,7 +25,7 @@ function WeightDots({ weight }) {
   )
 }
 
-export default function Frame4({ roleId, empId, mode, onBack }) {
+export default function Frame4({ roleId, empId, mode, onBack, onBackToRoles }) {
   // fitData  — array of per-capability fit items from the backend
   // employee — basic employee info (fetched from candidates list)
   // loading  — true while fetching
@@ -286,6 +266,12 @@ export default function Frame4({ roleId, empId, mode, onBack }) {
       {/* ── Navigation ── */}
       <div className="actions">
         <button className="btn-secondary" onClick={onBack}>← Back</button>
+        <button
+          className="btn-primary"
+          onClick={onBackToRoles}
+        >
+          Next role →
+        </button>
         <button
           className="btn-primary"
           onClick={() => alert('Export feature not ready yet for now...')}
