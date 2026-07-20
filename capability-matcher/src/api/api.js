@@ -98,3 +98,101 @@ export function getCandidates(roleId, availableOnly = false, requirePriorExp = f
 export function getCandidateFit(roleId, empId) {
   return request(`/roles/${roleId}/candidates/${empId}/fit`);
 }
+
+// Frame 0 — Project management
+// These functions talk to Supabase via the React app directly.
+// Once the backend team builds FastAPI endpoints for projects,
+// these will be replaced with request() calls to the backend instead.
+
+import { supabase } from '../supabase'
+
+// Temporary user id — replace with real user id from login session later
+const CURRENT_USER_ID = 'dev-user-001'
+
+// Fetch all projects belonging to the current user
+export async function getProjects() {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*, roles(*)')
+    .eq('created_by', CURRENT_USER_ID)
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Create a new project
+export async function createProject({ name, client, description, duration, start_date }) {
+  const { data, error } = await supabase
+    .from('projects')
+    .insert([{ name, client, description, duration, start_date, created_by: CURRENT_USER_ID }])
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Update an existing project
+export async function updateProject(id, updates) {
+  const { data, error } = await supabase
+    .from('projects')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Delete a project — roles are deleted automatically
+export async function deleteProject(id) {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// Roles
+
+// Fetch all roles for a project
+export async function getRoles(projectId) {
+  const { data, error } = await supabase
+    .from('roles')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order', { ascending: true })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Create a new role under a project
+export async function createRole(projectId, { title, description }) {
+  const { data, error } = await supabase
+    .from('roles')
+    .insert([{ project_id: projectId, title, description, order: Date.now() }])
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Update a role title or description
+export async function updateRole(id, updates) {
+  const { data, error } = await supabase
+    .from('roles')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Delete a role
+export async function deleteRole(id) {
+  const { error } = await supabase
+    .from('roles')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}

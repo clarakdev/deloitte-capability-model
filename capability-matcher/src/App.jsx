@@ -6,6 +6,7 @@
 //   mode    — "auto" skips Frame 3 (AI picks candidates), "hands" includes it
 
 import { useState } from 'react'
+import Frame0 from './pages/Frame0'
 import Frame1 from './pages/Frame1'
 import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
@@ -14,6 +15,7 @@ import './App.css'
 
 // The four steps shown in the progress bar at the top
 const STEPS = [
+  { num: 0, label: 'Projects' },
   { num: 1, label: 'Project setup' },
   { num: 2, label: 'Skill requirements' },
   { num: 3, label: 'Select team' },
@@ -21,10 +23,11 @@ const STEPS = [
 ]
 
 export default function App() {
-  const [frame, setFrame]   = useState(1)
+  const [frame, setFrame]   = useState(0)
   const [roleId, setRoleId] = useState(null)
   const [empId, setEmpId]   = useState(null)
   const [mode, setMode]     = useState('hands') // 'auto' | 'hands'
+  const [selectedProject, setSelectedProject] = useState(null)
 
   function goTo(f) { setFrame(f) }
 
@@ -78,7 +81,15 @@ export default function App() {
           onSelectRole — called by Frame 1 when user clicks a role card
           onBack/onNext — navigation between frames
           In Auto mode, Frame 2's Next button jumps straight to Frame 4 (skips Frame 3) */}
-      
+      {frame === 0 && (
+        <Frame0
+          onSelectProject={(project) => {
+            setSelectedProject(project)
+            goTo(1)
+          }}
+        />
+      )}
+
       {frame === 1 && (
         <Frame1
           onSelectRole={(id) => { setRoleId(id); goTo(2) }}
