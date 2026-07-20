@@ -390,7 +390,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
                           }}>
                             Required capabilities ({savedCaps[role.id].length})
                           </div>
-                          {savedCaps[role.id].slice(0, 3).map(cap => (
+                          {savedCaps[role.id].map(cap => (
                             <div key={cap.cap_id} style={{
                               display: 'flex', alignItems: 'center', gap: 8,
                               fontSize: 12, color: '#aaaaaa', padding: '3px 0',
@@ -403,11 +403,6 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
                               }}>{cap.weight}</span>
                             </div>
                           ))}
-                          {savedCaps[role.id].length > 3 && (
-                            <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>
-                              +{savedCaps[role.id].length - 3} more
-                            </div>
-                          )}
                         </div>
                       ) : (
                         <p style={{
