@@ -178,7 +178,7 @@ export default function Frame0({ onSelectProject }) {
                   )}
                   {project.description && (
                     <p style={{ fontSize: 12, color: '#777777', lineHeight: 1.6, marginBottom: 8 }}>
-                      {project.description.slice(0, 120)}{project.description.length > 120 ? '…' : ''}
+                      {project.description}
                     </p>
                   )}
                   <div style={{ display: 'flex', gap: 8 }}>

@@ -1,16 +1,4 @@
 // Frame1.jsx — Project overview screen (Step 1 of 4).
-//
-// What it does:
-//   1. On mount, calls getProject() which hits GET /project on the backend
-//   2. Displays the project name, description, and a clickable card per role
-//   3. US105 — Add role: user can add a new role via a form panel.
-//      New roles are stored in local React state only (no backend yet).
-//      When the backend is ready, addRole() in api.js will replace setLocalRoles().
-//   4. When a role card is clicked, calls onSelectRole(roleId) which tells
-//      App.jsx to store that roleId and navigate to Frame 2
-//
-// Props:
-//   onSelectRole(roleId) — called when user clicks a role, e.g. "ROLE001"
 
 import { useEffect, useState } from 'react'
 import { getProject } from '../api/api'
@@ -35,7 +23,7 @@ function getInitials(title) {
     .toUpperCase()
 }
 
-export default function Frame1({ onSelectRole }) {
+export default function Frame1({ onSelectRole, onBack }) {
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
@@ -176,8 +164,19 @@ export default function Frame1({ onSelectRole }) {
 
   return (
     <div className="page">
+      
+      <button
+        className="btn-secondary"
+        onClick={onBack}
+        style={{ marginBottom: 16, fontSize: 11, padding: '5px 14px' }}
+      >
+        Back to projects
+      </button>
+      
       <div className="page-title">{project.name}</div>
       <div className="page-sub">Select a role to begin capability matching</div>
+
+      
 
       {/* Project description card */}
       <div className="card">

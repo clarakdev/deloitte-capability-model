@@ -92,7 +92,9 @@ export default function App() {
 
       {frame === 1 && (
         <Frame1
+          project={selectedProject}
           onSelectRole={(id) => { setRoleId(id); goTo(2) }}
+          onBack={() => goTo(0)}
         />
       )}
       {frame === 2 && (
