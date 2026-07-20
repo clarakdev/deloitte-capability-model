@@ -1,9 +1,8 @@
 // Frame1.jsx — Project overview screen (Step 1 of 4).
 
 import { useEffect, useState } from 'react'
-import { getProject } from '../api/api'
+import { getRoles, createRole, updateRole, deleteRole } from '../api/api'
 
-// Visual colour coding for each role card avatar
 const ROLE_COLORS = [
   { bg: '#1e2a14', color: '#86BC25', initials: 'SA' },
   { bg: '#0d1f33', color: '#5b9bd5', initials: 'DE' },
@@ -13,158 +12,142 @@ const ROLE_COLORS = [
   { bg: '#082020', color: '#1D9E75', initials: 'NR' },
 ]
 
-// Generates initials from a role title e.g. "Cloud Architect" → "CA"
 function getInitials(title) {
-  return title
-    .split(' ')
-    .map(w => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  return title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
-export default function Frame1({ onSelectRole, onBack }) {
-  const [project, setProject] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
-  const [expanded, setExpanded]     = useState(null)
-  const [localRoles, setLocalRoles] = useState([])
+export default function Frame1({ project: initialProject, onSelectRole, onBack }) {
+  const [project]                       = useState(initialProject)
+  const [roles, setRoles]               = useState([])
+  const [rolesLoading, setRolesLoading] = useState(true)
+  const [error, setError]               = useState(null)
+  const [expanded, setExpanded]         = useState(null)
+
+  // Add form
   const [showAddForm, setShowAddForm] = useState(false)
   const [newTitle, setNewTitle]       = useState('')
   const [newDesc, setNewDesc]         = useState('')
   const [formError, setFormError]     = useState('')
-  const [editingRole, setEditingRole]   = useState(null)  // id of role being edited
-  const [editFields, setEditFields]     = useState({ title: '', description: '' })
-  const [dragOverId, setDragOverId] = useState(null)  // role being dragged over
-  const [dragId, setDragId]         = useState(null)   // role being dragged
-  
+
+  // Edit
+  const [editingRole, setEditingRole] = useState(null)
+  const [editFields, setEditFields]   = useState({ title: '', description: '' })
+
+  // Drag and drop
+  const [dragId, setDragId]       = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+
+  // ── Load roles from Supabase ──────────────────────────────────────────
   useEffect(() => {
-    getProject()
-      .then(setProject)
-      .catch(() => setError('Could not load project. Is the backend running?'))
-      .finally(() => setLoading(false))
-  }, [])
+    if (!initialProject?.id) return
+    getRoles(initialProject.id)
+      .then(setRoles)
+      .catch(() => setError('Could not load roles.'))
+      .finally(() => setRolesLoading(false))
+  }, [initialProject?.id])
 
-  // Validates the form, creates a new role object, and adds it to localRoles.
-  // The role id is generated locally as a temporary identifier (LOCAL_xxx).
-  // When the backend endpoint is ready, this function will be replaced with
-  // a call to addRole() from api.js which will persist it server-side.
-  function handleAddRole() {
-    if (!newTitle.trim()) {
-      setFormError('Role title is required.')
-      return
+  // ── Add role ──────────────────────────────────────────────────────────
+  async function handleAddRole() {
+    if (!newTitle.trim()) { setFormError('Role title is required.'); return }
+    if (!newDesc.trim())  { setFormError('Role description is required.'); return }
+    try {
+      const newRole = await createRole(initialProject.id, {
+        title:       newTitle.trim(),
+        description: newDesc.trim(),
+        sort_order:  roles.length,
+      })
+      setRoles(prev => [...prev, newRole])
+      setNewTitle('')
+      setNewDesc('')
+      setFormError('')
+      setShowAddForm(false)
+    } catch (e) {
+      setFormError('Failed to save role. Try again.')
     }
-    if (!newDesc.trim()) {
-    setFormError('Role description is required.')
-    return
-    }
-    const newRole = {
-      id:          `LOCAL_${Date.now()}`,
-      title:       newTitle.trim(),
-      description: newDesc.trim(),
-      isLocal:     true,
-    }
-    setLocalRoles(prev => [...prev, newRole])
-    setNewTitle('')
-    setNewDesc('')
-    setFormError('')
-    setShowAddForm(false)
   }
 
-  // Only locally added roles can be removed for now.
-  // Backend roles are managed server-side.
-  function handleRemoveLocalRole(roleId) {
-    setLocalRoles(prev => prev.filter(r => r.id !== roleId))
+  // Edit role
+  async function handleSaveEdit() {
+    if (!editFields.title.trim())       { setFormError('Role title is required.'); return }
+    if (!editFields.description.trim()) { setFormError('Role description is required.'); return }
+    try {
+      const updated = await updateRole(editingRole, {
+        title:       editFields.title.trim(),
+        description: editFields.description.trim(),
+      })
+      setRoles(prev => prev.map(r => r.id === editingRole ? { ...r, ...updated } : r))
+      setEditingRole(null)
+      setEditFields({ title: '', description: '' })
+      setFormError('')
+    } catch (e) {
+      setFormError('Failed to update role. Try again.')
+    }
   }
 
-  // Saves the edited title and description back into localRoles.
-  // When the backend is ready, this will call updateRole() from api.js instead.
-  function handleSaveEdit() {
-    if (!editFields.title.trim()) {
-      setFormError('Role title is required.')
-      return
+  // Remove role
+  async function handleRemoveRole(roleId) {
+    if (!window.confirm('Remove this role? This cannot be undone.')) return
+    try {
+      await deleteRole(roleId)
+      setRoles(prev => prev.filter(r => r.id !== roleId))
+    } catch (e) {
+      alert('Failed to delete role. Try again.')
     }
-    if (!editFields.description.trim()) {
-      setFormError('Role description is required.')
-      return
-    }
-    setLocalRoles(prev => prev.map(r =>
-      r.id === editingRole
-        ? { ...r, title: editFields.title.trim(), description: editFields.description.trim() }
-        : r
-    ))
-    setEditingRole(null)
-    setEditFields({ title: '', description: '' })
-    setFormError('')
   }
 
-  // Creates a copy of an existing local role with "(copy)" appended to the title.
-  // The duplicate does not inherit any capabilities — those are generated fresh.
-  // When the backend is ready, this will call duplicateRole() from api.js instead.
-  function handleDuplicateRole(role) {
-    const duplicate = {
-      id:          `LOCAL_${Date.now()}`,
-      title:       `${role.title} (copy)`,
-      description: role.description,
-      isLocal:     true,
+  // ── Duplicate role ────────────────────────────────────────────────────
+  async function handleDuplicateRole(role) {
+    try {
+      const duplicate = await createRole(initialProject.id, {
+        title:       `${role.title} (copy)`,
+        description: role.description,
+        sort_order:  roles.length,
+      })
+      setRoles(prev => [...prev, duplicate])
+    } catch (e) {
+      alert('Failed to duplicate role. Try again.')
     }
-    setLocalRoles(prev => [...prev, duplicate])
   }
 
-  // Drag and drop reordering
-  // Only local roles can be reordered for now.
-  // When the backend is ready, this will call reorderRoles() from api.js.
-  // We reorder the full allRoles list but only move local roles backend roles stay fixed at the top.
-  function handleDragStart(roleId) {
-    setDragId(roleId)
-  }
+  // ── Drag and drop reordering ──────────────────────────────────────────
+  function handleDragStart(roleId) { setDragId(roleId) }
 
   function handleDragOver(e, roleId) {
-    e.preventDefault() // required to allow drop
+    e.preventDefault()
     setDragOverId(roleId)
   }
 
-  function handleDrop(targetId) {
-    if (!dragId || dragId === targetId) {
-      setDragId(null)
-      setDragOverId(null)
-      return
-    }
+  async function handleDrop(targetId) {
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
+    const from = roles.findIndex(r => r.id === dragId)
+    const to   = roles.findIndex(r => r.id === targetId)
+    if (from === -1 || to === -1) { setDragId(null); setDragOverId(null); return }
 
-    // Only reorder within localRoles
-    const from = localRoles.findIndex(r => r.id === dragId)
-    const to   = localRoles.findIndex(r => r.id === targetId)
-
-    if (from === -1 || to === -1) {
-      // Can't drag backend roles or drag onto backend roles
-      setDragId(null)
-      setDragOverId(null)
-      return
-    }
-
-    const reordered = [...localRoles]
-    const [moved]   = reordered.splice(from, 1)
+    const reordered = [...roles]
+    const [moved] = reordered.splice(from, 1)
     reordered.splice(to, 0, moved)
 
-    setLocalRoles(reordered)
+    setRoles(reordered)
     setDragId(null)
     setDragOverId(null)
+
+    // Persist new order to Supabase
+    // Each role gets an order value based on its new position
+    try {
+      await Promise.all(
+        reordered.map((role, index) => updateRole(role.id, { sort_order: index }))
+      )
+    } catch (e) {
+      alert('Failed to save new order. Try again.')
+    }
   }
 
-  function handleDragEnd() {
-    setDragId(null)
-    setDragOverId(null)
-  }
+  function handleDragEnd() { setDragId(null); setDragOverId(null) }
 
-  if (loading) return <div className="loading">Loading project...</div>
-  if (error)   return <div className="error">{error}</div>
-
-  // Merge backend roles and locally added roles into one list for display
-  const allRoles = [...project.roles, ...localRoles]
+  if (error) return <div className="error">{error}</div>
 
   return (
     <div className="page">
-      
       <button
         className="btn-secondary"
         onClick={onBack}
@@ -172,13 +155,11 @@ export default function Frame1({ onSelectRole, onBack }) {
       >
         Back to projects
       </button>
-      
+
       <div className="page-title">{project.name}</div>
       <div className="page-sub">Select a role to begin capability matching</div>
 
-      
-
-      {/* Project description card */}
+      {/* Project description */}
       <div className="card">
         <div className="card-head">
           <span className="card-title">Project overview</span>
@@ -192,46 +173,46 @@ export default function Frame1({ onSelectRole, onBack }) {
       <div className="card">
         <div className="card-head">
           <span className="card-title">Roles required</span>
-          <span className="badge badge-green">{allRoles.length} roles</span>
+          <span className="badge badge-green">{roles.length} roles</span>
         </div>
 
-        {allRoles.map((role, i) => {
+        {rolesLoading ? (
+          <div style={{ fontSize: 12, color: '#555', padding: '12px 0' }}>Loading roles...</div>
+        ) : roles.length === 0 ? (
+          <div style={{ fontSize: 12, color: '#555', padding: '12px 0' }}>No roles yet. Add one below.</div>
+        ) : roles.map((role, i) => {
           const c = ROLE_COLORS[i % ROLE_COLORS.length]
-          const initials = role.isLocal ? getInitials(role.title) : c.initials
           const isExpanded = expanded === role.id
 
           return (
             <div
               key={role.id}
-              draggable={role.isLocal}
+              draggable={true}
               onDragStart={() => handleDragStart(role.id)}
               onDragOver={(e) => handleDragOver(e, role.id)}
               onDrop={() => handleDrop(role.id)}
               onDragEnd={handleDragEnd}
               style={{
-                borderBottom: i < allRoles.length - 1 ? '1px solid #1f1f1f' : 'none',
+                borderBottom: i < roles.length - 1 ? '1px solid #1f1f1f' : 'none',
                 opacity: dragId === role.id ? 0.4 : 1,
                 borderTop: dragOverId === role.id && dragId !== role.id
-                  ? '2px solid #86BC25'
-                  : '2px solid transparent',
+                  ? '2px solid #86BC25' : '2px solid transparent',
                 transition: 'opacity 0.15s',
               }}
             >
-              {/* Role row — click to expand */}
+              {/* Role row */}
               <div
                 onClick={() => setExpanded(isExpanded ? null : role.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
+                  display: 'flex', alignItems: 'center', gap: 10,
                   padding: '12px 0', cursor: 'pointer',
                 }}
               >
-                {/* Drag handle — only shown for local roles */}
-                {role.isLocal && (
-                  <span style={{
-                    color: '#333', fontSize: 14, cursor: 'grab',
-                    flexShrink: 0, userSelect: 'none', paddingRight: 2,
-                  }}>⠿</span>
-                )}
+                {/* Drag handle */}
+                <span style={{
+                  color: '#333', fontSize: 14, cursor: 'grab',
+                  flexShrink: 0, userSelect: 'none',
+                }}>⠿</span>
 
                 {/* Avatar */}
                 <div style={{
@@ -239,72 +220,50 @@ export default function Frame1({ onSelectRole, onBack }) {
                   background: c.bg, color: c.color,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 700, flexShrink: 0,
-                }}>{initials}</div>
+                }}>{getInitials(role.title)}</div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 600, color: '#eeeeee',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                  }}>
-                    {role.title}
-                  </div>
+                {/* Title */}
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#eeeeee' }}>
+                  {role.title}
                 </div>
 
-                {/* Edit button — only for locally added roles */}
-                {role.isLocal && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditingRole(role.id)
-                      setEditFields({ title: role.title, description: role.description })
-                      setExpanded(role.id)  // auto-expand so the form appears in context
-                    }}
-                    style={{
-                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                      color: '#888888', fontSize: 11, padding: '3px 10px',
-                      fontFamily: 'inherit', borderRadius: 5,
-                    }}
-                    title="Edit role"
-                  >Edit</button>
-                )}
+                {/* Action buttons */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditingRole(role.id)
+                    setEditFields({ title: role.title, description: role.description })
+                    setExpanded(role.id)
+                  }}
+                  style={{
+                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                    color: '#888888', fontSize: 11, padding: '3px 10px',
+                    fontFamily: 'inherit', borderRadius: 5,
+                  }}
+                >Edit</button>
 
-                {/* Duplicate button — only for locally added roles */}
-                {role.isLocal && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDuplicateRole(role)
-                    }}
-                    style={{
-                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                      color: '#888888', fontSize: 11, padding: '3px 10px',
-                      fontFamily: 'inherit', borderRadius: 5,
-                    }}
-                    title="Duplicate role"
-                  >Duplicate</button>
-                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDuplicateRole(role) }}
+                  style={{
+                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                    color: '#888888', fontSize: 11, padding: '3px 10px',
+                    fontFamily: 'inherit', borderRadius: 5,
+                  }}
+                >Duplicate</button>
 
-                {/* Remove button — only for locally added roles */}
-                {role.isLocal && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRemoveLocalRole(role.id)
-                    }}
-                    style={{
-                      background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                      color: '#888888', fontSize: 11, padding: '3px 10px',
-                      fontFamily: 'inherit', borderRadius: 5,
-                    }}
-                    title="Remove role"
-                  >Remove</button>
-                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemoveRole(role.id) }}
+                  style={{
+                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
+                    color: '#888888', fontSize: 11, padding: '3px 10px',
+                    fontFamily: 'inherit', borderRadius: 5,
+                  }}
+                >Remove</button>
 
-                {/* Expand chevron */}
+                {/* Chevron */}
                 <span style={{
-                  color: '#555', fontSize: 14,
-                  transition: 'transform 0.2s',
-                  display: 'inline-block',
+                  color: '#444', fontSize: 12, display: 'inline-block',
+                  transition: 'transform 0.2s', marginLeft: 4,
                   transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                 }}>›</span>
               </div>
@@ -314,7 +273,7 @@ export default function Frame1({ onSelectRole, onBack }) {
                 <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
                   {editingRole === role.id ? (
 
-                    // Edit form 
+                    // Edit form
                     <div style={{
                       padding: 16, background: '#141414',
                       border: '1px solid #2a2a2a', borderRadius: 8,
@@ -322,7 +281,6 @@ export default function Frame1({ onSelectRole, onBack }) {
                       <div style={{ fontSize: 12, fontWeight: 600, color: '#e0e0e0', marginBottom: 12 }}>
                         Edit role
                       </div>
-
                       <div style={{ marginBottom: 10 }}>
                         <label style={{
                           fontSize: 10, fontWeight: 600, color: '#888888',
@@ -342,7 +300,6 @@ export default function Frame1({ onSelectRole, onBack }) {
                           }}
                         />
                       </div>
-
                       <div style={{ marginBottom: 14 }}>
                         <label style={{
                           fontSize: 10, fontWeight: 600, color: '#888888',
@@ -367,7 +324,6 @@ export default function Frame1({ onSelectRole, onBack }) {
                           </div>
                         )}
                       </div>
-
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button className="btn-primary" onClick={handleSaveEdit}>
                           Save changes
@@ -379,29 +335,24 @@ export default function Frame1({ onSelectRole, onBack }) {
                             setEditFields({ title: '', description: '' })
                             setFormError('')
                           }}
-                        >
-                          Cancel
-                        </button>
+                        >Cancel</button>
                       </div>
                     </div>
 
                   ) : (
 
-                    // Normal expanded view
+                    // Normal view
                     <>
                       <p style={{
                         fontSize: 12, color: '#999999', lineHeight: 1.8,
                         borderLeft: '2px solid #2a2a2a',
-                        paddingLeft: 12, marginBottom: 14,
+                        paddingLeft: 12, marginBottom: 14, textAlign: 'left',
                       }}>
                         {role.description}
                       </p>
                       <button
                         className="btn-primary"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onSelectRole(role.id)
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onSelectRole(role.id) }}
                         style={{ fontSize: 11, padding: '7px 16px' }}
                       >
                         Start matching this role →
@@ -414,18 +365,15 @@ export default function Frame1({ onSelectRole, onBack }) {
           )
         })}
 
-        {/* Add role form — shown when showAddForm is true */}
+        {/* Add role form */}
         {showAddForm && (
           <div style={{
             marginTop: 16, padding: 16,
-            background: '#141414',
-            border: '1px solid #2a2a2a',
-            borderRadius: 8,
+            background: '#141414', border: '1px solid #2a2a2a', borderRadius: 8,
           }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#e0e0e0', marginBottom: 12 }}>
               New role
             </div>
-
             <div style={{ marginBottom: 10 }}>
               <label style={{
                 fontSize: 10, fontWeight: 600, color: '#888888',
@@ -451,7 +399,6 @@ export default function Frame1({ onSelectRole, onBack }) {
                 </div>
               )}
             </div>
-
             <div style={{ marginBottom: 14 }}>
               <label style={{
                 fontSize: 10, fontWeight: 600, color: '#888888',
@@ -472,7 +419,6 @@ export default function Frame1({ onSelectRole, onBack }) {
                 }}
               />
             </div>
-
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-primary" onClick={handleAddRole}>
                 Add role
@@ -485,22 +431,45 @@ export default function Frame1({ onSelectRole, onBack }) {
                   setNewDesc('')
                   setFormError('')
                 }}
-              >
-                Cancel
-              </button>
+              >Cancel</button>
             </div>
           </div>
         )}
 
-        {/* Add role button — hidden when form is open */}
+        {/* Bottom drop zone — allows dragging to the very end of the list */}
+        {dragId && (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOverId('bottom') }}
+            onDrop={() => {
+              if (!dragId) return
+              const from = roles.findIndex(r => r.id === dragId)
+              if (from === -1) { setDragId(null); setDragOverId(null); return }
+              const reordered = [...roles]
+              const [moved] = reordered.splice(from, 1)
+              reordered.push(moved)
+              setRoles(reordered)
+              setDragId(null)
+              setDragOverId(null)
+              Promise.all(
+                reordered.map((role, index) => updateRole(role.id, { sort_order: index }))
+              ).catch(() => alert('Failed to save new order.'))
+            }}
+            style={{
+              height: 24,
+              borderTop: dragOverId === 'bottom' ? '2px solid #86BC25' : '2px solid transparent',
+              marginTop: 4,
+              transition: 'border-color 0.1s',
+            }}
+          />
+        )}
+        
+        {/* Add role button */}
         {!showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
             style={{
-              marginTop: 14,
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'none',
-              border: '1px dashed #2a2a2a',
+              marginTop: 14, display: 'flex', alignItems: 'center', gap: 6,
+              background: 'none', border: '1px dashed #2a2a2a',
               borderRadius: 6, padding: '7px 14px',
               fontSize: 11, color: '#777777',
               cursor: 'pointer', fontFamily: 'inherit',

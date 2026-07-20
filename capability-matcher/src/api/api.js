@@ -100,9 +100,6 @@ export function getCandidateFit(roleId, empId) {
 }
 
 // Frame 0 — Project management
-// These functions talk to Supabase via the React app directly.
-// Once the backend team builds FastAPI endpoints for projects,
-// these will be replaced with request() calls to the backend instead.
 
 import { supabase } from '../supabase'
 
@@ -160,16 +157,21 @@ export async function getRoles(projectId) {
     .from('roles')
     .select('*')
     .eq('project_id', projectId)
-    .order('order', { ascending: true })
+    .order('sort_order', { ascending: true })
   if (error) throw new Error(error.message)
   return data
 }
 
 // Create a new role under a project
-export async function createRole(projectId, { title, description }) {
+export async function createRole(projectId, { title, description, sort_order = 0 }) {
   const { data, error } = await supabase
     .from('roles')
-    .insert([{ project_id: projectId, title, description, order: Date.now() }])
+    .insert([{ 
+      project_id:  projectId, 
+      title, 
+      description, 
+      sort_order
+    }])
     .select()
     .single()
   if (error) throw new Error(error.message)

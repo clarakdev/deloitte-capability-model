@@ -177,7 +177,7 @@ export default function Frame0({ onSelectProject }) {
                     </div>
                   )}
                   {project.description && (
-                    <p style={{ fontSize: 12, color: '#777777', lineHeight: 1.6, marginBottom: 8 }}>
+                    <p style={{ fontSize: 12, color: '#777777', lineHeight: 1.6, marginBottom: 8, textAlign: 'left'}}>
                       {project.description}
                     </p>
                   )}
