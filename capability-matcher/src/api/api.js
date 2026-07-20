@@ -102,7 +102,7 @@ export function getCandidateFit(roleId, empId) {
 // Frame 0 — Project management
 
 // Temporary user id — replace with real user id from login session later
-const CURRENT_USER_ID = 'dev-user-001'
+const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
 
 // Fetch all projects belonging to the current user
 export async function getProjects() {

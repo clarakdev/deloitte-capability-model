@@ -32,6 +32,8 @@ export default function Frame2({ roleId, role, mode, onBack, onNext }) {
   // saving — tracks which capId is currently being saved (shows a spinner on that row)
   const [saving, setSaving] = useState(null)
 
+  const [weightValues, setWeightValues] = useState({})
+
   // Load capabilities on mount
   useEffect(() => {
     async function loadCaps() {
@@ -216,19 +218,26 @@ export default function Frame2({ roleId, role, mode, onBack, onNext }) {
             {/* Row 3: weight slider
                 The weight (1–5) controls how much this skill influences the
                 candidate ranking. Higher weight = this skill matters more. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)', width: 42 }}>Weight</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              <span style={{ fontSize: 10, color: '#555', width: 42 }}>Weight</span>
+              <span style={{ fontSize: 10, color: '#555' }}>1</span>
               <input
                 type="range"
                 min={1} max={5} step={1}
-                defaultValue={cap.weight}
+                value={weightValues[cap.cap_id] ?? cap.weight}
+                onChange={(e) => setWeightValues(prev => ({ ...prev, [cap.cap_id]: Number(e.target.value) }))}
                 onMouseUp={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
                 onTouchEnd={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
-                style={{ flex: 1, accentColor: '#86BC25', height: 3 }}
+                style={{ flex: 1, accentColor: '#86BC25', height: 4, cursor: 'pointer' }}
               />
-              {/* Show current weight value. While saving, show a small indicator. */}
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#86BC25', minWidth: 14 }}>
-                {saving === cap.cap_id ? '…' : cap.weight}
+              <span style={{ fontSize: 10, color: '#555' }}>5</span>
+              <span style={{
+                background: '#86BC25', color: '#0a0a0a',
+                fontSize: 11, fontWeight: 700,
+                borderRadius: 5, padding: '2px 8px',
+                minWidth: 24, textAlign: 'center',
+              }}>
+                {saving === cap.cap_id ? '…' : (weightValues[cap.cap_id] ?? cap.weight)}
               </span>
             </div>
           </div>

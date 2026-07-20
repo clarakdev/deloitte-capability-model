@@ -205,6 +205,25 @@ body {
   margin-top: 20px;
 }
 
+/* Weights*/
+.weight-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.weight-bubble {
+  position: absolute;
+  top: -22px;
+  transform: translateX(-50%);
+  background: #86BC25;
+  color: #0a0a0a;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 5px;
+  pointer-events: none;
+}
+
 /* States*/
 .loading {
   color: var(--muted2);
