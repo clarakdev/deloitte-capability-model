@@ -352,7 +352,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
                       </p>
                       <button
                         className="btn-primary"
-                        onClick={(e) => { e.stopPropagation(); onSelectRole(role.id) }}
+                        onClick={(e) => { e.stopPropagation(); onSelectRole(role) }}
                         style={{ fontSize: 11, padding: '7px 16px' }}
                       >
                         Start matching this role →
@@ -462,7 +462,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
             }}
           />
         )}
-        
+
         {/* Add role button */}
         {!showAddForm && (
           <button

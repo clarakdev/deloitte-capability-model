@@ -198,3 +198,14 @@ export async function deleteRole(id) {
     .eq('id', id)
   if (error) throw new Error(error.message)
 }
+
+// Infers capabilities for a Supabase role using its title and description.
+// Used instead of getCapabilities() when the role has a UUID not known to the backend.
+// Backend endpoint: POST /roles/{roleId}/capabilities/infer
+export function inferCapabilities(roleId, title, description) {
+  return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, description }),
+  })
+}

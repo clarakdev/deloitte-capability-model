@@ -28,6 +28,7 @@ export default function App() {
   const [empId, setEmpId]   = useState(null)
   const [mode, setMode]     = useState('hands') // 'auto' | 'hands'
   const [selectedProject, setSelectedProject] = useState(null)
+  const [selectedRole, setSelectedRole] = useState(null)
 
   function goTo(f) { setFrame(f) }
 
@@ -93,13 +94,14 @@ export default function App() {
       {frame === 1 && (
         <Frame1
           project={selectedProject}
-          onSelectRole={(id) => { setRoleId(id); goTo(2) }}
+          onSelectRole={(role) => { setSelectedRole(role); setRoleId(role.id); goTo(2) }}
           onBack={() => goTo(0)}
         />
       )}
       {frame === 2 && (
         <Frame2
           roleId={roleId}
+          role={selectedRole}
           mode={mode}
           onBack={() => goTo(1)}
           onNext={(id) => { setRoleId(id); goTo(mode === 'auto' ? 4 : 3) }}

@@ -1,32 +1,17 @@
 // Frame2.jsx — Skill requirements screen (Step 2 of 4).
-//
-// What it does:
-//   1. On mount, calls getCapabilities(roleId) → GET /roles/{id}/capabilities
-//      The backend auto-infers the top 5 ESCO skills using AI on the first call.
-//      Subsequent calls return the current edited list (stored in backend memory).
-//   2. Displays each capability with its name, ESCO description, and a weight
-//      slider (1–5). The user can adjust weights, remove skills, or add new ones.
-//   3. Adding a skill: user types in the search box → searchEsco(q) hits
-//      GET /esco/search?q=... → results appear → user clicks one to add it.
-//   4. In Auto mode, Next jumps straight to Frame 4 (backend picks best candidate).
-//      In Hands-on mode, Next goes to Frame 3 (user picks manually).
-//
-// Props:
-//   roleId        — e.g. "ROLE001", set in Frame 1
-//   mode          — "auto" | "hands" (controls what the Next button says)
-//   onBack()      — navigate back to Frame 1
-//   onNext(id)    — navigate to Frame 3 or 4
+
 
 import { useEffect, useState } from 'react'
 import {
   getCapabilities,
+  inferCapabilities,
   updateCapability,
   deleteCapability,
   addCapability,
   searchEsco,
 } from '../api/api'
 
-export default function Frame2({ roleId, mode, onBack, onNext }) {
+export default function Frame2({ roleId, role, mode, onBack, onNext }) {
   // caps    — the current list of capabilities for this role
   // loading — true while the initial fetch is running
   // error   — error message if the fetch fails
@@ -45,11 +30,18 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
   // saving — tracks which capId is currently being saved (shows a spinner on that row)
   const [saving, setSaving] = useState(null)
 
-  // ── Load capabilities on mount ──────────────────────────────────────────
+  // Load capabilities on mount
   // Runs once when Frame 2 first appears. Triggers AI inference on the backend
   // if this is the first time this role's capabilities have been requested.
   useEffect(() => {
-    getCapabilities(roleId)
+    // If we have a full role object from Supabase, use inferCapabilities
+    // which accepts title and description directly.
+    // If we only have a roleId (legacy hardcoded roles), use getCapabilities.
+    const loadCaps = role?.title
+      ? inferCapabilities(roleId, role.title, role.description)
+      : getCapabilities(roleId)
+
+    loadCaps
       .then(setCaps)
       .catch(() => setError('Could not load capabilities. Is the backend running?'))
       .finally(() => setLoading(false))
@@ -190,7 +182,7 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
                 fontSize: 11, color: '#c8c8c8', lineHeight: 1.7,
                 marginBottom: 10,
                 paddingLeft: 10,
-                borderLeft: '2px solid #3a3a3a',
+                borderLeft: '2px solid #3a3a3a', textAlign: 'left'
             }}>
                 {cap.esco_description}
             </p>
