@@ -24,3 +24,7 @@
 [2026-07-12 06:30:21 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
 [2026-07-12 06:48:25 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
 [2026-07-12 06:49:02 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
+[2026-07-12 07:00:03 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
+[2026-07-16 03:19:10 UTC] [STATUS: FAILED] User: xavier_green (Employee) | Action: login | Details: invalid_password
+[2026-07-16 03:19:40 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-16 03:20:46 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
