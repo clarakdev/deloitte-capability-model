@@ -29,6 +29,7 @@ export default function App() {
   const [mode, setMode] = useState('hands') // 'auto' | 'hands'
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedRole, setSelectedRole] = useState(null)
+  const [viewSavedAssignment, setViewSavedAssignment] = useState(false)
 
   function goTo(f) { setFrame(f) }
 
@@ -94,13 +95,19 @@ export default function App() {
       {frame === 1 && (
         <Frame1
           project={selectedProject}
-          onSelectRole={(role, hasAssignment) => {
+          onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
             setSelectedRole(role)
             setRoleId(role.id)
+
             if (hasAssignment) {
-              setEmpId(null)
+              // View the employee already saved for this role.
+              setEmpId(savedEmployeeId)
+              setViewSavedAssignment(true)
               goTo(4)
             } else {
+              // Start or redo matching.
+              setEmpId(null)
+              setViewSavedAssignment(false)
               goTo(2)
             }
           }}
@@ -113,7 +120,11 @@ export default function App() {
           role={selectedRole}
           mode={mode}
           onBack={() => goTo(1)}
-          onNext={(id) => { setRoleId(id); goTo(mode === 'auto' ? 4 : 3) }}
+          onNext={(id) => {
+            setRoleId(id)
+            setViewSavedAssignment(false)
+            goTo(mode === 'auto' ? 4 : 3)
+          }}
         />
       )}
       {frame === 3 && (
@@ -130,6 +141,7 @@ export default function App() {
           projectId={selectedProject?.id}
           empId={empId}
           mode={mode}
+          viewSavedAssignment={viewSavedAssignment}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
           onBackToRoles={() => goTo(1)}
         />

@@ -75,6 +75,21 @@ export default function Frame4({
               candidate => candidate.employee_id === resolvedEmpId
             ) || null
 
+          if (!resolvedEmployee && viewSavedAssignment) {
+            const savedAssignment = await getAssignment(roleId)
+
+            if (savedAssignment) {
+              resolvedEmployee = {
+                employee_id: savedAssignment.employee_id,
+                name: savedAssignment.employee_name,
+                match_score: savedAssignment.match_score,
+                title: '',
+                business_unit: '',
+                location: '',
+              }
+            }
+          }
+
         } else if (viewSavedAssignment) {
           // User clicked "View analysis" from Frame1:
           // Load the employee already saved for this role.
