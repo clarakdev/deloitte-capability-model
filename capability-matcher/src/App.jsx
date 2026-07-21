@@ -23,10 +23,10 @@ const STEPS = [
 ]
 
 export default function App() {
-  const [frame, setFrame]   = useState(0)
+  const [frame, setFrame] = useState(0)
   const [roleId, setRoleId] = useState(null)
-  const [empId, setEmpId]   = useState(null)
-  const [mode, setMode]     = useState('hands') // 'auto' | 'hands'
+  const [empId, setEmpId] = useState(null)
+  const [mode, setMode] = useState('hands') // 'auto' | 'hands'
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedRole, setSelectedRole] = useState(null)
 
@@ -40,7 +40,7 @@ export default function App() {
         <span className="topbar-title">Capability Matcher</span>
         <div className="topbar-divider" />
         <span className="topbar-sub">Deloitte Talent Intelligence</span>
-        
+
         {/* Mode toggle — switches between Auto (AI picks team) and Hands-on (you pick) */}
         <div style={{ marginLeft: 'auto', display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
           <button
@@ -48,20 +48,20 @@ export default function App() {
             style={{
               padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
               background: mode === 'auto' ? '#86BC25' : 'transparent',
-              color:      mode === 'auto' ? '#0a0a0a'  : '#555',
+              color: mode === 'auto' ? '#0a0a0a' : '#555',
             }}>Auto</button>
           <button
             onClick={() => setMode('hands')}
             style={{
               padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
               background: mode === 'hands' ? '#86BC25' : 'transparent',
-              color:      mode === 'hands' ? '#0a0a0a'  : '#555',
+              color: mode === 'hands' ? '#0a0a0a' : '#555',
             }}>Hands-on</button>
         </div>
       </div>
 
       {/* ── Step progress bar ── */}
-      {/* Each step is idle (grey), active (green), or done (green + checkmark) */}      
+      {/* Each step is idle (grey), active (green), or done (green + checkmark) */}
       <div className="stepbar">
         {STEPS.map((s, i) => {
           const state = s.num < frame ? 'done' : s.num === frame ? 'active' : 'idle'
@@ -76,7 +76,7 @@ export default function App() {
           )
         })}
       </div>
-      
+
       {/* ── Frame routing ── */}
       {/* Only the active frame renders. State is passed down as props.
           onSelectRole — called by Frame 1 when user clicks a role card
@@ -127,6 +127,7 @@ export default function App() {
       {frame === 4 && (
         <Frame4
           roleId={roleId}
+          projectId={selectedProject?.id}
           empId={empId}
           mode={mode}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
