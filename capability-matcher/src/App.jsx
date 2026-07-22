@@ -1,7 +1,7 @@
 // App.jsx — the root component. Manages which frame is currently visible
 // and holds the shared state that gets passed between frames:
-//   frame   — which of the 4 steps the user is on (1–4)
-//   roleId  — the selected role (e.g. "ROLE001"), set in Frame 1, used in 2/3/4
+//   frame   — which of the 4 steps the user is on (0–4)
+//   roleId  — the selected role UUID from Supabase
 //   empId   — the selected employee (e.g. "EMP001"), set in Frame 3, used in Frame 4
 //   mode    — "auto" skips Frame 3 (AI picks candidates), "hands" includes it
 
@@ -11,9 +11,9 @@ import Frame1 from './pages/Frame1'
 import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
 import Frame4 from './pages/Frame4'
+import { requestAutoSelect } from './api/api'
 import './App.css'
 
-// The four steps shown in the progress bar at the top
 const STEPS = [
   { num: 0, label: 'Projects' },
   { num: 1, label: 'Project setup' },
@@ -23,26 +23,25 @@ const STEPS = [
 ]
 
 export default function App() {
-  const [frame, setFrame] = useState(0)
-  const [roleId, setRoleId] = useState(null)
-  const [empId, setEmpId] = useState(null)
-  const [mode, setMode] = useState('hands') // 'auto' | 'hands'
+  const [frame, setFrame]               = useState(0)
+  const [roleId, setRoleId]             = useState(null)
+  const [empId, setEmpId]               = useState(null)
+  const [mode, setMode]                 = useState('hands')
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedRole, setSelectedRole] = useState(null)
   const [viewSavedAssignment, setViewSavedAssignment] = useState(false)
+  //LLM auto-select result passed to Frame 4
+  const [autoSelect, setAutoSelect]     = useState(null)
 
   function goTo(f) { setFrame(f) }
 
   return (
     <>
-      {/* ── Top bar — logo + Auto/Hands-on toggle ── */}
       <div className="topbar">
         <div className="topbar-dot" />
         <span className="topbar-title">Capability Matcher</span>
         <div className="topbar-divider" />
         <span className="topbar-sub">Deloitte Talent Intelligence</span>
-
-        {/* Mode toggle — switches between Auto (AI picks team) and Hands-on (you pick) */}
         <div style={{ marginLeft: 'auto', display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
           <button
             onClick={() => setMode('auto')}
@@ -61,8 +60,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Step progress bar ── */}
-      {/* Each step is idle (grey), active (green), or done (green + checkmark) */}
       <div className="stepbar">
         {STEPS.map((s, i) => {
           const state = s.num < frame ? 'done' : s.num === frame ? 'active' : 'idle'
@@ -78,11 +75,7 @@ export default function App() {
         })}
       </div>
 
-      {/* ── Frame routing ── */}
-      {/* Only the active frame renders. State is passed down as props.
-          onSelectRole — called by Frame 1 when user clicks a role card
-          onBack/onNext — navigation between frames
-          In Auto mode, Frame 2's Next button jumps straight to Frame 4 (skips Frame 3) */}
+      {/* Frame 0 — Project list (new, Supabase) */}
       {frame === 0 && (
         <Frame0
           onSelectProject={(project) => {
@@ -92,28 +85,30 @@ export default function App() {
         />
       )}
 
+      {/* Frame 1 — Roles list (Supabase) */}
       {frame === 1 && (
         <Frame1
           project={selectedProject}
           onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
             setSelectedRole(role)
             setRoleId(role.id)
-
             if (hasAssignment) {
-              // View the employee already saved for this role.
               setEmpId(savedEmployeeId)
               setViewSavedAssignment(true)
+              setAutoSelect(null)
               goTo(4)
             } else {
-              // Start or redo matching.
               setEmpId(null)
               setViewSavedAssignment(false)
+              setAutoSelect(null)
               goTo(2)
             }
           }}
           onBack={() => goTo(0)}
         />
       )}
+
+      {/* Frame 2 — Skill requirements */}
       {frame === 2 && (
         <Frame2
           roleId={roleId}
@@ -123,10 +118,21 @@ export default function App() {
           onNext={(id) => {
             setRoleId(id)
             setViewSavedAssignment(false)
-            goTo(mode === 'auto' ? 4 : 3)
+            if (mode === 'auto') {
+              // Ask the LLM to pick the best of the top 5 before showing Frame 4
+              setAutoSelect(null)
+              requestAutoSelect(id)
+                .then(setAutoSelect)
+                .catch(() => setAutoSelect({ error: 'unavailable' }))
+              goTo(4)
+            } else {
+              goTo(3)
+            }
           }}
         />
       )}
+
+      {/* Frame 3 — Candidate selection (hands-on only) */}
       {frame === 3 && (
         <Frame3
           roleId={roleId}
@@ -135,12 +141,15 @@ export default function App() {
           onNext={(eid) => { setEmpId(eid); goTo(4) }}
         />
       )}
+
+      {/* Frame 4 — Gap analysis */}
       {frame === 4 && (
         <Frame4
           roleId={roleId}
           projectId={selectedProject?.id}
           empId={empId}
           mode={mode}
+          autoSelect={autoSelect}
           viewSavedAssignment={viewSavedAssignment}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
           onBackToRoles={() => goTo(1)}
