@@ -11,6 +11,8 @@ import Frame1 from './pages/Frame1'
 import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
 import Frame4 from './pages/Frame4'
+import Login from './pages/Login'
+import Portal from './pages/Portal'
 import './App.css'
 
 // The four steps shown in the progress bar at the top
@@ -30,8 +32,26 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedRole, setSelectedRole] = useState(null)
   const [viewSavedAssignment, setViewSavedAssignment] = useState(false)
+  const [view, setView] = useState('login')
+  const [profile, setProfile] = useState(null)
 
   function goTo(f) { setFrame(f) }
+
+  function handleLoginSuccess(profileData) {
+    setProfile(profileData)
+
+    if (profileData?.role === 'Employee') {
+      setView('employee-portal')
+      return
+    }
+
+    setView('portal')
+  }
+
+  function handleStartMatching() {
+    setFrame(0)
+    setView('flow')
+  }
 
   return (
     <>
@@ -42,109 +62,130 @@ export default function App() {
         <div className="topbar-divider" />
         <span className="topbar-sub">Deloitte Talent Intelligence</span>
 
-        {/* Mode toggle — switches between Auto (AI picks team) and Hands-on (you pick) */}
-        <div style={{ marginLeft: 'auto', display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
-          <button
-            onClick={() => setMode('auto')}
-            style={{
-              padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              background: mode === 'auto' ? '#86BC25' : 'transparent',
-              color: mode === 'auto' ? '#0a0a0a' : '#555',
-            }}>Auto</button>
-          <button
-            onClick={() => setMode('hands')}
-            style={{
-              padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              background: mode === 'hands' ? '#86BC25' : 'transparent',
-              color: mode === 'hands' ? '#0a0a0a' : '#555',
-            }}>Hands-on</button>
-        </div>
+        {/* Mode toggle — only relevant once inside the actual matching flow */}
+        {view === 'flow' && (
+          <div style={{ marginLeft: 'auto', display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
+            <button
+              onClick={() => setMode('auto')}
+              style={{
+                padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                background: mode === 'auto' ? '#86BC25' : 'transparent',
+                color: mode === 'auto' ? '#0a0a0a' : '#555',
+              }}>Auto</button>
+            <button
+              onClick={() => setMode('hands')}
+              style={{
+                padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                background: mode === 'hands' ? '#86BC25' : 'transparent',
+                color: mode === 'hands' ? '#0a0a0a' : '#555',
+              }}>Hands-on</button>
+          </div>
+        )}
       </div>
 
       {/* ── Step progress bar ── */}
       {/* Each step is idle (grey), active (green), or done (green + checkmark) */}
-      <div className="stepbar">
-        {STEPS.map((s, i) => {
-          const state = s.num < frame ? 'done' : s.num === frame ? 'active' : 'idle'
-          return (
-            <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div className="step">
-                <div className={`step-num ${state}`}>{state === 'done' ? '✓' : i + 1}</div>
-                <span className={`step-label ${state}`}>{s.label}</span>
+      {view === 'flow' && (
+        <div className="stepbar">
+          {STEPS.map((s, i) => {
+            const state = s.num < frame ? 'done' : s.num === frame ? 'active' : 'idle'
+            return (
+              <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div className="step">
+                  <div className={`step-num ${state}`}>{state === 'done' ? '✓' : i + 1}</div>
+                  <span className={`step-label ${state}`}>{s.label}</span>
+                </div>
+                {i < STEPS.length - 1 && <span className="step-arrow">›</span>}
               </div>
-              {i < STEPS.length - 1 && <span className="step-arrow">›</span>}
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
+      {/* ── Screen routing ── */}
+      {view === 'login' && <Login onLoginSuccess={handleLoginSuccess} />}
 
-      {/* ── Frame routing ── */}
-      {/* Only the active frame renders. State is passed down as props.
-          onSelectRole — called by Frame 1 when user clicks a role card
-          onBack/onNext — navigation between frames
-          In Auto mode, Frame 2's Next button jumps straight to Frame 4 (skips Frame 3) */}
-      {frame === 0 && (
-        <Frame0
-          onSelectProject={(project) => {
-            setSelectedProject(project)
-            goTo(1)
-          }}
+      {view === 'portal' && (
+        <Portal
+          profile={profile}
+          onStartMatching={handleStartMatching}
         />
       )}
 
-      {frame === 1 && (
-        <Frame1
-          project={selectedProject}
-          onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
-            setSelectedRole(role)
-            setRoleId(role.id)
+      {view === 'employee-portal' && (
+        <div className="page" style={{ minHeight: 'calc(100vh - 88px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '100%', maxWidth: 520 }}>
+            <h1 className="page-title">Employee portal coming soon</h1>
+            <p className="page-sub">The employee experience is not part of this iteration.</p>
+          </div>
+        </div>
+      )}
 
-            if (hasAssignment) {
-              // View the employee already saved for this role.
-              setEmpId(savedEmployeeId)
-              setViewSavedAssignment(true)
-              goTo(4)
-            } else {
-              // Start or redo matching.
-              setEmpId(null)
-              setViewSavedAssignment(false)
-              goTo(2)
-            }
-          }}
-          onBack={() => goTo(0)}
-        />
-      )}
-      {frame === 2 && (
-        <Frame2
-          roleId={roleId}
-          role={selectedRole}
-          mode={mode}
-          onBack={() => goTo(1)}
-          onNext={(id) => {
-            setRoleId(id)
-            setViewSavedAssignment(false)
-            goTo(mode === 'auto' ? 4 : 3)
-          }}
-        />
-      )}
-      {frame === 3 && (
-        <Frame3
-          roleId={roleId}
-          projectId={selectedProject?.id}
-          onBack={() => goTo(2)}
-          onNext={(eid) => { setEmpId(eid); goTo(4) }}
-        />
-      )}
-      {frame === 4 && (
-        <Frame4
-          roleId={roleId}
-          projectId={selectedProject?.id}
-          empId={empId}
-          mode={mode}
-          viewSavedAssignment={viewSavedAssignment}
-          onBack={() => goTo(mode === 'auto' ? 2 : 3)}
-          onBackToRoles={() => goTo(1)}
-        />
+      {view === 'flow' && (
+        <>
+          {frame === 0 && (
+            <Frame0
+              onSelectProject={(project) => {
+                setSelectedProject(project)
+                goTo(1)
+              }}
+            />
+          )}
+
+          {frame === 1 && (
+            <Frame1
+              project={selectedProject}
+              onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
+                setSelectedRole(role)
+                setRoleId(role.id)
+
+                if (hasAssignment) {
+                  // View the employee already saved for this role.
+                  setEmpId(savedEmployeeId)
+                  setViewSavedAssignment(true)
+                  goTo(4)
+                } else {
+                  // Start or redo matching.
+                  setEmpId(null)
+                  setViewSavedAssignment(false)
+                  goTo(2)
+                }
+              }}
+              onBack={() => goTo(0)}
+            />
+          )}
+          {frame === 2 && (
+            <Frame2
+              roleId={roleId}
+              role={selectedRole}
+              mode={mode}
+              onBack={() => goTo(1)}
+              onNext={(id) => {
+                setRoleId(id)
+                setViewSavedAssignment(false)
+                goTo(mode === 'auto' ? 4 : 3)
+              }}
+            />
+          )}
+          {frame === 3 && (
+            <Frame3
+              roleId={roleId}
+              projectId={selectedProject?.id}
+              onBack={() => goTo(2)}
+              onNext={(eid) => { setEmpId(eid); goTo(4) }}
+            />
+          )}
+          {frame === 4 && (
+            <Frame4
+              roleId={roleId}
+              projectId={selectedProject?.id}
+              empId={empId}
+              mode={mode}
+              viewSavedAssignment={viewSavedAssignment}
+              onBack={() => goTo(mode === 'auto' ? 2 : 3)}
+              onBackToRoles={() => goTo(1)}
+            />
+          )}
+        </>
       )}
     </>
   )
