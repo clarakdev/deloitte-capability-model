@@ -1,0 +1,30 @@
+[2026-07-11 06:06:28 UTC] [STATUS: SUCCESS] User: demo (admin) | Action: login | Details: Test entry
+[2026-07-12 02:12:41 UTC] [STATUS: FAILED] User: string (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:44:45 UTC] [STATUS: FAILED] User: string (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:45:14 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:47:04 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:48:26 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:49:24 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:49:38 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 05:58:02 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:03:43 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:05:47 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:05:48 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:05:48 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:05:48 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:07:01 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:12:37 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:13:01 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:16:23 UTC] [STATUS: FAILED] User: xavier_green (unknown) | Action: login | Details: user_not_found
+[2026-07-12 06:17:33 UTC] [STATUS: FAILED] User: xavier_green (Employee) | Action: login | Details: invalid_password
+[2026-07-12 06:18:29 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-12 06:19:15 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-12 06:19:54 UTC] [STATUS: FAILED] User: xavier_green (Employee) | Action: access_denied | Details: required_roles=['Admin', 'HR User', 'Project Manager']
+[2026-07-12 06:29:14 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-12 06:30:21 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
+[2026-07-12 06:48:25 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-12 06:49:02 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
+[2026-07-12 07:00:03 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued
+[2026-07-16 03:19:10 UTC] [STATUS: FAILED] User: xavier_green (Employee) | Action: login | Details: invalid_password
+[2026-07-16 03:19:40 UTC] [STATUS: SUCCESS] User: xavier_green (Employee) | Action: login | Details: jwt_issued
+[2026-07-16 03:20:46 UTC] [STATUS: SUCCESS] User: admin_user (Admin) | Action: login | Details: jwt_issued

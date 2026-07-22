@@ -1,0 +1,26 @@
+[
+  {
+    "username": "admin_user",
+    "password_hash": "$2b$12$Ioq0bCNQXQRZlVXkDyKZA.s/auaFdxUUjhY.paWDGiPdoG9RA9t.W",
+    "role": "Admin",
+    "employee_id": "EMP999"
+  },
+  {
+    "username": "hr_user",
+    "password_hash": "$2b$12$Ioq0bCNQXQRZlVXkDyKZA.s/auaFdxUUjhY.paWDGiPdoG9RA9t.W",
+    "role": "HR User",
+    "employee_id": "EMP998"
+  },
+  {
+    "username": "pm_user",
+    "password_hash": "$2b$12$Ioq0bCNQXQRZlVXkDyKZA.s/auaFdxUUjhY.paWDGiPdoG9RA9t.W",
+    "role": "Project Manager",
+    "employee_id": "EMP997"
+  },
+  {
+    "username": "xavier_green",
+    "password_hash": "$2b$12$Ioq0bCNQXQRZlVXkDyKZA.s/auaFdxUUjhY.paWDGiPdoG9RA9t.W",
+    "role": "Employee",
+    "employee_id": "EMP004"
+  }
+]
