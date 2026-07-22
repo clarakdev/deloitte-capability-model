@@ -45,7 +45,13 @@ from core.embedding_engine import (
 from core.gap_analysis import analyse_fit
 from core.logger import log_security_event
 from core.matching import rank_candidates
-from core.security import ALGORITHM, SECRET_KEY, create_access_token, verify_password
+from core.security import (
+    ALGORITHM,
+    SECRET_KEY,
+    decode_supabase_access_token,
+    get_supabase_client,
+    resolve_profile_from_user_id,
+)
 
 # ── Data loading (at import time) ─────────────────────────────────────────────
 
@@ -218,13 +224,6 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
 
 # ── Authentication and RBAC ────────────────────────────────────────────────
 
-# Store the user-account file path once so the authentication section can read
-# the local users.json file without altering any route behavior.
-_USERS_FILE = _DATA_DIR / "users.json"
-# This in-memory lookup lets the API resolve a username to its stored password
-# hash and role quickly during login attempts and protected endpoint checks.
-_USERS_BY_USERNAME: dict[str, dict] = {}
-
 # OAuth2PasswordBearer defines how FastAPI will expect the bearer token to be
 # supplied in the Authorization header for protected endpoints.
 # The tokenUrl="login" points the Swagger UI to the /login route.
@@ -253,65 +252,43 @@ class TokenResponse(BaseModel):
     role: str
 
 
-def _load_users() -> None:
-    # Load the local user inventory from disk and populate the in-memory lookup.
-    # This keeps the dictionary available immediately when the module is imported,
-    # so login and token validation can resolve users without repeated file reads.
-    if not _USERS_FILE.exists():
-        _USERS_BY_USERNAME.clear()
-        return
-    loaded_users: list[dict] = _load_json(_USERS_FILE)
-    _USERS_BY_USERNAME.clear()
-    for user in loaded_users:
-        username = user.get("username")
-        if isinstance(username, str) and username:
-            _USERS_BY_USERNAME[username] = {
-                "username": username,
-                "password_hash": user.get("password_hash", ""),
-                "role": user.get("role", "user"),
-                "employee_id": user.get("employee_id"),
-            }
-
-
-# Load the users once at module import time so the authentication layer is ready
-# before any request reaches the protected endpoints.
-_load_users()
-
-
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     # Create a consistent 401 response for any failed token handling, whether the
     # issue is malformed input, invalid signature, missing claims, or a missing
-    # user record in the local lookup.
+    # profile record in the Supabase lookup.
     credentials_exception = HTTPException(
         status_code=401,
         detail="Invalid authentication credentials",
     )
     try:
-        # Decode and validate the incoming JWT using python-jose. The token is
-        # checked against the configured secret and algorithm before any claims are
-        # accepted as trustworthy.
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # Extract the identity and role claims from the payload. These are the
-        # values that the application uses to establish the current user context.
-        username: str | None = payload.get("sub")
-        role: str | None = payload.get("role")
-        if username is None or role is None:
+        response = decode_supabase_access_token(token)
+        user_id = getattr(getattr(response, "user", None), "id", None)
+        if user_id is None:
             raise credentials_exception
-    except JWTError as exc:
-        # If the token is malformed, expired, or tampered with, python-jose raises
-        # an exception that is converted into the same 401 response the client sees.
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase authentication configuration error",
+        ) from exc
+    except Exception as exc:
         raise credentials_exception from exc
 
-    # Use the in-memory user dictionary to confirm the token subject still maps
-    # to a known account that exists in the local authentication data store.
-    user = _USERS_BY_USERNAME.get(username)
-    if user is None:
+    profile = resolve_profile_from_user_id(str(user_id))
+    if profile is None:
         raise credentials_exception
-    # Ensure that the role embedded in the token still matches the role assigned
-    # to the verified user in the local registry.
-    if str(user.get("role", "")).strip().lower() != str(role).strip().lower():
+
+    role = str(profile.get("role", "user") or "user").strip().lower()
+    if not role:
         raise credentials_exception
-    return user
+
+    return {
+        "user_id": str(user_id),
+        "username": str(user_id),
+        "role": role,
+        "employee_id": profile.get("employee_id"),
+        "first_name": profile.get("first_name"),
+        "last_name": profile.get("last_name"),
+    }
 
 
 def require_roles(allowed_roles: list[str]):
@@ -329,7 +306,7 @@ def require_roles(allowed_roles: list[str]):
         normalized_allowed = {str(item).strip().lower() for item in allowed_roles}
         if normalized_role not in normalized_allowed:
             log_security_event(
-                username=current_user.get("username", "unknown"),
+                username=current_user.get("user_id") or current_user.get("username", "unknown"),
                 role=current_user.get("role", "unknown"),
                 action="access_denied",
                 status="FAILED",
@@ -348,48 +325,68 @@ def require_roles(allowed_roles: list[str]):
     summary="Authenticate a user and issue a JWT",
 )
 async def login(payload: UserLogin) -> TokenResponse:
-    # Resolve the supplied username in the preloaded lookup. If the account does
-    # not exist, the request is rejected immediately and an audit event is logged.
-    user = _USERS_BY_USERNAME.get(payload.username)
-    if user is None:
+    try:
+        client = get_supabase_client()
+        auth_response = client.auth.sign_in_with_password(
+            {
+                "email": payload.username,
+                "password": payload.password,
+            }
+        )
+    except Exception as exc:
         log_security_event(
             username=payload.username,
             role="unknown",
             action="login",
             status="FAILED",
-            details="user_not_found",
+            details="supabase_auth_failed",
         )
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Invalid username or password") from exc
 
-    # Verify the submitted password against the stored bcrypt hash. The secure
-    # comparison is delegated to the password helper so the API never compares or
-    # stores plain-text credentials directly.
-    if not verify_password(payload.password, user.get("password_hash", "")):
+    session = getattr(auth_response, "session", None)
+    access_token = None
+    if session is not None:
+        access_token = getattr(session, "access_token", None)
+    if access_token is None and isinstance(auth_response, dict):
+        access_token = auth_response.get("access_token")
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    auth_user = getattr(auth_response, "user", None)
+    if isinstance(auth_user, dict):
+        user_id = auth_user.get("id")
+        username = auth_user.get("email", payload.username)
+    else:
+        user_id = getattr(auth_user, "id", None)
+        username = getattr(auth_user, "email", None) or payload.username
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    profile = resolve_profile_from_user_id(str(user_id))
+    if profile is None:
         log_security_event(
-            username=payload.username,
-            role=user.get("role", "unknown"),
+            username=str(user_id),
+            role="unknown",
             action="login",
             status="FAILED",
-            details="invalid_password",
+            details="profile_not_found",
         )
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
-    # A successful credential check triggers an audit log entry and a signed JWT
-    # containing the verified identity and role claim for downstream protected
-    # routes.
+    role = str(profile.get("role", "user") or "user").strip()
     log_security_event(
-        username=payload.username,
-        role=user.get("role", "unknown"),
+        username=str(user_id),
+        role=role,
         action="login",
         status="SUCCESS",
-        details="jwt_issued",
+        details="supabase_auth",
     )
-    token = create_access_token({"sub": payload.username, "role": user.get("role", "user")})
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
         token_type="bearer",
-        username=payload.username,
-        role=user.get("role", "user"),
+        username=username or payload.username,
+        role=role,
     )
 
 
@@ -687,6 +684,7 @@ def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(ge
     current_role = str(current_user.get("role", "")).strip().lower()
     if current_role == "employee":
         user_emp_id = current_user.get("employee_id") or current_user.get("username")
+        print(f"DEBUG emp_id={emp_id} current_user.employee_id={user_emp_id}")
         if str(user_emp_id) != str(emp_id):
             raise HTTPException(
                 status_code=403,

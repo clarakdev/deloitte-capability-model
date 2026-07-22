@@ -26,8 +26,10 @@ def log_security_event(username: str, role: str, action: str, status: str, detai
     timestamp: str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     # Construct the log line with a fixed layout so log entries remain easy to
     # parse, review, and compare across successful and failed security events.
+    identity_value: str = str(username or "unknown").strip() or "unknown"
+    role_value: str = str(role or "unknown").strip() or "unknown"
     entry: str = (
-        f"[{timestamp}] [STATUS: {status}] User: {username} ({role}) | "
+        f"[{timestamp}] [STATUS: {status}] User: {identity_value} ({role_value}) | "
         f"Action: {action} | Details: {details}"
     )
 
