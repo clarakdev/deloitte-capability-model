@@ -1,11 +1,16 @@
 // Frame4.jsx — Gap analysis screen (Step 4 of 4).
 
 import { useEffect, useState } from 'react'
-import { getCandidateFit, getCandidates } from '../api/api'
+import {
+  getCandidateFit,
+  getCandidates,
+  getAssignment,
+  saveAssignment,
+} from '../api/api'
 
 // Converts similarity score 0–1 into a colour for the bar and badge
 function simColor(sim, isGap) {
-  if (isGap)      return '#e05252' // red   — gap (< 0.6)
+  if (isGap) return '#e05252' // red   — gap (< 0.6)
   if (sim >= 0.85) return '#86BC25' // green — strong match
   return '#5b9bd5'                  // blue  — adequate match
 }
@@ -25,15 +30,22 @@ function WeightDots({ weight }) {
   )
 }
 
-export default function Frame4({ roleId, empId, mode, onBack, onBackToRoles }) {
-  // fitData  — array of per-capability fit items from the backend
+export default function Frame4({
+  roleId,
+  projectId,
+  empId,
+  mode,
+  viewSavedAssignment,
+  onBack,
+  onBackToRoles,
+}) {  // fitData  — array of per-capability fit items from the backend
   // employee — basic employee info (fetched from candidates list)
   // loading  — true while fetching
   // error    — error message if fetch fails
-  const [fitData, setFitData]     = useState([])
-  const [employee, setEmployee]   = useState(null)
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState(null)
+  const [fitData, setFitData] = useState([])
+  const [employee, setEmployee] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // ── Fetch fit data on mount ───────────────────────────────────────────────
   // In Hands-on mode: empId comes from Frame 3 (user's selection).
@@ -41,42 +53,122 @@ export default function Frame4({ roleId, empId, mode, onBack, onBackToRoles }) {
   //   from GET /roles/{roleId}/candidates and use the first result.
   useEffect(() => {
     async function load() {
+      setLoading(true)
+      setError(null)
+
       try {
         let resolvedEmpId = empId
+        let resolvedEmployee = null
 
-        // Auto mode — no empId passed in, pick the top-ranked candidate
-        if (!resolvedEmpId) {
-          const candidates = await getCandidates(roleId, false, false)
-          if (candidates.length === 0) {
-            setError('No candidates found for this role.')
-            return
-          }
-          resolvedEmpId = candidates[0].employee_id
-          setEmployee(candidates[0])
-        } else {
-          // Hands-on mode — fetch candidates just to get this employee's info
-          const candidates = await getCandidates(roleId, false, false)
-          setEmployee(candidates.find(c => c.employee_id === resolvedEmpId) || null)
+        const candidates = await getCandidates(roleId, false, false)
+
+        if (candidates.length === 0) {
+          setError('No candidates found for this role.')
+          return
         }
 
-        // Fetch the per-capability fit breakdown for this employee
+        if (resolvedEmpId) {
+          // Hands-on mode:
+          // Use the employee selected and saved in Frame3.
+          resolvedEmployee =
+            candidates.find(
+              candidate => candidate.employee_id === resolvedEmpId
+            ) || null
+
+          if (!resolvedEmployee && viewSavedAssignment) {
+            const savedAssignment = await getAssignment(roleId)
+
+            if (savedAssignment) {
+              resolvedEmployee = {
+                employee_id: savedAssignment.employee_id,
+                name: savedAssignment.employee_name,
+                match_score: savedAssignment.match_score,
+                title: '',
+                business_unit: '',
+                location: '',
+              }
+            }
+          }
+
+        } else if (viewSavedAssignment) {
+          // User clicked "View analysis" from Frame1:
+          // Load the employee already saved for this role.
+          const savedAssignment = await getAssignment(roleId)
+
+          if (!savedAssignment) {
+            setError('No saved assignment was found for this role.')
+            return
+          }
+
+          resolvedEmpId = savedAssignment.employee_id
+
+          resolvedEmployee =
+            candidates.find(
+              candidate =>
+                candidate.employee_id === savedAssignment.employee_id
+            ) || {
+              employee_id: savedAssignment.employee_id,
+              name: savedAssignment.employee_name,
+              match_score: savedAssignment.match_score,
+              title: '',
+              business_unit: '',
+              location: '',
+            }
+
+        } else if (mode === 'auto') {
+          // New or redone Auto match:
+          // Always select the current highest-ranked candidate.
+          resolvedEmployee = candidates[0]
+          resolvedEmpId = resolvedEmployee.employee_id
+
+          if (!projectId) {
+            throw new Error('Project ID is missing.')
+          }
+
+          // Overwrite any existing manual or Auto assignment.
+          await saveAssignment(
+            roleId,
+            projectId,
+            resolvedEmployee
+          )
+
+        } else {
+          setError('No employee was selected.')
+          return
+        }
+
+        if (!resolvedEmployee) {
+          setError('The selected employee could not be found.')
+          return
+        }
+
+        setEmployee(resolvedEmployee)
+
         const fit = await getCandidateFit(roleId, resolvedEmpId)
         setFitData(fit)
-      } catch {
+      } catch (e) {
+        console.error('Failed to load or save gap analysis:', e)
         setError('Could not load gap analysis. Is the backend running?')
       } finally {
         setLoading(false)
       }
     }
+
     load()
-  }, [roleId, empId])
+  }, [
+    roleId,
+    empId,
+    projectId,
+    mode,
+    viewSavedAssignment,
+  ])
 
   if (loading) return <div className="loading">Running gap analysis…</div>
-  if (error)   return <div className="error">{error}</div>
+  if (error) return <div className="error">{error}</div>
 
   // ── Derived summary stats ─────────────────────────────────────────────────
-  const gapCount      = fitData.filter(f => f.is_gap).length
-  const coveredCount  = fitData.filter(f => !f.is_gap).length
+  const gapCount = fitData.filter(f => f.is_gap).length
+  const coveredCount = fitData.filter(f => !f.is_gap).length
   const avgSimilarity = fitData.length
     ? (fitData.reduce((s, f) => s + f.similarity, 0) / fitData.length)
     : 0
@@ -130,8 +222,8 @@ export default function Frame4({ roleId, empId, mode, onBack, onBackToRoles }) {
       }}>
         {[
           { num: `${Math.round(avgSimilarity * 100)}%`, label: 'Avg similarity' },
-          { num: coveredCount,                           label: 'Skills covered' },
-          { num: gapCount,                               label: 'Gaps to address' },
+          { num: coveredCount, label: 'Skills covered' },
+          { num: gapCount, label: 'Gaps to address' },
         ].map(s => (
           <div key={s.label} style={{
             background: '#111', borderRadius: 8,

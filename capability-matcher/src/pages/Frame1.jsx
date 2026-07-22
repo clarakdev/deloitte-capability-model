@@ -1,7 +1,7 @@
 // Frame1.jsx — Project overview screen (Step 1 of 4).
 
 import { useEffect, useState } from 'react'
-import { getRoles, createRole, updateRole, deleteRole, getSavedCapabilities, getAssignment, getProjectAssignments  } from '../api/api'
+import { getRoles, createRole, updateRole, deleteRole, getSavedCapabilities, getProjectAssignments } from '../api/api'
 
 const ROLE_COLORS = [
   { bg: '#1e2a14', color: '#86BC25', initials: 'SA' },
@@ -17,28 +17,28 @@ function getInitials(title) {
 }
 
 export default function Frame1({ project: initialProject, onSelectRole, onBack }) {
-  const [project]                       = useState(initialProject)
-  const [roles, setRoles]               = useState([])
+  const [project] = useState(initialProject)
+  const [roles, setRoles] = useState([])
   const [rolesLoading, setRolesLoading] = useState(true)
-  const [error, setError]               = useState(null)
-  const [expanded, setExpanded]         = useState(null)
+  const [error, setError] = useState(null)
+  const [expanded, setExpanded] = useState(null)
 
   // Add form
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newTitle, setNewTitle]       = useState('')
-  const [newDesc, setNewDesc]         = useState('')
-  const [formError, setFormError]     = useState('')
+  const [newTitle, setNewTitle] = useState('')
+  const [newDesc, setNewDesc] = useState('')
+  const [formError, setFormError] = useState('')
 
   // Edit
   const [editingRole, setEditingRole] = useState(null)
-  const [editFields, setEditFields]   = useState({ title: '', description: '' })
+  const [editFields, setEditFields] = useState({ title: '', description: '' })
 
   // Drag and drop
-  const [dragId, setDragId]       = useState(null)
+  const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
 
-  const [assignments, setAssignments]   = useState({}) // roleId -> assignment
-  const [savedCaps, setSavedCaps]       = useState({})  // roleId -> caps array
+  const [assignments, setAssignments] = useState({}) // roleId -> assignment
+  const [savedCaps, setSavedCaps] = useState({})  // roleId -> caps array
 
   // Load assignments for this project
   useEffect(() => {
@@ -74,12 +74,12 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
   //Add role
   async function handleAddRole() {
     if (!newTitle.trim()) { setFormError('Role title is required.'); return }
-    if (!newDesc.trim())  { setFormError('Role description is required.'); return }
+    if (!newDesc.trim()) { setFormError('Role description is required.'); return }
     try {
       const newRole = await createRole(initialProject.id, {
-        title:       newTitle.trim(),
+        title: newTitle.trim(),
         description: newDesc.trim(),
-        sort_order:  roles.length,
+        sort_order: roles.length,
       })
       setRoles(prev => [...prev, newRole])
       setNewTitle('')
@@ -93,11 +93,11 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
 
   // Edit role
   async function handleSaveEdit() {
-    if (!editFields.title.trim())       { setFormError('Role title is required.'); return }
+    if (!editFields.title.trim()) { setFormError('Role title is required.'); return }
     if (!editFields.description.trim()) { setFormError('Role description is required.'); return }
     try {
       const updated = await updateRole(editingRole, {
-        title:       editFields.title.trim(),
+        title: editFields.title.trim(),
         description: editFields.description.trim(),
       })
       setRoles(prev => prev.map(r => r.id === editingRole ? { ...r, ...updated } : r))
@@ -124,9 +124,9 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
   async function handleDuplicateRole(role) {
     try {
       const duplicate = await createRole(initialProject.id, {
-        title:       `${role.title} (copy)`,
+        title: `${role.title} (copy)`,
         description: role.description,
-        sort_order:  roles.length,
+        sort_order: roles.length,
       })
       setRoles(prev => [...prev, duplicate])
     } catch (e) {
@@ -158,7 +158,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
   async function handleDrop(targetId) {
     if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
     const from = roles.findIndex(r => r.id === dragId)
-    const to   = roles.findIndex(r => r.id === targetId)
+    const to = roles.findIndex(r => r.id === targetId)
     if (from === -1 || to === -1) { setDragId(null); setDragOverId(null); return }
 
     const reordered = [...roles]
@@ -436,7 +436,15 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button
                             className="btn-primary"
-                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, true) }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+
+                              onSelectRole(
+                                role,
+                                true,
+                                assignments[role.id].employee_id
+                              )
+                            }}
                             style={{ fontSize: 11, padding: '7px 16px' }}
                           >
                             View analysis →
