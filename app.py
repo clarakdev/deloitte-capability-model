@@ -528,7 +528,7 @@ def get_candidates(
     
     _require_capabilities_exist(role_id)
     role = _ROLE_BY_ID.get(role_id)
-    role_title = role["title"] if role else ""
+    role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
     results = rank_candidates(
         caps,
@@ -564,7 +564,7 @@ def get_candidate_fit(role_id: str, emp_id: str):
     return analyse_fit(caps, employee)
 
 
-# ── LLM gap analysis (Sprint 2) ────────────────────────────────────────────────
+# LLM gap analysis
 
 @app.post(
     "/roles/{role_id}/candidates/{emp_id}/llm-report",
@@ -583,9 +583,14 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     (US-S2-07). Returns 503 if the LLM service is unavailable — the
     deterministic `GET .../fit` endpoint remains usable (US-S2-06).
     """
-    role = _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
-
+    
+    role = _ROLE_BY_ID.get(role_id)
+    role_context = {
+        "title": role["title"] if role else "",
+        "description": role["description"] if role else "",
+    }
     employee = _EMP_BY_ID.get(emp_id)
     if employee is None:
         raise HTTPException(status_code=404, detail=f"Employee '{emp_id}' not found.")
@@ -599,7 +604,7 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     fit_report = analyse_fit(caps, employee)
     try:
         result = await generate_fit_report(
-            role_context={"title": role["title"], "description": role["description"]},
+            role_context=role_context,
             role_capabilities=caps,
             employee=employee,
             fit_report=fit_report,
@@ -649,9 +654,14 @@ async def auto_select_candidate(role_id: str):
     (US-S2-07). Returns 503 if the LLM is unavailable; callers should fall
     back to embedding rank #1 in that case (US-S2-06).
     """
-    role = _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
+    role = _ROLE_BY_ID.get(role_id)
+    role_title = role["title"] if role else ""
+    role_description = role["description"] if role else ""
+    role_context = {"title": role_title, "description": role_description}
+    
     cap_hash = _capability_hash(caps)
     cache_key = ("auto", role_id, cap_hash)
     cached = _llm_cache.get(cache_key)

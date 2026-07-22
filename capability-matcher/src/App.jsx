@@ -151,6 +151,7 @@ export default function App() {
           mode={mode}
           autoSelect={autoSelect}
           viewSavedAssignment={viewSavedAssignment}
+          selectedRole={selectedRole}
           onBack={() => goTo(mode === 'auto' ? 2 : 3)}
           onBackToRoles={() => goTo(1)}
         />

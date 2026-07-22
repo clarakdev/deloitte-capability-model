@@ -115,3 +115,168 @@ export function requestAutoSelect(roleId) {
     method: 'POST',
   })
 }
+
+// Supabase — Projects
+// These functions talk directly to Supabase for project and role CRUD.
+// Capabilities, matching and gap analysis still go through FastAPI.
+
+const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
+
+export async function getProjects() {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*, roles(*)')
+    .eq('created_by', CURRENT_USER_ID)
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function createProject({ name, client, description, duration, start_date }) {
+  const { data, error } = await supabase
+    .from('projects')
+    .insert([{ name, client, description, duration, start_date, created_by: CURRENT_USER_ID }])
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function updateProject(id, updates) {
+  const { data, error } = await supabase
+    .from('projects')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function deleteProject(id) {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// Supabase — Roles
+
+export async function getRoles(projectId) {
+  const { data, error } = await supabase
+    .from('roles')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('sort_order', { ascending: true })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function createRole(projectId, { title, description, sort_order = 0 }) {
+  const { data, error } = await supabase
+    .from('roles')
+    .insert([{ project_id: projectId, title, description, sort_order }])
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function updateRole(id, updates) {
+  const { data, error } = await supabase
+    .from('roles')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function deleteRole(id) {
+  const { error } = await supabase
+    .from('roles')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// Supabase — Capabilities
+
+export async function saveCapabilities(roleId, capabilities) {
+  await supabase.from('capabilities').delete().eq('role_id', roleId)
+  if (capabilities.length === 0) return []
+  const { data, error } = await supabase
+    .from('capabilities')
+    .insert(
+      capabilities.map(cap => ({
+        role_id:          roleId,
+        cap_id:           cap.cap_id,
+        name:             cap.name,
+        esco_description: cap.esco_description || '',
+        weight:           cap.weight,
+        is_inferred:      cap.is_inferred,
+      }))
+    )
+    .select()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function getSavedCapabilities(roleId) {
+  const { data, error } = await supabase
+    .from('capabilities')
+    .select('*')
+    .eq('role_id', roleId)
+    .order('created_at', { ascending: true })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Supabase — Assignments
+
+export async function saveAssignment(roleId, projectId, employee) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .upsert({
+      role_id:       roleId,
+      project_id:    projectId,
+      employee_id:   employee.employee_id,
+      employee_name: employee.name,
+      match_score:   employee.match_score,
+    }, { onConflict: 'role_id' })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function getAssignment(roleId) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*')
+    .eq('role_id', roleId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function getProjectAssignments(projectId) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*')
+    .eq('project_id', projectId)
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Infer capabilities for Supabase roles
+
+export function inferCapabilities(roleId, title, description) {
+  return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, description }),
+  })
+}

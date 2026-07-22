@@ -9,7 +9,15 @@
 //      saves the assignment to Supabase
 
 import { useEffect, useState } from 'react'
-import { getCandidateFit, getCandidates, getAssignment, saveAssignment } from '../api/api'
+import { supabase } from '../supabase'
+import {
+  getCandidateFit,
+  getCandidates,
+  getAssignment,
+  saveAssignment,
+  requestLLMReport,
+  inferCapabilities,
+} from '../api/api'
 
 function simColor(sim, isGap) {
   if (isGap)       return '#e05252'
@@ -33,15 +41,17 @@ function WeightDots({ weight }) {
 export default function Frame4({
   roleId, projectId, empId, mode,
   autoSelect, viewSavedAssignment,
+  selectedRole,
   onBack, onBackToRoles
 }) {
-  const [fitData, setFitData]   = useState([])
-  const [employee, setEmployee] = useState(null)
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(null)
-
-  // Auto mode collapsible top-5 panel
+  const [fitData, setFitData]                     = useState([])
+  const [employee, setEmployee]                   = useState(null)
+  const [loading, setLoading]                     = useState(true)
+  const [error, setError]                         = useState(null)
   const [showTopCandidates, setShowTopCandidates] = useState(false)
+  const [report, setReport]                       = useState(null)
+  const [reportStatus, setReportStatus]           = useState('idle')
+  const [showReport, setShowReport]               = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -49,6 +59,33 @@ export default function Frame4({
       setError(null)
 
       try {
+        // Step 1 — load role from Supabase to get title and description
+        // needed to re-infer capabilities if backend was restarted
+        let roleTitle = selectedRole?.title || ''
+        let roleDescription = selectedRole?.description || ''
+
+        if (!roleTitle && roleId) {
+          const { data } = await supabase
+            .from('roles')
+            .select('title, description')
+            .eq('id', roleId)
+            .single()
+          if (data) {
+            roleTitle = data.title
+            roleDescription = data.description
+          }
+        }
+
+        // Step 2 — re-infer capabilities into FastAPI memory
+        if (roleTitle) {
+          try {
+            await inferCapabilities(roleId, roleTitle, roleDescription)
+          } catch (e) {
+            console.warn('Could not re-infer capabilities:', e)
+          }
+        }
+
+        // Step 3 — load candidates and resolve employee
         let resolvedEmpId = empId
         let resolvedEmployee = null
 
@@ -59,7 +96,6 @@ export default function Frame4({
         }
 
         if (viewSavedAssignment) {
-          // Came from "View analysis" in Frame 1 — load saved assignment from Supabase
           const savedAssignment = await getAssignment(roleId)
           if (!savedAssignment) {
             setError('No saved assignment found for this role.')
@@ -76,21 +112,17 @@ export default function Frame4({
           }
 
         } else if (mode === 'auto') {
-          // Auto mode — use LLM pick if available, otherwise fall back to top candidate
           if (autoSelect && !autoSelect.error) {
             resolvedEmpId = autoSelect.selected_employee_id
           } else {
             resolvedEmpId = candidates[0].employee_id
           }
           resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || candidates[0]
-
-          // Save assignment to Supabase
           if (projectId) {
             await saveAssignment(roleId, projectId, resolvedEmployee)
           }
 
         } else if (resolvedEmpId) {
-          // Hands-on mode — came from Frame 3 with a selected employee
           resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || null
           if (!resolvedEmployee) {
             setError('Selected employee could not be found.')
@@ -116,6 +148,29 @@ export default function Frame4({
 
     load()
   }, [roleId, empId, projectId, mode, viewSavedAssignment])
+
+  async function handleGenerateReport() {
+    if (reportStatus === 'loading') return
+    if (reportStatus === 'done' || reportStatus === 'error') {
+      setShowReport(p => !p)
+      return
+    }
+    setReportStatus('loading')
+    setShowReport(true)
+    try {
+      const data = await requestLLMReport(roleId, employee?.employee_id)
+      setReport(data)
+      setReportStatus('done')
+    } catch (err) {
+      const msg = err?.message?.includes('503')
+        ? 'AI report unavailable — check OPENROUTER_API_KEY. Deterministic matching still works.'
+        : 'Could not generate AI report. Is the backend running?'
+      setReport({ error: msg })
+      setReportStatus('error')
+    }
+  }
+
+
 
   if (loading) return <div className="loading">Running gap analysis…</div>
   if (error)   return <div className="error">{error}</div>
@@ -160,6 +215,67 @@ export default function Frame4({
               <div style={{ fontSize: 10, color: '#999999' }}>overall match</div>
             </div>
           </div>
+        </div>
+      )}
+      {/* Generate AI fit report button — hands-on mode */}
+      {!loading && employee && (
+        <div style={{ marginBottom: 14 }}>
+          <button
+            onClick={handleGenerateReport}
+            disabled={reportStatus === 'loading'}
+            style={{
+              fontSize: 11, fontWeight: 600,
+              padding: '6px 14px', borderRadius: 7, cursor: 'pointer',
+              fontFamily: 'inherit',
+              border: `1px solid ${reportStatus === 'done' ? '#86BC25' : '#2a2a2a'}`,
+              background: reportStatus === 'done' ? '#1e2a14' : 'transparent',
+              color: reportStatus === 'done' ? '#86BC25' : '#888888',
+              opacity: reportStatus === 'loading' ? 0.5 : 1,
+            }}
+          >
+            {reportStatus === 'loading' ? 'Generating AI report…'
+              : reportStatus === 'done' ? (showReport ? 'Hide AI report ▲' : 'Show AI report ▼')
+              : reportStatus === 'error' ? 'AI report — retry'
+              : 'Generate AI fit report'}
+          </button>
+
+          {/* Inline report panel */}
+          {showReport && reportStatus !== 'idle' && (
+            <div style={{
+              marginTop: 8, padding: '14px 16px',
+              background: '#0f0f0f',
+              border: '1px solid #2a2a2a',
+              borderRadius: 8,
+            }}>
+              {reportStatus === 'loading' && (
+                <div style={{ fontSize: 12, color: '#888' }}>Generating AI report…</div>
+              )}
+              {reportStatus === 'error' && (
+                <div style={{ fontSize: 12, color: '#e05252' }}>{report?.error}</div>
+              )}
+              {reportStatus === 'done' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+                    <span style={{ fontSize: 26, fontWeight: 700, color: '#86BC25' }}>
+                      {report.overall_fit_score}
+                    </span>
+                    <span style={{
+                      fontSize: 10, color: '#888',
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                    }}>
+                      overall fit score
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: 12, lineHeight: 1.7, color: '#c0c0c0',
+                    margin: 0, whiteSpace: 'pre-wrap',
+                  }}>
+                    {report.report}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
