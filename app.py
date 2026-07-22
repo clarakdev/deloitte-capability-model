@@ -29,8 +29,10 @@ from pathlib import Path
 from typing import Annotated
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
 from core.capability_inference import infer_capabilities
@@ -41,7 +43,9 @@ from core.embedding_engine import (
     get_uri_to_index,
 )
 from core.gap_analysis import analyse_fit
+from core.logger import log_security_event
 from core.matching import rank_candidates
+from core.security import ALGORITHM, SECRET_KEY, create_access_token, verify_password
 
 # ── Data loading (at import time) ─────────────────────────────────────────────
 
@@ -210,6 +214,182 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
         skill_type=s.get("skillType", ""),
         reuse_level=s.get("reuseLevel", ""),
         description=s.get("description", ""),
+    )
+
+# ── Authentication and RBAC ────────────────────────────────────────────────
+
+# Store the user-account file path once so the authentication section can read
+# the local users.json file without altering any route behavior.
+_USERS_FILE = _DATA_DIR / "users.json"
+# This in-memory lookup lets the API resolve a username to its stored password
+# hash and role quickly during login attempts and protected endpoint checks.
+_USERS_BY_USERNAME: dict[str, dict] = {}
+
+# OAuth2PasswordBearer defines how FastAPI will expect the bearer token to be
+# supplied in the Authorization header for protected endpoints.
+# The tokenUrl="login" points the Swagger UI to the /login route.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+
+# Pydantic models in this section act as a validation and serialization contract.
+# UserLogin ensures that the incoming login payload is shaped correctly and that
+# required values like username and password are present before the route logic
+# receives them. TokenData and TokenResponse define the expected structure for
+# token-related payloads so callers receive a predictable, sanitized response.
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class TokenData(BaseModel):
+    username: str
+    role: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+    role: str
+
+
+def _load_users() -> None:
+    # Load the local user inventory from disk and populate the in-memory lookup.
+    # This keeps the dictionary available immediately when the module is imported,
+    # so login and token validation can resolve users without repeated file reads.
+    if not _USERS_FILE.exists():
+        _USERS_BY_USERNAME.clear()
+        return
+    loaded_users: list[dict] = _load_json(_USERS_FILE)
+    _USERS_BY_USERNAME.clear()
+    for user in loaded_users:
+        username = user.get("username")
+        if isinstance(username, str) and username:
+            _USERS_BY_USERNAME[username] = {
+                "username": username,
+                "password_hash": user.get("password_hash", ""),
+                "role": user.get("role", "user"),
+                "employee_id": user.get("employee_id"),
+            }
+
+
+# Load the users once at module import time so the authentication layer is ready
+# before any request reaches the protected endpoints.
+_load_users()
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    # Create a consistent 401 response for any failed token handling, whether the
+    # issue is malformed input, invalid signature, missing claims, or a missing
+    # user record in the local lookup.
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Invalid authentication credentials",
+    )
+    try:
+        # Decode and validate the incoming JWT using python-jose. The token is
+        # checked against the configured secret and algorithm before any claims are
+        # accepted as trustworthy.
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Extract the identity and role claims from the payload. These are the
+        # values that the application uses to establish the current user context.
+        username: str | None = payload.get("sub")
+        role: str | None = payload.get("role")
+        if username is None or role is None:
+            raise credentials_exception
+    except JWTError as exc:
+        # If the token is malformed, expired, or tampered with, python-jose raises
+        # an exception that is converted into the same 401 response the client sees.
+        raise credentials_exception from exc
+
+    # Use the in-memory user dictionary to confirm the token subject still maps
+    # to a known account that exists in the local authentication data store.
+    user = _USERS_BY_USERNAME.get(username)
+    if user is None:
+        raise credentials_exception
+    # Ensure that the role embedded in the token still matches the role assigned
+    # to the verified user in the local registry.
+    if str(user.get("role", "")).strip().lower() != str(role).strip().lower():
+        raise credentials_exception
+    return user
+
+
+def require_roles(allowed_roles: list[str]):
+    # This function is a dependency factory that returns a fresh async dependency
+    # for each allowed-role list. It follows the factory pattern because the
+    # outer function closes over the allowed_roles list and builds a role-specific
+    # gate around the shared get_current_user dependency.
+    async def dependency(current_user: dict = Depends(get_current_user)) -> dict:
+        # FastAPI resolves the dependency graph automatically when the route is
+        # called. The current_user dependency runs first, and if the user is valid,
+        # this inner function evaluates the role membership rule. If the role is
+        # not allowed, the request is rejected with 403 and a security log entry is
+        # emitted for audit purposes.
+        normalized_role = str(current_user.get("role", "")).strip().lower()
+        normalized_allowed = {str(item).strip().lower() for item in allowed_roles}
+        if normalized_role not in normalized_allowed:
+            log_security_event(
+                username=current_user.get("username", "unknown"),
+                role=current_user.get("role", "unknown"),
+                action="access_denied",
+                status="FAILED",
+                details=f"required_roles={allowed_roles}",
+            )
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return current_user
+
+    return dependency
+
+
+@app.post(
+    "/login",
+    response_model=TokenResponse,
+    tags=["Authentication"],
+    summary="Authenticate a user and issue a JWT",
+)
+async def login(payload: UserLogin) -> TokenResponse:
+    # Resolve the supplied username in the preloaded lookup. If the account does
+    # not exist, the request is rejected immediately and an audit event is logged.
+    user = _USERS_BY_USERNAME.get(payload.username)
+    if user is None:
+        log_security_event(
+            username=payload.username,
+            role="unknown",
+            action="login",
+            status="FAILED",
+            details="user_not_found",
+        )
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    # Verify the submitted password against the stored bcrypt hash. The secure
+    # comparison is delegated to the password helper so the API never compares or
+    # stores plain-text credentials directly.
+    if not verify_password(payload.password, user.get("password_hash", "")):
+        log_security_event(
+            username=payload.username,
+            role=user.get("role", "unknown"),
+            action="login",
+            status="FAILED",
+            details="invalid_password",
+        )
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    # A successful credential check triggers an audit log entry and a signed JWT
+    # containing the verified identity and role claim for downstream protected
+    # routes.
+    log_security_event(
+        username=payload.username,
+        role=user.get("role", "unknown"),
+        action="login",
+        status="SUCCESS",
+        details="jwt_issued",
+    )
+    token = create_access_token({"sub": payload.username, "role": user.get("role", "user")})
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        username=payload.username,
+        role=user.get("role", "user"),
     )
 
 
@@ -458,6 +638,7 @@ def search_esco(
     response_model=list[CandidateOut],
     tags=["Matching"],
     summary="Rank employees by fit to a role",
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))]
 )
 def get_candidates(
     role_id: str,
@@ -495,8 +676,23 @@ def get_candidates(
     response_model=list[FitItemOut],
     tags=["Matching"],
     summary="Per-capability fit breakdown for a candidate",
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager", "Employee"]))]
 )
-def get_candidate_fit(role_id: str, emp_id: str):
+def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(get_current_user)):
+    
+    # If they are an Employee, block them if they try to look at someone else's
+    # emp_id. The comparison is performed against the employee_id mapping stored
+    # for that account so self-service access remains isolated to the user's own
+    # profile while all other lookups are rejected with HTTP 403.
+    current_role = str(current_user.get("role", "")).strip().lower()
+    if current_role == "employee":
+        user_emp_id = current_user.get("employee_id") or current_user.get("username")
+        if str(user_emp_id) != str(emp_id):
+            raise HTTPException(
+                status_code=403,
+                detail="Access Denied: Employees are only permitted to view their own fit analysis."
+            )
+    
     """
     Return a per-capability fit breakdown for a specific employee (US007).
 
@@ -512,3 +708,5 @@ def get_candidate_fit(role_id: str, emp_id: str):
         raise HTTPException(status_code=404, detail=f"Employee '{emp_id}' not found.")
 
     return analyse_fit(caps, employee)
+
+
