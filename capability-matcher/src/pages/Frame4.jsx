@@ -61,93 +61,54 @@ export default function Frame4({
         let resolvedEmployee = null
 
         const candidates = await getCandidates(roleId, false, false)
-
         if (candidates.length === 0) {
           setError('No candidates found for this role.')
           return
         }
 
-        if (resolvedEmpId) {
-          // Hands-on mode:
-          // Use the employee selected and saved in Frame3.
-          resolvedEmployee =
-            candidates.find(
-              candidate => candidate.employee_id === resolvedEmpId
-            ) || null
-
-          if (!resolvedEmployee && viewSavedAssignment) {
-            const savedAssignment = await getAssignment(roleId)
-
-            if (savedAssignment) {
-              resolvedEmployee = {
-                employee_id: savedAssignment.employee_id,
-                name: savedAssignment.employee_name,
-                match_score: savedAssignment.match_score,
-                title: '',
-                business_unit: '',
-                location: '',
-              }
-            }
-          }
-
-        } else if (viewSavedAssignment) {
-          // User clicked "View analysis" from Frame1:
-          // Load the employee already saved for this role.
+        if (viewSavedAssignment) {
+          // Came from "View analysis" in Frame 1 — load saved assignment
           const savedAssignment = await getAssignment(roleId)
-
           if (!savedAssignment) {
-            setError('No saved assignment was found for this role.')
+            setError('No saved assignment found for this role.')
             return
           }
-
           resolvedEmpId = savedAssignment.employee_id
-
-          resolvedEmployee =
-            candidates.find(
-              candidate =>
-                candidate.employee_id === savedAssignment.employee_id
-            ) || {
-              employee_id: savedAssignment.employee_id,
-              name: savedAssignment.employee_name,
-              match_score: savedAssignment.match_score,
-              title: '',
-              business_unit: '',
-              location: '',
-            }
-
-        } else if (mode === 'auto') {
-          // New or redone Auto match:
-          // Always select the current highest-ranked candidate.
-          resolvedEmployee = candidates[0]
-          resolvedEmpId = resolvedEmployee.employee_id
-
-          if (!projectId) {
-            throw new Error('Project ID is missing.')
+          resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || {
+            employee_id:   savedAssignment.employee_id,
+            name:          savedAssignment.employee_name,
+            match_score:   savedAssignment.match_score,
+            title:         '',
+            business_unit: '',
+            location:      '',
           }
 
-          // Overwrite any existing manual or Auto assignment.
-          await saveAssignment(
-            roleId,
-            projectId,
-            resolvedEmployee
-          )
+        } else if (mode === 'auto' && !resolvedEmpId) {
+          // Auto mode — pick top ranked candidate and save assignment
+          resolvedEmployee = candidates[0]
+          resolvedEmpId = resolvedEmployee.employee_id
+          if (!projectId) throw new Error('Project ID is missing.')
+          await saveAssignment(roleId, projectId, resolvedEmployee)
+
+        } else if (resolvedEmpId) {
+          // Hands-on mode — came from Frame 3 with a selected employee
+          resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || null
+          if (!resolvedEmployee) {
+            setError('Selected employee could not be found.')
+            return
+          }
 
         } else {
           setError('No employee was selected.')
           return
         }
 
-        if (!resolvedEmployee) {
-          setError('The selected employee could not be found.')
-          return
-        }
-
         setEmployee(resolvedEmployee)
-
         const fit = await getCandidateFit(roleId, resolvedEmpId)
         setFitData(fit)
+
       } catch (e) {
-        console.error('Failed to load or save gap analysis:', e)
+        console.error('Gap analysis error:', e)
         setError('Could not load gap analysis. Is the backend running?')
       } finally {
         setLoading(false)
@@ -155,13 +116,7 @@ export default function Frame4({
     }
 
     load()
-  }, [
-    roleId,
-    empId,
-    projectId,
-    mode,
-    viewSavedAssignment,
-  ])
+  }, [roleId, empId, projectId, mode, viewSavedAssignment])
 
   if (loading) return <div className="loading">Running gap analysis…</div>
   if (error) return <div className="error">{error}</div>
@@ -365,7 +320,7 @@ export default function Frame4({
           Next role →
         </button>
         <button
-          className="btn-primary"
+          className="btn-secondary"
           onClick={() => alert('Export feature not ready yet for now...')}
         >
           Export report →
