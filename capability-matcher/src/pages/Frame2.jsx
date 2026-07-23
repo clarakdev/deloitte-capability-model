@@ -1,32 +1,19 @@
 // Frame2.jsx — Skill requirements screen (Step 2 of 4).
-//
-// What it does:
-//   1. On mount, calls getCapabilities(roleId) → GET /roles/{id}/capabilities
-//      The backend auto-infers the top 5 ESCO skills using AI on the first call.
-//      Subsequent calls return the current edited list (stored in backend memory).
-//   2. Displays each capability with its name, ESCO description, and a weight
-//      slider (1–5). The user can adjust weights, remove skills, or add new ones.
-//   3. Adding a skill: user types in the search box → searchEsco(q) hits
-//      GET /esco/search?q=... → results appear → user clicks one to add it.
-//   4. In Auto mode, Next jumps straight to Frame 4 (backend picks best candidate).
-//      In Hands-on mode, Next goes to Frame 3 (user picks manually).
-//
-// Props:
-//   roleId        — e.g. "ROLE001", set in Frame 1
-//   mode          — "auto" | "hands" (controls what the Next button says)
-//   onBack()      — navigate back to Frame 1
-//   onNext(id)    — navigate to Frame 3 or 4
+
 
 import { useEffect, useState } from 'react'
 import {
   getCapabilities,
+  inferCapabilities,
   updateCapability,
   deleteCapability,
   addCapability,
   searchEsco,
+  saveCapabilities,
+  getSavedCapabilities,
 } from '../api/api'
 
-export default function Frame2({ roleId, mode, onBack, onNext }) {
+export default function Frame2({ roleId, role, mode, onBack, onNext }) {
   // caps    — the current list of capabilities for this role
   // loading — true while the initial fetch is running
   // error   — error message if the fetch fails
@@ -45,17 +32,49 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
   // saving — tracks which capId is currently being saved (shows a spinner on that row)
   const [saving, setSaving] = useState(null)
 
-  // ── Load capabilities on mount ──────────────────────────────────────────
-  // Runs once when Frame 2 first appears. Triggers AI inference on the backend
-  // if this is the first time this role's capabilities have been requested.
+  const [weightValues, setWeightValues] = useState({})
+
+  // Load capabilities on mount
   useEffect(() => {
-    getCapabilities(roleId)
-      .then(setCaps)
-      .catch(() => setError('Could not load capabilities. Is the backend running?'))
-      .finally(() => setLoading(false))
+    async function loadCaps() {
+      try {
+        // Check if capabilities are already saved in Supabase for this role
+        // If so, load them and also sync them to the FastAPI backend memory
+        if (role?.title) {
+          const saved = await getSavedCapabilities(roleId)
+          if (saved && saved.length > 0) {
+            // Load saved caps into FastAPI memory so weights/edits work
+            await inferCapabilities(roleId, role.title, role.description)
+            // Use the saved caps for display
+            setCaps(saved.map(c => ({
+              cap_id:           c.cap_id,
+              name:             c.name,
+              esco_description: c.esco_description,
+              weight:           c.weight,
+              is_inferred:      c.is_inferred,
+            })))
+            setLoading(false)
+            return
+          }
+        }
+
+        // No saved caps — infer from AI or load from backend
+        const loadFn = role?.title
+          ? inferCapabilities(roleId, role.title, role.description)
+          : getCapabilities(roleId)
+
+        const data = await loadFn
+        setCaps(data)
+      } catch (e) {
+        setError('Could not load capabilities. Is the backend running?')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCaps()
   }, [roleId])
 
-  // ── Weight change ───────────────────────────────────────────────────────
+  // Weight change
   // Called when the user moves a weight slider.
   // Sends PUT /roles/{roleId}/capabilities/{capId} with the new weight.
   // Updates the local caps list immediately so the UI feels instant.
@@ -190,7 +209,7 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
                 fontSize: 11, color: '#c8c8c8', lineHeight: 1.7,
                 marginBottom: 10,
                 paddingLeft: 10,
-                borderLeft: '2px solid #3a3a3a',
+                borderLeft: '2px solid #3a3a3a', textAlign: 'left'
             }}>
                 {cap.esco_description}
             </p>
@@ -199,19 +218,26 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
             {/* Row 3: weight slider
                 The weight (1–5) controls how much this skill influences the
                 candidate ranking. Higher weight = this skill matters more. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)', width: 42 }}>Weight</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              <span style={{ fontSize: 10, color: '#555', width: 42 }}>Weight</span>
+              <span style={{ fontSize: 10, color: '#555' }}>1</span>
               <input
                 type="range"
                 min={1} max={5} step={1}
-                defaultValue={cap.weight}
+                value={weightValues[cap.cap_id] ?? cap.weight}
+                onChange={(e) => setWeightValues(prev => ({ ...prev, [cap.cap_id]: Number(e.target.value) }))}
                 onMouseUp={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
                 onTouchEnd={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
-                style={{ flex: 1, accentColor: '#86BC25', height: 3 }}
+                style={{ flex: 1, accentColor: '#86BC25', height: 4, cursor: 'pointer' }}
               />
-              {/* Show current weight value. While saving, show a small indicator. */}
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#86BC25', minWidth: 14 }}>
-                {saving === cap.cap_id ? '…' : cap.weight}
+              <span style={{ fontSize: 10, color: '#555' }}>5</span>
+              <span style={{
+                background: '#86BC25', color: '#0a0a0a',
+                fontSize: 11, fontWeight: 700,
+                borderRadius: 5, padding: '2px 8px',
+                minWidth: 24, textAlign: 'center',
+              }}>
+                {saving === cap.cap_id ? '…' : (weightValues[cap.cap_id] ?? cap.weight)}
               </span>
             </div>
           </div>
@@ -288,7 +314,18 @@ export default function Frame2({ roleId, mode, onBack, onNext }) {
       {/* ── Navigation ── */}
       <div className="actions">
         <button className="btn-secondary" onClick={onBack}>← Back</button>
-        <button className="btn-primary" onClick={() => onNext(roleId)}>
+        <button
+          className="btn-primary"
+          onClick={async () => {
+            // Save current capability list to Supabase before moving on
+            try {
+              await saveCapabilities(roleId, caps)
+            } catch (e) {
+              console.error('Failed to save capabilities:', e)
+            }
+            onNext(roleId)
+          }}
+        >
           {mode === 'auto' ? 'Run auto-match →' : 'Browse candidates →'}
         </button>
       </div>

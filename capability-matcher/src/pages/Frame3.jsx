@@ -1,32 +1,12 @@
 // Frame3.jsx — Candidate selection screen (Step 3 of 4). Hands-on mode only.
-//
-// What it does:
-//   1. On mount, calls getCandidates(roleId) → GET /roles/{roleId}/candidates
-//      The backend ranks all 30 employees by semantic fit to the role's
-//      current capability list (weighted cosine similarity).
-//   2. Displays employees as cards ranked by match_score (highest first).
-//   3. Two filter toggles:
-//      - Available only   → ?available_only=true   (removes unavailable employees)
-//      - Prior experience → ?require_prior_experience=true (only employees who
-//        have held this role title before — exactly 3 per role in demo data)
-//   4. User clicks a candidate card to select them, then clicks Submit to
-//      call onNext(empId) which stores the empId in App.jsx and goes to Frame 4.
-//
-// Props:
-//   roleId       — e.g. "ROLE001"
-//   onBack()     — navigate back to Frame 2
-//   onNext(empId)— navigate to Frame 4 with the selected employee id
 
 import { useEffect, useState } from 'react'
-import { getCandidates, requestLLMReport } from '../api/api'
+import { getCandidates, saveAssignment, requestLLMReport } from '../api/api'
 
-// Generates initials from a full name e.g. "Jane Smith" → "JS"
 function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
-// Assigns a consistent avatar colour based on the employee's id
-// so the same person always gets the same colour across frames
 const AVATAR_COLORS = [
   { bg: '#1e2a14', color: '#86BC25' },
   { bg: '#0d1f33', color: '#5b9bd5' },
@@ -37,60 +17,44 @@ const AVATAR_COLORS = [
 ]
 
 function avatarColor(empId) {
-  // Uses the numeric part of the id (e.g. "EMP007" → 7) to pick a colour
   const n = parseInt(empId.replace(/\D/g, ''), 10) || 0
   return AVATAR_COLORS[n % AVATAR_COLORS.length]
 }
 
-// Converts a 0–1 match score to a colour for the score badge
 function scoreColor(score) {
-  if (score >= 0.85) return { bg: '#1e2a14', color: '#86BC25' } // strong
-  if (score >= 0.70) return { bg: '#0d1f33', color: '#5b9bd5' } // good
-  return { bg: '#2a1e0a', color: '#d4922a' }                    // moderate
+  if (score >= 0.85) return { bg: '#1e2a14', color: '#86BC25' }
+  if (score >= 0.70) return { bg: '#0d1f33', color: '#5b9bd5' }
+  return { bg: '#2a1e0a', color: '#d4922a' }
 }
 
-export default function Frame3({ roleId, onBack, onNext }) {
-  // candidates   — full list returned from the backend (sorted by match_score)
-  // loading      — true while fetching
-  // error        — error message if fetch fails
+export default function Frame3({ roleId, projectId, onBack, onNext }) {
   const [candidates, setCandidates] = useState([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
-
-  // selectedId — the empId the user has clicked on (null = none selected yet)
   const [selectedId, setSelectedId] = useState(null)
+  const [availableOnly, setAvailableOnly] = useState(false)
+  const [priorExpOnly, setPriorExpOnly]   = useState(false)
 
-  // Filter toggles — when changed, re-fetches from the backend with new params
-  const [availableOnly, setAvailableOnly]   = useState(false)
-  const [priorExpOnly, setPriorExpOnly]     = useState(false)
-
-  // Per-employee LLM report state: empId → { status, data, error }
-  // status is 'idle' | 'loading' | 'done' | 'error'
+  // Per-employee LLM report state: empId → { status, data, error, hidden }
   const [reports, setReports] = useState({})
 
-  // ── Fetch candidates whenever filters change ─────────────────────────────
-  // The dependency array [roleId, availableOnly, priorExpOnly] means this
-  // runs on mount AND whenever either filter toggle is switched.
-  // This ensures weights changed in Frame 2 are reflected here too —
-  // every visit re-fetches fresh ranked results from the backend.
   useEffect(() => {
     setLoading(true)
-    setSelectedId(null) // clear selection when filters change
+    setSelectedId(null)
     getCandidates(roleId, availableOnly, priorExpOnly)
       .then(setCandidates)
       .catch(() => setError('Could not load candidates. Is the backend running?'))
       .finally(() => setLoading(false))
   }, [roleId, availableOnly, priorExpOnly])
 
-  // ── Generate / toggle the LLM report for one candidate ───────────────────
+  // Generate or toggle the LLM report for one candidate
   async function handleGenerateReport(empId) {
-    // If the report is already loaded, toggle it closed (re-click shows it again).
     const existing = reports[empId]
     if (existing?.status === 'done' || existing?.status === 'error') {
       setReports(r => ({ ...r, [empId]: { ...existing, hidden: !existing.hidden } }))
       return
     }
-    if (existing?.status === 'loading') return // debounce double-clicks
+    if (existing?.status === 'loading') return
 
     setReports(r => ({ ...r, [empId]: { status: 'loading', hidden: false } }))
     try {
@@ -113,15 +77,8 @@ export default function Frame3({ roleId, onBack, onNext }) {
         Candidates ranked by capability match score — click a card to select
       </div>
 
-      {/* ── Filter toggles ── */}
-      {/* These hit the backend with different query params.
-          Both flags are always shown on every candidate card regardless
-          of whether the filter is active. */}
-      <div style={{
-        display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap',
-      }}>
-
-        {/* Available only filter */}
+      {/* Filter toggles */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <label style={{
           display: 'flex', alignItems: 'center', gap: 8,
           background: availableOnly ? '#1e2a14' : '#1a1a1a',
@@ -130,16 +87,12 @@ export default function Frame3({ roleId, onBack, onNext }) {
           fontSize: 12, color: availableOnly ? '#86BC25' : '#888',
           fontWeight: availableOnly ? 600 : 400,
         }}>
-          <input
-            type="checkbox"
-            checked={availableOnly}
+          <input type="checkbox" checked={availableOnly}
             onChange={e => setAvailableOnly(e.target.checked)}
-            style={{ accentColor: '#86BC25' }}
-          />
+            style={{ accentColor: '#86BC25' }} />
           Available only
         </label>
 
-        {/* Prior experience filter */}
         <label style={{
           display: 'flex', alignItems: 'center', gap: 8,
           background: priorExpOnly ? '#1e2a14' : '#1a1a1a',
@@ -148,25 +101,18 @@ export default function Frame3({ roleId, onBack, onNext }) {
           fontSize: 12, color: priorExpOnly ? '#86BC25' : '#888',
           fontWeight: priorExpOnly ? 600 : 400,
         }}>
-          <input
-            type="checkbox"
-            checked={priorExpOnly}
+          <input type="checkbox" checked={priorExpOnly}
             onChange={e => setPriorExpOnly(e.target.checked)}
-            style={{ accentColor: '#86BC25' }}
-          />
+            style={{ accentColor: '#86BC25' }} />
           Prior experience only
         </label>
 
-        {/* Live count of results */}
-        <span style={{
-          marginLeft: 'auto', fontSize: 11, color: '#555',
-          alignSelf: 'center',
-        }}>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
           {loading ? 'Loading…' : `${candidates.length} candidates`}
         </span>
       </div>
 
-      {/* ── Candidate cards ── */}
+      {/* Candidate cards */}
       {loading && <div className="loading">Ranking candidates…</div>}
 
       {!loading && candidates.length === 0 && (
@@ -176,170 +122,167 @@ export default function Frame3({ roleId, onBack, onNext }) {
       )}
 
       {!loading && candidates.map((c) => {
-        const av  = avatarColor(c.employee_id)
-        const sc  = scoreColor(c.match_score)
+        const av = avatarColor(c.employee_id)
+        const sc = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId
         const rpt = reports[c.employee_id]
-        const showPanel = rpt && !rpt.hidden && (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
+        const showPanel = rpt && !rpt.hidden &&
+          (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
 
         return (
           <div key={c.employee_id} style={{ marginBottom: 8 }}>
-          <div
-            onClick={() => setSelectedId(c.employee_id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 14,
-              padding: '12px 16px',
-              background: isSelected ? '#131a0d' : '#161616',
-              border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}
-          >
-            {/* Avatar circle with initials */}
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-              background: av.bg, color: av.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 700,
-            }}>
-              {getInitials(c.name)}
-            </div>
-
-            {/* Name, title, business unit */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
-                {c.name}
-              </div>
-              <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
-                {c.title} · {c.business_unit} · {c.location}
-              </div>
-
-              {/* Match score bar */}
+            <div
+              onClick={() => setSelectedId(c.employee_id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '12px 16px',
+                background: isSelected ? '#131a0d' : '#161616',
+                border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
+                borderRadius: showPanel ? '8px 8px 0 0' : 8,
+                cursor: 'pointer',
+              }}
+            >
+              {/* Avatar */}
               <div style={{
-                height: 3, background: '#1f1f1f', borderRadius: 2, marginTop: 7,
-              }}>
-                <div style={{
-                  height: 3, borderRadius: 2,
-                  width: `${Math.round(c.match_score * 100)}%`,
-                  background: '#86BC25',
-                }} />
-              </div>
-            </div>
-
-            {/* Right side: score badge + status flags */}
-            <div style={{
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'flex-end', gap: 5, flexShrink: 0,
-            }}>
-              {/* Match score percentage */}
-              <span style={{
-                background: sc.bg, color: sc.color,
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                background: av.bg, color: av.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 700,
-                padding: '3px 9px', borderRadius: 20,
               }}>
-                {Math.round(c.match_score * 100)}%
-              </span>
+                {getInitials(c.name)}
+              </div>
 
-              <div style={{ display: 'flex', gap: 5 }}>
-                {/* Available badge — shown on every card regardless of filter */}
+              {/* Name, title, score bar */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
+                  {c.name}
+                </div>
+                <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
+                  {c.title} · {c.business_unit} · {c.location}
+                </div>
+                <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2, marginTop: 7 }}>
+                  <div style={{
+                    height: 3, borderRadius: 2,
+                    width: `${Math.round(c.match_score * 100)}%`,
+                    background: '#86BC25',
+                  }} />
+                </div>
+              </div>
+
+              {/* Right side: score, badges, AI report button */}
+              <div style={{
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'flex-end', gap: 5, flexShrink: 0,
+              }}>
                 <span style={{
-                  fontSize: 10, padding: '2px 7px', borderRadius: 10,
-                  background: c.available ? '#1e2a14' : '#2a0d0d',
-                  color:      c.available ? '#86BC25' : '#e05252',
+                  background: sc.bg, color: sc.color,
+                  fontSize: 11, fontWeight: 700,
+                  padding: '3px 9px', borderRadius: 20,
                 }}>
-                  {c.available ? 'Available' : 'Unavailable'}
+                  {Math.round(c.match_score * 100)}%
                 </span>
 
-                {/* Prior experience badge — shown when true */}
-                {c.has_prior_experience && (
+                <div style={{ display: 'flex', gap: 5 }}>
                   <span style={{
                     fontSize: 10, padding: '2px 7px', borderRadius: 10,
-                    background: '#0d1f33', color: '#5b9bd5',
+                    background: c.available ? '#1e2a14' : '#2a0d0d',
+                    color: c.available ? '#86BC25' : '#e05252',
                   }}>
-                    Prior exp
+                    {c.available ? 'Available' : 'Unavailable'}
                   </span>
-                )}
+                  {c.has_prior_experience && (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#0d1f33', color: '#5b9bd5',
+                    }}>
+                      Prior exp
+                    </span>
+                  )}
+                </div>
+
+                {/* Generate AI report button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleGenerateReport(c.employee_id) }}
+                  disabled={rpt?.status === 'loading'}
+                  style={{
+                    marginTop: 4, fontSize: 10, fontWeight: 600,
+                    padding: '4px 10px', borderRadius: 10, cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    border: `1px solid ${rpt?.status === 'done' ? '#86BC25' : '#333'}`,
+                    background: rpt?.status === 'done' ? '#1e2a14' : 'transparent',
+                    color: rpt?.status === 'done' ? '#86BC25' : '#888',
+                    opacity: rpt?.status === 'loading' ? 0.5 : 1,
+                  }}
+                >
+                  {rpt?.status === 'loading' ? 'Generating…'
+                    : rpt?.status === 'done' ? 'AI report ✓'
+                    : rpt?.status === 'error' ? 'AI report — retry'
+                    : 'Generate AI report'}
+                </button>
               </div>
 
-              {/* Sprint 2 — Generate AI report button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); handleGenerateReport(c.employee_id) }}
-                disabled={rpt?.status === 'loading'}
-                style={{
-                  marginTop: 4, fontSize: 10, fontWeight: 600,
-                  padding: '4px 10px', borderRadius: 10, cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  border: `1px solid ${rpt?.status === 'done' ? '#86BC25' : '#333'}`,
-                  background: rpt?.status === 'done' ? '#1e2a14' : 'transparent',
-                  color:      rpt?.status === 'done' ? '#86BC25' : '#888',
-                  opacity: rpt?.status === 'loading' ? 0.5 : 1,
-                }}
-              >
-                {rpt?.status === 'loading' ? 'Generating…'
-                  : rpt?.status === 'done' ? 'AI report ✓'
-                  : rpt?.status === 'error' ? 'AI report — retry'
-                  : 'Generate AI report'}
-              </button>
+              {/* Selection checkmark */}
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                border: `1.5px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
+                background: isSelected ? '#86BC25' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, color: '#0a0a0a', fontWeight: 700,
+              }}>
+                {isSelected && '✓'}
+              </div>
             </div>
 
-            {/* Selection checkmark */}
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-              border: `1.5px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
-              background: isSelected ? '#86BC25' : 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, color: '#0a0a0a', fontWeight: 700,
-            }}>
-              {isSelected && '✓'}
-            </div>
-          </div>
-
-          {/* ── Sprint 2: inline AI report panel ── */}
-          {showPanel && (
-            <div style={{
-              marginTop: -1, padding: '12px 16px',
-              background: '#0f0f0f',
-              border: `1px solid #2a2a2a`,
-              borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
-            }}>
-              {rpt.status === 'loading' && (
-                <div style={{ fontSize: 12, color: '#888' }}>Generating AI report…</div>
-              )}
-              {rpt.status === 'error' && (
-                <div style={{ fontSize: 12, color: '#e05252' }}>{rpt.error}</div>
-              )}
-              {rpt.status === 'done' && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-                    <span style={{ fontSize: 22, fontWeight: 700, color: '#86BC25' }}>
-                      {rpt.data.overall_fit_score}
-                    </span>
-                    <span style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      overall fit
-                    </span>
-                  </div>
-                  <p style={{
-                    fontSize: 12, lineHeight: 1.5, color: '#c0c0c0',
-                    margin: 0, whiteSpace: 'pre-wrap',
-                  }}>
-                    {rpt.data.report}
-                  </p>
-                </>
-              )}
-            </div>
-          )}
+            {/* Inline AI report panel */}
+            {showPanel && (
+              <div style={{
+                padding: '12px 16px', background: '#0f0f0f',
+                border: '1px solid #2a2a2a',
+                borderTop: 'none',
+                borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
+              }}>
+                {rpt.status === 'loading' && (
+                  <div style={{ fontSize: 12, color: '#888' }}>Generating AI report…</div>
+                )}
+                {rpt.status === 'error' && (
+                  <div style={{ fontSize: 12, color: '#e05252' }}>{rpt.error}</div>
+                )}
+                {rpt.status === 'done' && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontSize: 22, fontWeight: 700, color: '#86BC25' }}>
+                        {rpt.data.overall_fit_score}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        overall fit
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12, lineHeight: 1.5, color: '#c0c0c0', margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {rpt.data.report}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )
       })}
 
-      {/* ── Navigation ── */}
-      {/* Submit is disabled until a candidate is selected */}
+      {/* Navigation */}
       <div className="actions">
         <button className="btn-secondary" onClick={onBack}>← Back</button>
         <button
           className="btn-primary"
           disabled={!selectedId}
-          onClick={() => onNext(selectedId)}
+          onClick={async () => {
+            const selected = candidates.find(c => c.employee_id === selectedId)
+            try {
+              await saveAssignment(roleId, projectId, selected)
+            } catch (e) {
+              console.error('Failed to save assignment:', e)
+            }
+            onNext(selectedId)
+          }}
           style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
           View gap analysis →

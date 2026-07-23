@@ -212,11 +212,29 @@ def _require_role(role_id: str) -> dict:
         raise HTTPException(status_code=404, detail=f"Role '{role_id}' not found.")
     return role
 
+def _require_capabilities_exist(role_id: str) -> None:
+    """
+    Ensures a capability list exists for this role.
+    Works for both hardcoded role IDs (ROLE001 etc) and Supabase UUIDs.
+    For Supabase roles, capabilities must have been inferred first via
+    POST /roles/{id}/capabilities/infer before this is called.
+    """
+    if role_id not in _capability_state and role_id not in _ROLE_BY_ID:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No capabilities found for role '{role_id}'. Call /capabilities/infer first."
+        )
 
 def _get_or_infer_capabilities(role_id: str) -> list[dict]:
     """Return capabilities for a role, inferring them on first access."""
     if role_id not in _capability_state:
-        role = _require_role(role_id)
+        # Try hardcoded roles first, otherwise raise
+        role = _ROLE_BY_ID.get(role_id)
+        if role is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Role '{role_id}' not found. For Supabase roles, call /capabilities/infer first."
+            )
         _capability_state[role_id] = infer_capabilities(role["title"], role["description"])
     return _capability_state[role_id]
 
@@ -257,6 +275,28 @@ def get_project():
 
 # ── Capabilities ───────────────────────────────────────────────────────────────
 
+class InferCapabilitiesIn(BaseModel):
+    title: str
+    description: str
+
+
+@app.post(
+    "/infer/{role_id}/capabilities",
+    response_model=list[CapabilityOut],
+    tags=["Capabilities"],
+    summary="Infer capabilities from a role title and description",
+)
+def infer_capabilities_from_description(role_id: str, body: InferCapabilitiesIn):
+    """
+    Infer capabilities for any role using its title and description.
+    Used for roles coming from Supabase that are not in project.json.
+    On subsequent calls returns the cached capability list if it exists.
+    """
+    if role_id not in _capability_state:
+        _capability_state[role_id] = infer_capabilities(body.title, body.description)
+    return [_cap_to_out(c) for c in _capability_state[role_id]]
+
+
 @app.get(
     "/roles/{role_id}/capabilities",
     response_model=list[CapabilityOut],
@@ -266,11 +306,10 @@ def get_project():
 def get_capabilities(role_id: str):
     """
     Return the capability list for a role.
-
-    On first call, capabilities are automatically inferred from the role
-    description (US001, US002). Subsequent calls return the current edited list.
+    Works for both hardcoded roles (ROLE001 etc) and Supabase UUIDs.
+    For Supabase roles, call /infer/{role_id}/capabilities first.
     """
-    _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
     return [_cap_to_out(c) for c in caps]
 
@@ -285,11 +324,9 @@ def get_capabilities(role_id: str):
 def add_capability(role_id: str, body: AddCapabilityIn):
     """
     Add an ESCO skill to a role's capability list (US003).
-
-    Supply the ESCO `conceptUri` (from `GET /esco/search`) and an optional
-    importance weight (1–5, default 3).
+    Supply the ESCO conceptUri (from GET /esco/search) and an optional weight (1-5, default 3).
     """
-    _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
     uri_to_index = get_uri_to_index()
@@ -321,7 +358,6 @@ def add_capability(role_id: str, body: AddCapabilityIn):
     _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in caps]
 
-
 @app.put(
     "/roles/{role_id}/capabilities/{cap_id:path}",
     response_model=list[CapabilityOut],
@@ -339,7 +375,7 @@ def update_capability(role_id: str, cap_id: str, body: UpdateCapabilityIn):
 
     `cap_id` in the URL is the ESCO `conceptUri` (URL-encoded).
     """
-    _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
     if body.weight is None and body.esco_uri is None:
@@ -398,7 +434,7 @@ def delete_capability(role_id: str, cap_id: str):
 
     `cap_id` in the URL is the ESCO `conceptUri` (URL-encoded).
     """
-    _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
     new_caps = [c for c in caps if c["cap_id"] != cap_id]
@@ -489,14 +525,17 @@ def get_candidates(
 
     Uses the role's current capability list (auto-inferred on first call).
     """
-    role = _require_role(role_id)
+    
+    _require_capabilities_exist(role_id)
+    role = _ROLE_BY_ID.get(role_id)
+    role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
     results = rank_candidates(
         caps,
         _EMPLOYEES,
         require_prior_experience=require_prior_experience,
         available_only=available_only,
-        role_title=role["title"],
+        role_title=role_title,
     )
     return results
 
@@ -515,7 +554,7 @@ def get_candidate_fit(role_id: str, emp_id: str):
     skill, the cosine similarity, and whether it is flagged as a gap
     (similarity < 0.6).
     """
-    _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
     employee = _EMP_BY_ID.get(emp_id)
@@ -525,7 +564,7 @@ def get_candidate_fit(role_id: str, emp_id: str):
     return analyse_fit(caps, employee)
 
 
-# ── LLM gap analysis (Sprint 2) ────────────────────────────────────────────────
+# LLM gap analysis
 
 @app.post(
     "/roles/{role_id}/candidates/{emp_id}/llm-report",
@@ -544,9 +583,14 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     (US-S2-07). Returns 503 if the LLM service is unavailable — the
     deterministic `GET .../fit` endpoint remains usable (US-S2-06).
     """
-    role = _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
-
+    
+    role = _ROLE_BY_ID.get(role_id)
+    role_context = {
+        "title": role["title"] if role else "",
+        "description": role["description"] if role else "",
+    }
     employee = _EMP_BY_ID.get(emp_id)
     if employee is None:
         raise HTTPException(status_code=404, detail=f"Employee '{emp_id}' not found.")
@@ -560,7 +604,7 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     fit_report = analyse_fit(caps, employee)
     try:
         result = await generate_fit_report(
-            role_context={"title": role["title"], "description": role["description"]},
+            role_context=role_context,
             role_capabilities=caps,
             employee=employee,
             fit_report=fit_report,
@@ -610,9 +654,14 @@ async def auto_select_candidate(role_id: str):
     (US-S2-07). Returns 503 if the LLM is unavailable; callers should fall
     back to embedding rank #1 in that case (US-S2-06).
     """
-    role = _require_role(role_id)
+    _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
 
+    role = _ROLE_BY_ID.get(role_id)
+    role_title = role["title"] if role else ""
+    role_description = role["description"] if role else ""
+    role_context = {"title": role_title, "description": role_description}
+    
     cap_hash = _capability_hash(caps)
     cache_key = ("auto", role_id, cap_hash)
     cached = _llm_cache.get(cache_key)
