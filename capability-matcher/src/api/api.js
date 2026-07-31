@@ -106,13 +106,30 @@ export function getCandidates(roleId, availableOnly = false, requirePriorExp = f
 export function getCandidateFit(roleId, empId) {
   return request(`/roles/${roleId}/candidates/${empId}/fit`);
 }
+// LLM gap analysis (hands-on report + auto selection)
 
-// Frame 0 — Project management
+// Request an objective prose fit report + 0–100 score for one candidate.
+// Returns { employee_id, overall_fit_score, report }.
+export function requestLLMReport(roleId, empId) {
+  return request(`/roles/${roleId}/candidates/${empId}/llm-report`, {
+    method: 'POST',
+  })
+}
 
-// Temporary user id — replace with real user id from login session later
+// Ask the LLM to pick the best candidate from the top 5 (auto mode).
+// Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
+export function requestAutoSelect(roleId) {
+  return request(`/roles/${roleId}/auto-select`, {
+    method: 'POST',
+  })
+}
+
+// Supabase — Projects
+// These functions talk directly to Supabase for project and role CRUD.
+// Capabilities, matching and gap analysis still go through FastAPI.
+
 const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
 
-// Fetch all projects belonging to the current user
 export async function getProjects() {
   const { data, error } = await supabase
     .from('projects')
@@ -123,7 +140,6 @@ export async function getProjects() {
   return data
 }
 
-// Create a new project
 export async function createProject({ name, client, description, duration, start_date }) {
   const { data, error } = await supabase
     .from('projects')
@@ -134,7 +150,6 @@ export async function createProject({ name, client, description, duration, start
   return data
 }
 
-// Update an existing project
 export async function updateProject(id, updates) {
   const { data, error } = await supabase
     .from('projects')
@@ -146,7 +161,6 @@ export async function updateProject(id, updates) {
   return data
 }
 
-// Delete a project — roles are deleted automatically
 export async function deleteProject(id) {
   const { error } = await supabase
     .from('projects')
@@ -155,9 +169,8 @@ export async function deleteProject(id) {
   if (error) throw new Error(error.message)
 }
 
-// Roles
+// Supabase — Roles
 
-// Fetch all roles for a project
 export async function getRoles(projectId) {
   const { data, error } = await supabase
     .from('roles')
@@ -168,23 +181,16 @@ export async function getRoles(projectId) {
   return data
 }
 
-// Create a new role under a project
 export async function createRole(projectId, { title, description, sort_order = 0 }) {
   const { data, error } = await supabase
     .from('roles')
-    .insert([{ 
-      project_id:  projectId, 
-      title, 
-      description, 
-      sort_order
-    }])
+    .insert([{ project_id: projectId, title, description, sort_order }])
     .select()
     .single()
   if (error) throw new Error(error.message)
   return data
 }
 
-// Update a role title or description
 export async function updateRole(id, updates) {
   const { data, error } = await supabase
     .from('roles')
@@ -196,7 +202,6 @@ export async function updateRole(id, updates) {
   return data
 }
 
-// Delete a role
 export async function deleteRole(id) {
   const { error } = await supabase
     .from('roles')
@@ -205,28 +210,11 @@ export async function deleteRole(id) {
   if (error) throw new Error(error.message)
 }
 
-// Infers capabilities for a Supabase role using its title and description.
-// Used instead of getCapabilities() when the role has a UUID not known to the backend.
-// Backend endpoint: POST /roles/{roleId}/capabilities/infer
-export function inferCapabilities(roleId, title, description) {
-  return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description }),
-  })
-}
+// Supabase — Capabilities
 
-// Capabilities persistence
-// Saves the final capability list for a role to Supabase after Frame 2.
-// On revisit, Frame 2 loads from Supabase instead of re-inferring from AI.
-
-// Save all capabilities for a role (replaces existing ones)
 export async function saveCapabilities(roleId, capabilities) {
-  // Delete existing capabilities for this role first
   await supabase.from('capabilities').delete().eq('role_id', roleId)
-
   if (capabilities.length === 0) return []
-
   const { data, error } = await supabase
     .from('capabilities')
     .insert(
@@ -244,7 +232,6 @@ export async function saveCapabilities(roleId, capabilities) {
   return data
 }
 
-// Load saved capabilities for a role from Supabase
 export async function getSavedCapabilities(roleId) {
   const { data, error } = await supabase
     .from('capabilities')
@@ -255,10 +242,8 @@ export async function getSavedCapabilities(roleId) {
   return data
 }
 
-// Assignments
-// Stores the employee chosen for a role after Frame 3.
+// Supabase — Assignments
 
-// Save or update the employee assigned to a role
 export async function saveAssignment(roleId, projectId, employee) {
   const { data, error } = await supabase
     .from('assignments')
@@ -275,7 +260,6 @@ export async function saveAssignment(roleId, projectId, employee) {
   return data
 }
 
-// Load the assignment for a role
 export async function getAssignment(roleId) {
   const { data, error } = await supabase
     .from('assignments')
@@ -286,7 +270,6 @@ export async function getAssignment(roleId) {
   return data
 }
 
-// Load all assignments for a project
 export async function getProjectAssignments(projectId) {
   const { data, error } = await supabase
     .from('assignments')
@@ -294,4 +277,14 @@ export async function getProjectAssignments(projectId) {
     .eq('project_id', projectId)
   if (error) throw new Error(error.message)
   return data
+}
+
+// Infer capabilities for Supabase roles
+
+export function inferCapabilities(roleId, title, description) {
+  return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, description }),
+  })
 }

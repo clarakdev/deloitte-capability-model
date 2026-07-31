@@ -1,14 +1,7 @@
 .venv/
-
-node_modules/
-__pycache__/
-*.pyc
-
 venv/
+node_modules/
 __pycache__/
 *.pyc
 .DS_Store
 .env
-
-
-data/security_audit.log

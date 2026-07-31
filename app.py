@@ -23,12 +23,14 @@ Ref: Commission Decision 2011/833/EU.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -44,6 +46,12 @@ from core.embedding_engine import (
 )
 from core.gap_analysis import analyse_fit
 from core.logger import log_security_event
+from core.llm_report import (
+    ConfigError as LLMConfigError,
+    LLMReportError,
+    generate_fit_report,
+    select_best_candidate,
+)
 from core.matching import rank_candidates
 from core.security import (
     ALGORITHM,
@@ -52,6 +60,10 @@ from core.security import (
     get_supabase_client,
     resolve_profile_from_user_id,
 )
+
+# Load .env (OPENROUTER_API_KEY / OPENROUTER_BASE_URL / OPENROUTER_MODEL) at
+# import time so the LLM client picks up config without manual env exports.
+load_dotenv()
 
 # ── Data loading (at import time) ─────────────────────────────────────────────
 
@@ -70,6 +82,28 @@ _ROLE_BY_ID: dict[str, dict] = {r["id"]: r for r in _PROJECT["roles"]}
 
 # In-memory capability state: role_id → list of capability dicts
 _capability_state: dict[str, list[dict]] = {}
+
+# In-memory LLM cache, invalidated whenever a role's capabilities change.
+# Keys: ("report", role_id, emp_id, capability_hash) for hands-on reports,
+#       ("auto",   role_id, capability_hash)              for auto-selection.
+# capability_hash is a stable digest of the role's capability ids+weights.
+_llm_cache: dict[tuple, dict] = {}
+
+
+def _capability_hash(caps: list[dict]) -> str:
+    """Stable digest of a role's capability ids + weights (order-independent)."""
+    pairs = sorted(
+        (str(c.get("cap_id", "")), int(c.get("weight", 1))) for c in caps
+    )
+    raw = json.dumps(pairs, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+def _invalidate_llm_cache(role_id: str) -> None:
+    """Drop all cached LLM results for a role (called on capability mutation)."""
+    keys_to_drop = [k for k in _llm_cache if k[1] == role_id]
+    for k in keys_to_drop:
+        _llm_cache.pop(k, None)
 
 
 # ── Startup warm-up ───────────────────────────────────────────────────────────
@@ -165,6 +199,19 @@ class EscoSkillOut(BaseModel):
     skill_type: str
     reuse_level: str
     description: str
+
+
+class LLMReportOut(BaseModel):
+    employee_id: str
+    overall_fit_score: int  # 0–100
+    report: str
+
+
+class AutoSelectOut(BaseModel):
+    role_id: str
+    selected_employee_id: str
+    rationale: str
+    all_top_candidates: list[dict]  # [{employee_id, name, match_score}, ...]
 
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
@@ -485,6 +532,7 @@ def add_capability(role_id: str, body: AddCapabilityIn):
         "weight":           body.weight,
         "is_inferred":      False,
     })
+    _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in caps]
 
 @app.put(
@@ -547,6 +595,7 @@ def update_capability(role_id: str, cap_id: str, body: UpdateCapabilityIn):
         cap["embedding"]        = esco_embs[skill_idx].copy()
         cap["is_inferred"]      = False
 
+    _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in caps]
 
 
@@ -572,6 +621,7 @@ def delete_capability(role_id: str, cap_id: str):
             detail=f"Capability '{cap_id}' not found on role '{role_id}'.",
         )
     _capability_state[role_id] = new_caps
+    _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in new_caps]
 
 
@@ -656,7 +706,7 @@ def get_candidates(
     
     _require_capabilities_exist(role_id)
     role = _ROLE_BY_ID.get(role_id)
-    role_title = role["title"] if role else ""
+    role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
     results = rank_candidates(
         caps,
@@ -707,4 +757,170 @@ def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(ge
 
     return analyse_fit(caps, employee)
 
+
+
+# LLM gap analysis
+
+@app.post(
+    "/roles/{role_id}/candidates/{emp_id}/llm-report",
+    response_model=LLMReportOut,
+    tags=["LLM"],
+    summary="Generate an AI fit report for a candidate (hands-on mode)",
+)
+async def get_llm_fit_report(role_id: str, emp_id: str):
+    """
+    Generate an objective prose fit report + overall fit score (0–100) for
+    a specific employee against the role (US-S2-01, US-S2-02).
+
+    The LLM interprets the deterministic `analyse_fit()` output; it does not
+    re-judge fit from raw text. Responses are cached per (role, employee,
+    capability hash) and invalidated when the role's capabilities change
+    (US-S2-07). Returns 503 if the LLM service is unavailable — the
+    deterministic `GET .../fit` endpoint remains usable (US-S2-06).
+    """
+    _require_capabilities_exist(role_id)
+    caps = _get_or_infer_capabilities(role_id)
+    
+    role = _ROLE_BY_ID.get(role_id)
+    role_context = {
+        "title": role["title"] if role else "",
+        "description": role["description"] if role else "",
+    }
+    employee = _EMP_BY_ID.get(emp_id)
+    if employee is None:
+        raise HTTPException(status_code=404, detail=f"Employee '{emp_id}' not found.")
+
+    cap_hash = _capability_hash(caps)
+    cache_key = ("report", role_id, emp_id, cap_hash)
+    cached = _llm_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    fit_report = analyse_fit(caps, employee)
+    try:
+        result = await generate_fit_report(
+            role_context=role_context,
+            role_capabilities=caps,
+            employee=employee,
+            fit_report=fit_report,
+        )
+    except LLMConfigError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "LLM report unavailable: OPENROUTER_API_KEY is not set. "
+                "Embedding-based analysis is still available at "
+                f"/roles/{role_id}/candidates/{emp_id}/fit."
+            ),
+        ) from exc
+    except LLMReportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "LLM report unavailable at this time. "
+                "Embedding-based analysis is still available at "
+                f"/roles/{role_id}/candidates/{emp_id}/fit."
+            ),
+        ) from exc
+
+    payload = LLMReportOut(
+        employee_id=emp_id,
+        overall_fit_score=result["overall_fit_score"],
+        report=result["report"],
+    )
+    _llm_cache[cache_key] = payload
+    return payload
+
+
+@app.post(
+    "/roles/{role_id}/auto-select",
+    response_model=AutoSelectOut,
+    tags=["LLM"],
+    summary="Let the LLM pick the best candidate from the top 5 (auto mode)",
+)
+async def auto_select_candidate(role_id: str):
+    """
+    Use the LLM to select the best-fit candidate from the top 5 embedding
+    results (US-S2-03). The LLM may override embedding rank #1; its choice is
+    binding and a short rationale is returned alongside the other top
+    candidates for transparency (US-S2-04).
+
+    Cached per (role, capability hash) and invalidated on capability change
+    (US-S2-07). Returns 503 if the LLM is unavailable; callers should fall
+    back to embedding rank #1 in that case (US-S2-06).
+    """
+    _require_capabilities_exist(role_id)
+    caps = _get_or_infer_capabilities(role_id)
+
+    role = _ROLE_BY_ID.get(role_id)
+    role_title = role["title"] if role else ""
+    role_description = role["description"] if role else ""
+    role_context = {"title": role_title, "description": role_description}
+    
+    cap_hash = _capability_hash(caps)
+    cache_key = ("auto", role_id, cap_hash)
+    cached = _llm_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    ranked = rank_candidates(caps, _EMPLOYEES, role_title=role["title"])
+    top = ranked[:5]
+    if not top:
+        raise HTTPException(
+            status_code=422,
+            detail="No ranked candidates available for this role.",
+        )
+
+    top_with_fit = []
+    for i, cand in enumerate(top, start=1):
+        emp = _EMP_BY_ID.get(cand["employee_id"])
+        if emp is None:
+            continue
+        top_with_fit.append({
+            "rank": i,
+            "employee": emp,
+            "match_score": cand["match_score"],
+            "fit_report": analyse_fit(caps, emp),
+        })
+
+    if not top_with_fit:
+        raise HTTPException(
+            status_code=422,
+            detail="No ranked candidates available for this role.",
+        )
+
+    try:
+        result = await select_best_candidate(
+            role_context={"title": role["title"], "description": role["description"]},
+            role_capabilities=caps,
+            top_candidates_with_fit=top_with_fit,
+        )
+    except LLMConfigError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "LLM auto-select unavailable: OPENROUTER_API_KEY is not set. "
+                "Falling back to embedding rank #1 is recommended."
+            ),
+        ) from exc
+    except LLMReportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "LLM auto-select unavailable at this time. "
+                "Falling back to embedding rank #1 is recommended."
+            ),
+        ) from exc
+
+    payload = AutoSelectOut(
+        role_id=role_id,
+        selected_employee_id=result["selected_employee_id"],
+        rationale=result["rationale"],
+        all_top_candidates=[
+            {"employee_id": c["employee_id"], "name": c["name"], "match_score": c["match_score"]}
+            for c in top
+        ],
+    )
+    _llm_cache[cache_key] = payload
+    return payload
 
