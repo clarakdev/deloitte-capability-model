@@ -9,7 +9,15 @@ const BASE_URL = 'http://localhost:8000';
 // If the server returns an error status (4xx, 5xx), it throws so the
 // calling component can catch it and show an error message.
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, options);
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  const headers = {
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
   return res.json();
 }

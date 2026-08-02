@@ -31,8 +31,10 @@ from typing import Annotated
 
 import numpy as np
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
 from core.capability_inference import infer_capabilities
@@ -43,6 +45,7 @@ from core.embedding_engine import (
     get_uri_to_index,
 )
 from core.gap_analysis import analyse_fit
+from core.logger import log_security_event
 from core.llm_report import (
     ConfigError as LLMConfigError,
     LLMReportError,
@@ -50,6 +53,13 @@ from core.llm_report import (
     select_best_candidate,
 )
 from core.matching import rank_candidates
+from core.security import (
+    ALGORITHM,
+    SECRET_KEY,
+    decode_supabase_access_token,
+    get_supabase_client,
+    resolve_profile_from_user_id,
+)
 
 # Load .env (OPENROUTER_API_KEY / OPENROUTER_BASE_URL / OPENROUTER_MODEL) at
 # import time so the LLM client picks up config without manual env exports.
@@ -257,6 +267,173 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
         skill_type=s.get("skillType", ""),
         reuse_level=s.get("reuseLevel", ""),
         description=s.get("description", ""),
+    )
+
+# ── Authentication and RBAC ────────────────────────────────────────────────
+
+# OAuth2PasswordBearer defines how FastAPI will expect the bearer token to be
+# supplied in the Authorization header for protected endpoints.
+# The tokenUrl="login" points the Swagger UI to the /login route.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+
+# Pydantic models in this section act as a validation and serialization contract.
+# UserLogin ensures that the incoming login payload is shaped correctly and that
+# required values like username and password are present before the route logic
+# receives them. TokenData and TokenResponse define the expected structure for
+# token-related payloads so callers receive a predictable, sanitized response.
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class TokenData(BaseModel):
+    username: str
+    role: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+    role: str
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    # Create a consistent 401 response for any failed token handling, whether the
+    # issue is malformed input, invalid signature, missing claims, or a missing
+    # profile record in the Supabase lookup.
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Invalid authentication credentials",
+    )
+    try:
+        response = decode_supabase_access_token(token)
+        user_id = getattr(getattr(response, "user", None), "id", None)
+        if user_id is None:
+            raise credentials_exception
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase authentication configuration error",
+        ) from exc
+    except Exception as exc:
+        raise credentials_exception from exc
+
+    profile = resolve_profile_from_user_id(str(user_id))
+    if profile is None:
+        raise credentials_exception
+
+    role = str(profile.get("role", "user") or "user").strip().lower()
+    if not role:
+        raise credentials_exception
+
+    return {
+        "user_id": str(user_id),
+        "username": str(user_id),
+        "role": role,
+        "employee_id": profile.get("employee_id"),
+        "first_name": profile.get("first_name"),
+        "last_name": profile.get("last_name"),
+    }
+
+
+def require_roles(allowed_roles: list[str]):
+    # This function is a dependency factory that returns a fresh async dependency
+    # for each allowed-role list. It follows the factory pattern because the
+    # outer function closes over the allowed_roles list and builds a role-specific
+    # gate around the shared get_current_user dependency.
+    async def dependency(current_user: dict = Depends(get_current_user)) -> dict:
+        # FastAPI resolves the dependency graph automatically when the route is
+        # called. The current_user dependency runs first, and if the user is valid,
+        # this inner function evaluates the role membership rule. If the role is
+        # not allowed, the request is rejected with 403 and a security log entry is
+        # emitted for audit purposes.
+        normalized_role = str(current_user.get("role", "")).strip().lower()
+        normalized_allowed = {str(item).strip().lower() for item in allowed_roles}
+        if normalized_role not in normalized_allowed:
+            log_security_event(
+                username=current_user.get("user_id") or current_user.get("username", "unknown"),
+                role=current_user.get("role", "unknown"),
+                action="access_denied",
+                status="FAILED",
+                details=f"required_roles={allowed_roles}",
+            )
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return current_user
+
+    return dependency
+
+
+@app.post(
+    "/login",
+    response_model=TokenResponse,
+    tags=["Authentication"],
+    summary="Authenticate a user and issue a JWT",
+)
+async def login(payload: UserLogin) -> TokenResponse:
+    try:
+        client = get_supabase_client()
+        auth_response = client.auth.sign_in_with_password(
+            {
+                "email": payload.username,
+                "password": payload.password,
+            }
+        )
+    except Exception as exc:
+        log_security_event(
+            username=payload.username,
+            role="unknown",
+            action="login",
+            status="FAILED",
+            details="supabase_auth_failed",
+        )
+        raise HTTPException(status_code=401, detail="Invalid username or password") from exc
+
+    session = getattr(auth_response, "session", None)
+    access_token = None
+    if session is not None:
+        access_token = getattr(session, "access_token", None)
+    if access_token is None and isinstance(auth_response, dict):
+        access_token = auth_response.get("access_token")
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    auth_user = getattr(auth_response, "user", None)
+    if isinstance(auth_user, dict):
+        user_id = auth_user.get("id")
+        username = auth_user.get("email", payload.username)
+    else:
+        user_id = getattr(auth_user, "id", None)
+        username = getattr(auth_user, "email", None) or payload.username
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    profile = resolve_profile_from_user_id(str(user_id))
+    if profile is None:
+        log_security_event(
+            username=str(user_id),
+            role="unknown",
+            action="login",
+            status="FAILED",
+            details="profile_not_found",
+        )
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    role = str(profile.get("role", "user") or "user").strip()
+    log_security_event(
+        username=str(user_id),
+        role=role,
+        action="login",
+        status="SUCCESS",
+        details="supabase_auth",
+    )
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        username=username or payload.username,
+        role=role,
     )
 
 
@@ -508,6 +685,7 @@ def search_esco(
     response_model=list[CandidateOut],
     tags=["Matching"],
     summary="Rank employees by fit to a role",
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))]
 )
 def get_candidates(
     role_id: str,
@@ -545,8 +723,24 @@ def get_candidates(
     response_model=list[FitItemOut],
     tags=["Matching"],
     summary="Per-capability fit breakdown for a candidate",
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager", "Employee"]))]
 )
-def get_candidate_fit(role_id: str, emp_id: str):
+def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(get_current_user)):
+    
+    # If they are an Employee, block them if they try to look at someone else's
+    # emp_id. The comparison is performed against the employee_id mapping stored
+    # for that account so self-service access remains isolated to the user's own
+    # profile while all other lookups are rejected with HTTP 403.
+    current_role = str(current_user.get("role", "")).strip().lower()
+    if current_role == "employee":
+        user_emp_id = current_user.get("employee_id") or current_user.get("username")
+        print(f"DEBUG emp_id={emp_id} current_user.employee_id={user_emp_id}")
+        if str(user_emp_id) != str(emp_id):
+            raise HTTPException(
+                status_code=403,
+                detail="Access Denied: Employees are only permitted to view their own fit analysis."
+            )
+    
     """
     Return a per-capability fit breakdown for a specific employee (US007).
 
@@ -562,6 +756,7 @@ def get_candidate_fit(role_id: str, emp_id: str):
         raise HTTPException(status_code=404, detail=f"Employee '{emp_id}' not found.")
 
     return analyse_fit(caps, employee)
+
 
 
 # LLM gap analysis
@@ -728,3 +923,4 @@ async def auto_select_candidate(role_id: str):
     )
     _llm_cache[cache_key] = payload
     return payload
+
