@@ -128,22 +128,50 @@ export function requestAutoSelect(roleId) {
 // These functions talk directly to Supabase for project and role CRUD.
 // Capabilities, matching and gap analysis still go through FastAPI.
 
-const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
+// Gets the real logged-in user's id from the current session.
+// Replaces the old CURRENT_USER_ID constant — that was a fake fixed
+// value, so every project was scoped to the same placeholder no matter
+// who was actually logged in.
+async function getCurrentUserId() {
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+  if (!userId) throw new Error('Not signed in.')
+  return userId
+}
 
+// Admins see every project platform-wide. Managers only see projects
+// they created themselves. Role comes from the user's own profile row.
 export async function getProjects() {
-  const { data, error } = await supabase
+  const userId = await getCurrentUserId()
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+  if (profileError) throw new Error(profileError.message)
+
+  let query = supabase
     .from('projects')
     .select('*, roles(*)')
-    .eq('created_by', CURRENT_USER_ID)
     .order('created_at', { ascending: false })
+
+  // Only Managers get filtered to their own projects. Admins see all.
+  if (profile?.role !== 'Admin') {
+    query = query.eq('created_by', userId)
+  }
+
+  const { data, error } = await query
   if (error) throw new Error(error.message)
   return data
 }
 
+// Stamps the new project with the real logged-in user's id.
 export async function createProject({ name, client, description, duration, start_date }) {
+  const userId = await getCurrentUserId()
   const { data, error } = await supabase
     .from('projects')
-    .insert([{ name, client, description, duration, start_date, created_by: CURRENT_USER_ID }])
+    .insert([{ name, client, description, duration, start_date, created_by: userId }])
     .select()
     .single()
   if (error) throw new Error(error.message)
