@@ -73,6 +73,27 @@ def test_similarity_in_range(pm_caps):
         )
 
 
+def test_similarity_uses_square_root_correction(monkeypatch):
+    """Semantic similarity is raised by the requested 0.5 power correction."""
+    import core.gap_analysis as gap_analysis
+
+    monkeypatch.setattr(
+        gap_analysis,
+        "embed_texts",
+        lambda texts: np.array([[0.25, np.sqrt(1 - 0.25**2)]], dtype=np.float32),
+    )
+    cap = {
+        "cap_id": "cap-1",
+        "name": "Capability",
+        "embedding": np.array([1.0, 0.0], dtype=np.float32),
+        "weight": 1,
+    }
+
+    result = gap_analysis.analyse_fit([cap], {"skills": [{"name": "Skill"}]})
+
+    assert result[0]["similarity"] == pytest.approx(0.5, abs=0.0001)
+
+
 # ── Gap threshold consistency ──────────────────────────────────────────────────
 
 def test_is_gap_consistent_with_threshold(pm_caps):
