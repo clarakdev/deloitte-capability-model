@@ -1,7 +1,7 @@
 // Frame3.jsx — Candidate selection screen (Step 3 of 4). Hands-on mode only.
 
 import { useEffect, useState } from 'react'
-import { getCandidates, saveAssignment, requestLLMReport } from '../api/api'
+import { getCandidates, requestLLMReport } from '../api/api'
 
 function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -274,15 +274,7 @@ export default function Frame3({ roleId, projectId, onBack, onNext }) {
         <button
           className="btn-primary"
           disabled={!selectedId}
-          onClick={async () => {
-            const selected = candidates.find(c => c.employee_id === selectedId)
-            try {
-              await saveAssignment(roleId, projectId, selected)
-            } catch (e) {
-              console.error('Failed to save assignment:', e)
-            }
-            onNext(selectedId)
-          }}
+          onClick={() => onNext(selectedId)}
           style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
           View gap analysis →
