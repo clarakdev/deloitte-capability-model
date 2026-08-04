@@ -128,22 +128,147 @@ export function requestAutoSelect(roleId) {
 // These functions talk directly to Supabase for project and role CRUD.
 // Capabilities, matching and gap analysis still go through FastAPI.
 
-const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
+// Gets the real logged-in user's id from the current session.
+// Replaces the old CURRENT_USER_ID constant — that was a fake fixed
+// value, so every project was scoped to the same placeholder no matter
+// who was actually logged in.
+async function getCurrentUserId() {
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+  if (!userId) throw new Error('Not signed in.')
+  return userId
+}
 
+// My Projects — returns the projects the current user created or is assigned to.
+// This is intentionally scoped for the dashboard demo and does not expose the
+// full project catalogue to every role.
 export async function getProjects() {
+  const userId = await getCurrentUserId()
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, employee_id, role')
+    .eq('id', userId)
+    .maybeSingle()
+  if (profileError) throw new Error(profileError.message)
+
+  const createdQuery = supabase
+    .from('projects')
+    .select('*, roles(*)')
+    .eq('created_by', userId)
+    .order('created_at', { ascending: false })
+
+  const { data: createdProjects, error: createdError } = await createdQuery
+  if (createdError) throw new Error(createdError.message)
+
+  const assignedProjectIds = []
+  if (profile?.employee_id) {
+    const { data: assignments, error: assignmentError } = await supabase
+      .from('assignments')
+      .select('project_id')
+      .eq('employee_id', profile.employee_id)
+
+    if (assignmentError) throw new Error(assignmentError.message)
+
+    assignments?.forEach((assignment) => {
+      if (assignment.project_id) {
+        assignedProjectIds.push(assignment.project_id)
+      }
+    })
+  }
+
+  let assignedProjects = []
+  if (assignedProjectIds.length > 0) {
+    const { data: assignedRows, error: assignedError } = await supabase
+      .from('projects')
+      .select('*, roles(*)')
+      .in('id', assignedProjectIds)
+      .order('created_at', { ascending: false })
+
+    if (assignedError) throw new Error(assignedError.message)
+    assignedProjects = assignedRows || []
+  }
+
+  const merged = [...(createdProjects || []), ...assignedProjects]
+  const uniqueProjects = merged.filter(
+    (project, index, array) => array.findIndex((entry) => entry.id === project.id) === index
+  )
+
+  return attachCreatorNames(uniqueProjects)
+}
+
+// Admin-only access to the full project directory.
+export async function getAllProjects() {
   const { data, error } = await supabase
     .from('projects')
     .select('*, roles(*)')
-    .eq('created_by', CURRENT_USER_ID)
     .order('created_at', { ascending: false })
+
   if (error) throw new Error(error.message)
-  return data
+  return attachCreatorNames(data || [])
 }
 
+// Adds the creator label directly onto each project so the dashboard can render
+// a stable "Created by" summary without changing the rest of the matching flow.
+async function attachCreatorNames(projects) {
+  const creatorIds = [...new Set((projects || []).map((project) => project?.created_by).filter(Boolean))]
+
+  let creatorMap = {}
+  if (creatorIds.length > 0) {
+    const { data: creators, error: creatorError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', creatorIds)
+
+    if (creatorError) throw new Error(creatorError.message)
+
+    creatorMap = Object.fromEntries(
+      (creators || []).map((creator) => {
+        const fullName = [creator?.first_name, creator?.last_name].filter(Boolean).join(' ')
+        return [creator.id, fullName || 'Resource Management Team']
+      })
+    )
+  }
+
+  return (projects || []).map((project) => ({
+    ...project,
+    created_by_name: creatorMap[project?.created_by] || 'Resource Management Team',
+  }))
+}
+
+// Role-based mock skills keep the dashboard preview realistic for the current
+// profile without touching the live backend employee-skill schema.
+export async function getMySkills(profile = null) {
+  const role = String(profile?.role || 'Employee').toLowerCase()
+
+  if (role === 'admin') {
+    return ['Cloud Architecture', 'Python', 'Stakeholder Reporting', 'Data Analysis']
+  }
+
+  if (role === 'manager') {
+    return ['Project Management', 'Stakeholder Communication', 'Data Analysis', 'React']
+  }
+
+  return ['React', 'Python', 'Data Analysis', 'Agile Delivery']
+}
+
+// Admin-only directory helpers for the dashboard shell.
+export async function getAllEmployees() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, employee_id, role, first_name, last_name')
+    .order('last_name', { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return data || []
+}
+
+// Stamps the new project with the real logged-in user's id.
 export async function createProject({ name, client, description, duration, start_date }) {
+  const userId = await getCurrentUserId()
   const { data, error } = await supabase
     .from('projects')
-    .insert([{ name, client, description, duration, start_date, created_by: CURRENT_USER_ID }])
+    .insert([{ name, client, description, duration, start_date, created_by: userId }])
     .select()
     .single()
   if (error) throw new Error(error.message)
