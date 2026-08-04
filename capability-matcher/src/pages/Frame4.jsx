@@ -25,6 +25,10 @@ function simColor(sim, isGap) {
   return '#5b9bd5'
 }
 
+function scoreOutOfFive(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 5)
+}
+
 function WeightDots({ weight }) {
   return (
     <div style={{ display: 'flex', gap: 2 }}>
@@ -344,7 +348,7 @@ export default function Frame4({
         gap: 10, marginBottom: 14,
       }}>
         {[
-          { num: `${Math.round(avgSimilarity * 100)}%`, label: 'Avg similarity' },
+          { num: `${scoreOutOfFive(avgSimilarity)}/5`, label: 'Avg fit' },
           { num: coveredCount,                           label: 'Skills covered' },
           { num: gapCount,                               label: 'Gaps to address' },
         ].map(s => (
@@ -379,7 +383,7 @@ export default function Frame4({
           <span>Capability</span>
           <span style={{ textAlign: 'center' }}>Weight</span>
           <span>Closest skill</span>
-          <span style={{ textAlign: 'right' }}>Similarity</span>
+          <span style={{ textAlign: 'right' }}>Fit (1–5)</span>
         </div>
 
         {fitData.map((f, i) => {
@@ -416,7 +420,7 @@ export default function Frame4({
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: barColor, marginBottom: 4 }}>
-                  {Math.round(f.similarity * 100)}%
+                  {scoreOutOfFive(f.similarity)}/5
                 </div>
                 <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2 }}>
                   <div style={{
