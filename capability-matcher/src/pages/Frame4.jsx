@@ -8,7 +8,9 @@
 //   3. Hands-on mode — empId set from Frame 3 candidate selection
 //      saves the assignment to Supabase
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { supabase } from "../supabase";
 import {
   getCandidateFit,
@@ -65,6 +67,8 @@ export default function Frame4({
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [existingAssignment, setExistingAssignment] = useState(null);
+  const exportRef = useRef(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -226,6 +230,70 @@ export default function Frame4({
     }
   }
 
+  async function handleExportReport() {
+    if (!exportRef.current || exporting) return;
+
+    setExporting(true);
+
+    try {
+      // Wait for the IBM Plex Sans web font to finish loading.
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(exportRef.current, {
+        scale: 2,
+        backgroundColor: "#0a0a0a",
+        useCORS: true,
+        logging: false,
+
+        // Hide all controls marked with pdf-hide in the copied document.
+        onclone: (clonedDocument) => {
+          clonedDocument.querySelectorAll(".pdf-hide").forEach((element) => {
+            element.style.display = "none";
+          });
+
+          const clonedPage = clonedDocument.querySelector(".pdf-snapshot");
+
+          if (clonedPage) {
+            clonedPage.style.background = "#0a0a0a";
+            clonedPage.style.paddingBottom = "24px";
+          }
+        },
+      });
+
+      const imageData = canvas.toDataURL("image/png", 1.0);
+
+      // Keep the report on one PDF page with the same proportions
+      // as the captured screen content.
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      const pdf = new jsPDF({
+        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
+        compress: true,
+      });
+
+      pdf.addImage(imageData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      const employeeName = employee?.name
+        ? employee.name
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-zA-Z0-9-]/g, "")
+        : "Employee";
+
+      pdf.save(`Gap-Analysis-${employeeName}.pdf`);
+    } catch (error) {
+      console.error("Failed to export gap analysis:", error);
+      window.alert("Could not export the gap analysis. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) return <div className="loading">Running gap analysis…</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -236,7 +304,7 @@ export default function Frame4({
     : 0;
 
   return (
-    <div className="page">
+    <div ref={exportRef} className="page pdf-snapshot">
       <div className="page-title">Gap analysis</div>
       <div className="page-sub">
         {mode === "auto"
@@ -295,7 +363,7 @@ export default function Frame4({
       )}
       {/* Generate AI fit report button — hands-on mode */}
       {!loading && employee && (
-        <div style={{ marginBottom: 14 }}>
+        <div className="pdf-hide" style={{ marginBottom: 14 }}>
           <button
             onClick={handleGenerateReport}
             disabled={reportStatus === "loading"}
@@ -690,7 +758,7 @@ export default function Frame4({
       </div>
 
       {/* Navigation */}
-      <div className="actions">
+      <div className="actions pdf-hide">
         {/* Only show during a new matching / redo matching */}
         {!viewSavedAssignment && (
           <button className="btn-secondary" onClick={onBack}>
@@ -709,11 +777,7 @@ export default function Frame4({
               cursor: saving || !employee ? "default" : "pointer",
             }}
           >
-            {saving
-              ? "Saving..."
-              : saveStatus === "saved"
-                ? "Saved ✓"
-                : "Save"}
+            {saving ? "Saving..." : saveStatus === "saved" ? "Saved ✓" : "Save"}
           </button>
         )}
 
@@ -724,10 +788,15 @@ export default function Frame4({
         )}
 
         <button
-          className="btn-secondary"
-          onClick={() => alert("Export feature coming in Sprint 2!")}
+          className="btn-primary"
+          onClick={handleExportReport}
+          disabled={exporting}
+          style={{
+            opacity: exporting ? 0.5 : 1,
+            cursor: exporting ? "default" : "pointer",
+          }}
         >
-          Export report
+          {exporting ? "Exporting..." : "Export report"}
         </button>
       </div>
     </div>
