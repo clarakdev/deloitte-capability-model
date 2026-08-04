@@ -113,11 +113,17 @@ export default function Frame4({
 
         } else if (mode === 'auto') {
           if (autoSelect && !autoSelect.error) {
+            // Trust the LLM pick directly
             resolvedEmpId = autoSelect.selected_employee_id
           } else {
-            resolvedEmpId = candidates[0].employee_id
+            // Fallback — pick top available candidate
+            const availableCandidates = candidates.filter(c => c.available)
+            resolvedEmpId = availableCandidates.length > 0
+              ? availableCandidates[0].employee_id
+              : candidates[0].employee_id
           }
           resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || candidates[0]
+
           if (projectId) {
             await saveAssignment(roleId, projectId, resolvedEmployee)
           }
@@ -147,7 +153,7 @@ export default function Frame4({
     }
 
     load()
-  }, [roleId, empId, projectId, mode, viewSavedAssignment])
+  }, [roleId, empId, projectId, mode, viewSavedAssignment, autoSelect])
 
   async function handleGenerateReport() {
     if (reportStatus === 'loading') return
@@ -174,6 +180,11 @@ export default function Frame4({
 
   if (loading) return <div className="loading">Running gap analysis…</div>
   if (error)   return <div className="error">{error}</div>
+
+  // In auto mode, wait for LLM selection before rendering
+  if (mode === 'auto' && !viewSavedAssignment && autoSelect === null) {
+    return <div className="loading">AI is selecting the best candidate…</div>
+  }
 
   const gapCount     = fitData.filter(f => f.is_gap).length
   const coveredCount = fitData.filter(f => !f.is_gap).length

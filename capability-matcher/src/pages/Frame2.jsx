@@ -13,7 +13,7 @@ import {
   getSavedCapabilities,
 } from '../api/api'
 
-export default function Frame2({ roleId, role, topK = 5, mode, onBack, onNext }) {
+export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading = false, onBack, onNext }) {
   // caps    — the current list of capabilities for this role
   // loading — true while the initial fetch is running
   // error   — error message if the fetch fails
@@ -315,8 +315,9 @@ export default function Frame2({ roleId, role, topK = 5, mode, onBack, onNext })
         <button className="btn-secondary" onClick={onBack}>← Back</button>
         <button
           className="btn-primary"
+          disabled={autoSelectLoading}
+          style={{ opacity: autoSelectLoading ? 0.5 : 1 }}
           onClick={async () => {
-            // Save current capability list to Supabase before moving on
             try {
               await saveCapabilities(roleId, caps)
             } catch (e) {
@@ -325,7 +326,7 @@ export default function Frame2({ roleId, role, topK = 5, mode, onBack, onNext })
             onNext(roleId)
           }}
         >
-          {mode === 'auto' ? 'Run auto-match →' : 'Browse candidates →'}
+          {autoSelectLoading ? 'Finding best candidate…' : mode === 'auto' ? 'Run auto-match →' : 'Browse candidates →'}
         </button>
       </div>
 

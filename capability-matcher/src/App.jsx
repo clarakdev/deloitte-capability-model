@@ -38,6 +38,7 @@ export default function App() {
   
   // LLM auto-select result passed to Frame 4
   const [autoSelect, setAutoSelect] = useState(null)
+  const [autoSelectLoading, setAutoSelectLoading] = useState(false)
 
   function goTo(f) { setFrame(f) }
 
@@ -176,16 +177,25 @@ export default function App() {
               role={selectedRole}
               topK={topK}
               mode={mode}
+              autoSelectLoading={autoSelectLoading}
               onBack={() => goTo(1)}
               onNext={(id) => {
                 setRoleId(id)
-                setViewSavedAssignment(false)
+                setViewSavedAssignment(false) 
                 if (mode === 'auto') {
                   setAutoSelect(null)
-                  requestAutoSelect(id)
-                    .then(setAutoSelect)
-                    .catch(() => setAutoSelect({ error: 'unavailable' }))
-                  goTo(4)
+                  setAutoSelectLoading(true)
+                  requestAutoSelect(id, parseProjectStartDate(selectedProject?.start_date))
+                    .then(result => {
+                      setAutoSelect(result)
+                      setAutoSelectLoading(false)
+                      goTo(4)  // only navigate AFTER result is ready
+                    })
+                    .catch(() => {
+                      setAutoSelect({ error: 'unavailable' })
+                      setAutoSelectLoading(false)
+                      goTo(4)
+                    })
                 } else {
                   goTo(3)
                 }

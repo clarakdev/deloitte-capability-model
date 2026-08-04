@@ -120,10 +120,10 @@ export function requestLLMReport(roleId, empId) {
 
 // Ask the LLM to pick the best candidate from the top 5 (auto mode).
 // Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
-export function requestAutoSelect(roleId) {
-  return request(`/roles/${roleId}/auto-select`, {
-    method: 'POST',
-  })
+export function requestAutoSelect(roleId, projectStartDate = null) {
+  let url = `/roles/${roleId}/auto-select`
+  if (projectStartDate) url += `?project_start_date=${projectStartDate}`
+  return request(url, { method: 'POST' })
 }
 
 // Supabase — Projects
