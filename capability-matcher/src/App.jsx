@@ -34,6 +34,7 @@ export default function App() {
   const [viewSavedAssignment, setViewSavedAssignment] = useState(false)
   const [view, setView] = useState('login')
   const [profile, setProfile] = useState(null)
+  const [topK, setTopK] = useState(5)
   
   // LLM auto-select result passed to Frame 4
   const [autoSelect, setAutoSelect] = useState(null)
@@ -137,9 +138,10 @@ export default function App() {
           {frame === 1 && (
             <Frame1
               project={selectedProject}
-              onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
+              onSelectRole={(role, hasAssignment, savedEmployeeId = null, roleTopK = 5) => {
                 setSelectedRole(role)
                 setRoleId(role.id)
+                setTopK(roleTopK)
                 if (hasAssignment) {
                   setEmpId(savedEmployeeId)
                   setViewSavedAssignment(true)
@@ -161,6 +163,7 @@ export default function App() {
             <Frame2
               roleId={roleId}
               role={selectedRole}
+              topK={topK}
               mode={mode}
               onBack={() => goTo(1)}
               onNext={(id) => {

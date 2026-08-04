@@ -40,6 +40,8 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
   const [assignments, setAssignments] = useState({}) // roleId -> assignment
   const [savedCaps, setSavedCaps] = useState({})  // roleId -> caps array
 
+  const [topKValues, setTopKValues] = useState({}) // roleId -> number
+
   // Load assignments for this project
   useEffect(() => {
     if (!initialProject?.id) return
@@ -430,47 +432,70 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
                         </div>
                       )}
 
+                      {/* TopK picker — only shown before capabilities are inferred */}
+                      {(!savedCaps[role.id] || savedCaps[role.id].length === 0) && !assignments[role.id] && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          marginBottom: 14,
+                          padding: '10px 12px',
+                          background: '#141414',
+                          border: '1px solid #2a2a2a',
+                          borderRadius: 7,
+                        }}>
+                          <span style={{ fontSize: 12, color: '#aaaaaa' }}>
+                            AI suggested capabilities
+                          </span>
+                          <input
+                            type="number"
+                            min={1} max={10}
+                            value={topKValues[role.id] ?? 5}
+                            onChange={e => setTopKValues(prev => ({
+                              ...prev,
+                              [role.id]: Math.max(1, Math.min(10, Number(e.target.value)))
+                            }))}
+                            style={{
+                              width: 52, background: '#111',
+                              border: '1px solid #2a2a2a', borderRadius: 5,
+                              padding: '4px 8px', fontSize: 13, fontWeight: 600,
+                              color: '#86BC25', textAlign: 'center',
+                              fontFamily: 'inherit',
+                            }}
+                          />
+                          <span style={{ fontSize: 11, color: '#555' }}>of 10 max</span>
+                        </div>
+                      )}
+
                       {/* Action button — changes based on progress */}
                       {assignments[role.id] ? (
                         // Employee already assigned — show view analysis + option to redo
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button
                             className="btn-primary"
-                            onClick={(e) => {
-                              e.stopPropagation()
-
-                              onSelectRole(
-                                role,
-                                true,
-                                assignments[role.id].employee_id
-                              )
-                            }}
+                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, true, assignments[role.id].employee_id) }}
                             style={{ fontSize: 11, padding: '7px 16px' }}
                           >
                             View analysis →
                           </button>
                           <button
                             className="btn-secondary"
-                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
                             style={{ fontSize: 11, padding: '7px 16px' }}
                           >
                             Redo matching
                           </button>
                         </div>
                       ) : savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
-                        // Capabilities saved but no employee yet
                         <button
                           className="btn-primary"
-                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
                           style={{ fontSize: 11, padding: '7px 16px' }}
                         >
                           Continue matching →
                         </button>
                       ) : (
-                        // Nothing done yet
                         <button
                           className="btn-primary"
-                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false) }}
+                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
                           style={{ fontSize: 11, padding: '7px 16px' }}
                         >
                           Match this role →

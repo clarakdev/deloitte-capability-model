@@ -455,6 +455,7 @@ def get_project():
 class InferCapabilitiesIn(BaseModel):
     title: str
     description: str
+    top_k: int = 5  # default 5, range 1-10
 
 
 @app.post(
@@ -469,8 +470,13 @@ def infer_capabilities_from_description(role_id: str, body: InferCapabilitiesIn)
     Used for roles coming from Supabase that are not in project.json.
     On subsequent calls returns the cached capability list if it exists.
     """
-    if role_id not in _capability_state:
-        _capability_state[role_id] = infer_capabilities(body.title, body.description)
+    cached = _capability_state.get(role_id)
+    if cached is None or len(cached) != body.top_k:
+        _capability_state[role_id] = infer_capabilities(
+            body.title,
+            body.description,
+            top_k=max(1, min(10, body.top_k))
+        )
     return [_cap_to_out(c) for c in _capability_state[role_id]]
 
 
