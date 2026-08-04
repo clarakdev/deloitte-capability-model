@@ -1,7 +1,16 @@
+function formatRoleLabel(role) {
+  const normalizedRole = String(role || 'Employee').toLowerCase()
+  if (normalizedRole === 'admin') return 'Resource Manager'
+  if (normalizedRole === 'manager') return 'Manager'
+  if (normalizedRole === 'employee') return 'Employee'
+  return role || 'Employee'
+}
+
 export default function Portal({ profile, onStartMatching }) {
-  const roleLabel = profile?.role || 'User'
-  const isAdmin = roleLabel === 'Admin'
-  const isManager = roleLabel === 'Manager'
+  const rawRoleLabel = profile?.role || 'Employee'
+  const roleLabel = formatRoleLabel(rawRoleLabel)
+  const isAdmin = String(rawRoleLabel).toLowerCase() === 'admin'
+  const isManager = String(rawRoleLabel).toLowerCase() === 'manager'
 
   return (
     <div className="page" style={{ minHeight: 'calc(100vh - 88px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -26,7 +35,7 @@ export default function Portal({ profile, onStartMatching }) {
 
         {isAdmin ? (
           <p style={{ color: '#aaaaaa', fontSize: 13 }}>
-            Admin access allows you to view all projects and all employees.
+            Resource Manager access allows you to view all projects and all employees.
           </p>
         ) : null}
 
