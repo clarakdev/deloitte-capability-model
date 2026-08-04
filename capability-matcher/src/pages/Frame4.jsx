@@ -25,6 +25,10 @@ function simColor(sim, isGap) {
   return '#5b9bd5'
 }
 
+function scoreOutOfFive(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 5)
+}
+
 function WeightDots({ weight }) {
   return (
     <div style={{ display: 'flex', gap: 2 }}>
@@ -255,17 +259,19 @@ export default function Frame4({
               )}
               {reportStatus === 'done' && (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 26, fontWeight: 700, color: '#86BC25' }}>
-                      {report.overall_fit_score}
-                    </span>
-                    <span style={{
-                      fontSize: 10, color: '#888',
-                      textTransform: 'uppercase', letterSpacing: '0.06em',
-                    }}>
-                      overall fit score
-                    </span>
-                  </div>
+                  {mode !== 'auto' && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+                      <span style={{ fontSize: 26, fontWeight: 700, color: '#86BC25' }}>
+                        {report.overall_fit_score}
+                      </span>
+                      <span style={{
+                        fontSize: 10, color: '#888',
+                        textTransform: 'uppercase', letterSpacing: '0.06em',
+                      }}>
+                        overall fit score
+                      </span>
+                    </div>
+                  )}
                   <p style={{
                     fontSize: 12, lineHeight: 1.7, color: '#c0c0c0',
                     margin: 0, whiteSpace: 'pre-wrap',
@@ -344,7 +350,7 @@ export default function Frame4({
         gap: 10, marginBottom: 14,
       }}>
         {[
-          { num: `${Math.round(avgSimilarity * 100)}%`, label: 'Avg similarity' },
+          { num: `${scoreOutOfFive(avgSimilarity)}/5`, label: 'Avg fit' },
           { num: coveredCount,                           label: 'Skills covered' },
           { num: gapCount,                               label: 'Gaps to address' },
         ].map(s => (
@@ -379,7 +385,7 @@ export default function Frame4({
           <span>Capability</span>
           <span style={{ textAlign: 'center' }}>Weight</span>
           <span>Closest skill</span>
-          <span style={{ textAlign: 'right' }}>Similarity</span>
+          <span style={{ textAlign: 'right' }}>Fit (1–5)</span>
         </div>
 
         {fitData.map((f, i) => {
@@ -416,7 +422,7 @@ export default function Frame4({
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: barColor, marginBottom: 4 }}>
-                  {Math.round(f.similarity * 100)}%
+                  {scoreOutOfFive(f.similarity)}/5
                 </div>
                 <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2 }}>
                   <div style={{
