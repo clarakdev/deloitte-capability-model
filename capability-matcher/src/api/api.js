@@ -92,10 +92,10 @@ export function searchEsco(query) {
 //   requirePriorExp — only show employees who have held this role title before
 // The match_score (0–1) is computed by the backend's matching engine.
 // Backend endpoint: GET /roles/{roleId}/candidates
-export function getCandidates(roleId, availableOnly = false, requirePriorExp = false) {
-  return request(
-    `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
-  );
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null) {
+  let url = `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
+  if (projectStartDate) url += `&project_start_date=${projectStartDate}`
+  return request(url)
 }
 
 // Frame 4

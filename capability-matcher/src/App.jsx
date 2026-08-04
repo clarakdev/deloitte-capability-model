@@ -57,6 +57,17 @@ export default function App() {
     setView('flow')
   }
 
+  function parseProjectStartDate(startDateText) {
+    if (!startDateText) return null
+    try {
+      const date = new Date(startDateText)
+      if (!isNaN(date)) return date.toISOString().split('T')[0]
+      return null
+    } catch {
+      return null
+    }
+  }
+
   return (
     <>
       <div className="topbar">
@@ -187,6 +198,7 @@ export default function App() {
             <Frame3
               roleId={roleId}
               projectId={selectedProject?.id}
+              projectStartDate={parseProjectStartDate(selectedProject?.start_date)}
               onBack={() => goTo(2)}
               onNext={(eid) => { setEmpId(eid); goTo(4) }}
             />

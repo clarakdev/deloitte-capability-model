@@ -130,7 +130,7 @@ export default function Frame0({ onSelectProject }) {
                 { key: 'client', label: 'Client' },
                 { key: 'description', label: 'Description' },
                 { key: 'duration', label: 'Duration' },
-                { key: 'start_date', label: 'Start date' },
+                { key: 'start_date', label: 'Start date', type: 'date' },
               ].map(f => (
                 <div key={f.key} style={{ marginBottom: 10 }}>
                   <label style={{
@@ -141,8 +141,8 @@ export default function Frame0({ onSelectProject }) {
                     {f.label} {f.required && <span style={{ color: '#e05252' }}>*</span>}
                   </label>
                   <input
-                    type="text"
-                    value={editFields[f.key]}
+                    type={f.type || 'text'}
+                    value={fields[f.key]}
                     onChange={e => { setEditFields(prev => ({ ...prev, [f.key]: e.target.value })); setFormError('') }}
                     style={{
                       width: '100%', background: '#111', border: '1px solid #2a2a2a',
@@ -253,7 +253,7 @@ export default function Frame0({ onSelectProject }) {
             { key: 'client', label: 'Client' },
             { key: 'description', label: 'Description' },
             { key: 'duration', label: 'Duration' },
-            { key: 'start_date', label: 'Start date' },
+            { key: 'start_date', label: 'Start date', type: 'date' },
           ].map(f => (
             <div key={f.key} style={{ marginBottom: 10 }}>
               <label style={{
@@ -264,7 +264,7 @@ export default function Frame0({ onSelectProject }) {
                 {f.label} {f.required && <span style={{ color: '#e05252' }}>*</span>}
               </label>
               <input
-                type="text"
+                type={f.type || 'text'}
                 value={fields[f.key]}
                 onChange={e => { setFields(prev => ({ ...prev, [f.key]: e.target.value })); setFormError('') }}
                 style={{

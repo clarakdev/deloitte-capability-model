@@ -36,6 +36,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
+from datetime import datetime
+import copy
 
 from core.capability_inference import infer_capabilities
 from core.embedding_engine import (
@@ -703,6 +705,10 @@ def get_candidates(
         default=False,
         description="Only return employees marked as available (US006)",
     ),
+    project_start_date: str = Query(
+        default=None,
+        description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
+    ),
 ):
     """
     Return all employees ranked by semantic fit to the role (US005, US006).
@@ -714,13 +720,34 @@ def get_candidates(
     role = _ROLE_BY_ID.get(role_id)
     role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
+
+    # Deep copy employees so we don't mutate the global _EMPLOYEES list
+    employees = copy.deepcopy(_EMPLOYEES)
+
+    # US023 — override availability based on project start date
+    if project_start_date:
+        try:
+            start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+            for emp in employees:
+                unavailability = emp.get("unavailability", [])
+                is_unavailable = any(
+                    datetime.strptime(u["from"], "%Y-%m-%d").date() <= start <=
+                    datetime.strptime(u["to"], "%Y-%m-%d").date()
+                    for u in unavailability
+                )
+                if is_unavailable:
+                    emp["available"] = False
+        except ValueError:
+            pass  # if date parsing fails keep existing available flag
+
     results = rank_candidates(
         caps,
-        _EMPLOYEES,
+        employees,
         require_prior_experience=require_prior_experience,
         available_only=available_only,
         role_title=role_title,
     )
+    
     return results
 
 
