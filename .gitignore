@@ -4,4 +4,13 @@ node_modules/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
