@@ -432,19 +432,6 @@ export default function Frame4({
               )}
               {reportStatus === "done" && (
                 <>
-                  {mode !== 'auto' && (
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-                      <span style={{ fontSize: 26, fontWeight: 700, color: '#86BC25' }}>
-                        {report.overall_fit_score}
-                      </span>
-                      <span style={{
-                        fontSize: 10, color: '#888',
-                        textTransform: 'uppercase', letterSpacing: '0.06em',
-                      }}>
-                        overall fit score
-                      </span>
-                    </div>
-                  )}
                   <p style={{
                     fontSize: 12, lineHeight: 1.7, color: '#c0c0c0',
                     margin: 0, whiteSpace: 'pre-wrap',

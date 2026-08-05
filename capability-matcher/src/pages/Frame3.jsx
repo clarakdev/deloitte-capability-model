@@ -253,14 +253,6 @@ export default function Frame3({ roleId, projectId, projectStartDate, onBack, on
                 )}
                 {rpt.status === 'done' && (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: '#86BC25' }}>
-                        {rpt.data.overall_fit_score}
-                      </span>
-                      <span style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        overall fit
-                      </span>
-                    </div>
                     <p style={{ fontSize: 12, lineHeight: 1.5, color: '#c0c0c0', margin: 0, whiteSpace: 'pre-wrap' }}>
                       {rpt.data.report}
                     </p>
