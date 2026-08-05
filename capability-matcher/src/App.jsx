@@ -66,6 +66,7 @@ export default function App() {
     } catch {
       return null
     }
+  }
   // Resets the capability-matching session and returns the user to the shared
   // dashboard shell without leaving the app in a stale frame state.
   function handleExitToDashboard() {
