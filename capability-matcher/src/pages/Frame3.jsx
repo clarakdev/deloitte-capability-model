@@ -27,7 +27,7 @@ function scoreColor(score) {
   return { bg: '#2a1e0a', color: '#d4922a' }
 }
 
-export default function Frame3({ roleId, projectId, onBack, onNext }) {
+export default function Frame3({ roleId, projectId, projectStartDate, onBack, onNext }) {
   const [candidates, setCandidates] = useState([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
@@ -41,7 +41,7 @@ export default function Frame3({ roleId, projectId, onBack, onNext }) {
   useEffect(() => {
     setLoading(true)
     setSelectedId(null)
-    getCandidates(roleId, availableOnly, priorExpOnly)
+    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate)
       .then(setCandidates)
       .catch(() => setError('Could not load candidates. Is the backend running?'))
       .finally(() => setLoading(false))
@@ -125,6 +125,7 @@ export default function Frame3({ roleId, projectId, onBack, onNext }) {
         const av = avatarColor(c.employee_id)
         const sc = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId
+        const isUnavailable = !c.available  // can't select unavailable employees
         const rpt = reports[c.employee_id]
         const showPanel = rpt && !rpt.hidden &&
           (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
@@ -132,14 +133,17 @@ export default function Frame3({ roleId, projectId, onBack, onNext }) {
         return (
           <div key={c.employee_id} style={{ marginBottom: 8 }}>
             <div
-              onClick={() => setSelectedId(c.employee_id)}
+              onClick={() => !isUnavailable && setSelectedId(c.employee_id)}
+              title={isUnavailable ? 'This employee is unavailable for the project start date' : ''}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '12px 16px',
                 background: isSelected ? '#131a0d' : '#161616',
                 border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
                 borderRadius: showPanel ? '8px 8px 0 0' : 8,
-                cursor: 'pointer',
+                cursor: isUnavailable ? 'not-allowed' : 'pointer',
+                opacity: isUnavailable ? 0.45 : 1,
+                transition: 'opacity 0.15s',
               }}
             >
               {/* Avatar */}

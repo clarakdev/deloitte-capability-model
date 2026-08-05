@@ -35,9 +35,11 @@ export default function App() {
   const [viewSavedAssignment, setViewSavedAssignment] = useState(false)
   const [view, setView] = useState('login')
   const [profile, setProfile] = useState(null)
+  const [topK, setTopK] = useState(5)
   
   // LLM auto-select result passed to Frame 4
   const [autoSelect, setAutoSelect] = useState(null)
+  const [autoSelectLoading, setAutoSelectLoading] = useState(false)
 
   function goTo(f) { setFrame(f) }
 
@@ -55,6 +57,15 @@ export default function App() {
     setView('flow')
   }
 
+  function parseProjectStartDate(startDateText) {
+    if (!startDateText) return null
+    try {
+      const date = new Date(startDateText)
+      if (!isNaN(date)) return date.toISOString().split('T')[0]
+      return null
+    } catch {
+      return null
+    }
   // Resets the capability-matching session and returns the user to the shared
   // dashboard shell without leaving the app in a stale frame state.
   function handleExitToDashboard() {
@@ -192,9 +203,10 @@ export default function App() {
           {frame === 1 && (
             <Frame1
               project={selectedProject}
-              onSelectRole={(role, hasAssignment, savedEmployeeId = null) => {
+              onSelectRole={(role, hasAssignment, savedEmployeeId = null, roleTopK = 5) => {
                 setSelectedRole(role)
                 setRoleId(role.id)
+                setTopK(roleTopK)
                 if (hasAssignment) {
                   setEmpId(savedEmployeeId)
                   setViewSavedAssignment(true)
@@ -216,17 +228,27 @@ export default function App() {
             <Frame2
               roleId={roleId}
               role={selectedRole}
+              topK={topK}
               mode={mode}
+              autoSelectLoading={autoSelectLoading}
               onBack={() => goTo(1)}
               onNext={(id) => {
                 setRoleId(id)
-                setViewSavedAssignment(false)
+                setViewSavedAssignment(false) 
                 if (mode === 'auto') {
                   setAutoSelect(null)
-                  requestAutoSelect(id)
-                    .then(setAutoSelect)
-                    .catch(() => setAutoSelect({ error: 'unavailable' }))
-                  goTo(4)
+                  setAutoSelectLoading(true)
+                  requestAutoSelect(id, parseProjectStartDate(selectedProject?.start_date))
+                    .then(result => {
+                      setAutoSelect(result)
+                      setAutoSelectLoading(false)
+                      goTo(4)  // only navigate AFTER result is ready
+                    })
+                    .catch(() => {
+                      setAutoSelect({ error: 'unavailable' })
+                      setAutoSelectLoading(false)
+                      goTo(4)
+                    })
                 } else {
                   goTo(3)
                 }
@@ -239,6 +261,7 @@ export default function App() {
             <Frame3
               roleId={roleId}
               projectId={selectedProject?.id}
+              projectStartDate={parseProjectStartDate(selectedProject?.start_date)}
               onBack={() => goTo(2)}
               onNext={(eid) => { setEmpId(eid); goTo(4) }}
             />

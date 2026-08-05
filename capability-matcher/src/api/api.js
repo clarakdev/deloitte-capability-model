@@ -9,17 +9,19 @@ const BASE_URL = 'http://localhost:8000';
 // If the server returns an error status (4xx, 5xx), it throws so the
 // calling component can catch it and show an error message.
 async function request(path, options = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  // Get the current Supabase session token
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
 
-  const headers = {
-    ...(options.headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-  if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
-  return res.json();
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    }
+  })
+  if (!res.ok) throw new Error(`API error ${res.status} on ${path}`)
+  return res.json()
 }
 
 // Frame 1
@@ -90,10 +92,10 @@ export function searchEsco(query) {
 //   requirePriorExp — only show employees who have held this role title before
 // The match_score (0–1) is computed by the backend's matching engine.
 // Backend endpoint: GET /roles/{roleId}/candidates
-export function getCandidates(roleId, availableOnly = false, requirePriorExp = false) {
-  return request(
-    `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
-  );
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null) {
+  let url = `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
+  if (projectStartDate) url += `&project_start_date=${projectStartDate}`
+  return request(url)
 }
 
 // Frame 4
@@ -118,10 +120,10 @@ export function requestLLMReport(roleId, empId) {
 
 // Ask the LLM to pick the best candidate from the top 5 (auto mode).
 // Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
-export function requestAutoSelect(roleId) {
-  return request(`/roles/${roleId}/auto-select`, {
-    method: 'POST',
-  })
+export function requestAutoSelect(roleId, projectStartDate = null) {
+  let url = `/roles/${roleId}/auto-select`
+  if (projectStartDate) url += `?project_start_date=${projectStartDate}`
+  return request(url, { method: 'POST' })
 }
 
 // Supabase — Projects
@@ -406,10 +408,10 @@ export async function getProjectAssignments(projectId) {
 
 // Infer capabilities for Supabase roles
 
-export function inferCapabilities(roleId, title, description) {
+export function inferCapabilities(roleId, title, description, topK = 5) {
   return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description }),
+    body: JSON.stringify({ title, description, top_k: topK }),
   })
 }

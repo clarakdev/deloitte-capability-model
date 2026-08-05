@@ -36,6 +36,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
+from datetime import datetime
+import copy
 
 from core.capability_inference import infer_capabilities
 from core.embedding_engine import (
@@ -234,6 +236,33 @@ def _require_capabilities_exist(role_id: str) -> None:
             status_code=404,
             detail=f"No capabilities found for role '{role_id}'. Call /capabilities/infer first."
         )
+    
+def _apply_availability(employees: list, project_start_date: str = None) -> list:
+    """
+    Returns a deep copy of employees with availability overridden
+    based on project start date and unavailability periods.
+    If no date provided, returns employees as-is.
+    """
+    import copy
+    from datetime import datetime
+
+    employees = copy.deepcopy(employees)
+    if not project_start_date:
+        return employees
+    try:
+        start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+        for emp in employees:
+            unavailability = emp.get("unavailability", [])
+            is_unavailable = any(
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= start <=
+                datetime.strptime(u["to"], "%Y-%m-%d").date()
+                for u in unavailability
+            )
+            if is_unavailable:
+                emp["available"] = False
+    except ValueError:
+        pass
+    return employees
 
 def _get_or_infer_capabilities(role_id: str) -> list[dict]:
     """Return capabilities for a role, inferring them on first access."""
@@ -455,6 +484,7 @@ def get_project():
 class InferCapabilitiesIn(BaseModel):
     title: str
     description: str
+    top_k: int = 5  # default 5, range 1-10
 
 
 @app.post(
@@ -469,8 +499,13 @@ def infer_capabilities_from_description(role_id: str, body: InferCapabilitiesIn)
     Used for roles coming from Supabase that are not in project.json.
     On subsequent calls returns the cached capability list if it exists.
     """
-    if role_id not in _capability_state:
-        _capability_state[role_id] = infer_capabilities(body.title, body.description)
+    cached = _capability_state.get(role_id)
+    if cached is None or len(cached) != body.top_k:
+        _capability_state[role_id] = infer_capabilities(
+            body.title,
+            body.description,
+            top_k=max(1, min(10, body.top_k))
+        )
     return [_cap_to_out(c) for c in _capability_state[role_id]]
 
 
@@ -697,6 +732,10 @@ def get_candidates(
         default=False,
         description="Only return employees marked as available (US006)",
     ),
+    project_start_date: str = Query(
+        default=None,
+        description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
+    ),
 ):
     """
     Return all employees ranked by semantic fit to the role (US005, US006).
@@ -708,13 +747,34 @@ def get_candidates(
     role = _ROLE_BY_ID.get(role_id)
     role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
+
+    # Deep copy employees so we don't mutate the global _EMPLOYEES list
+    employees = copy.deepcopy(_EMPLOYEES)
+
+    # US023 — override availability based on project start date
+    if project_start_date:
+        try:
+            start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+            for emp in employees:
+                unavailability = emp.get("unavailability", [])
+                is_unavailable = any(
+                    datetime.strptime(u["from"], "%Y-%m-%d").date() <= start <=
+                    datetime.strptime(u["to"], "%Y-%m-%d").date()
+                    for u in unavailability
+                )
+                if is_unavailable:
+                    emp["available"] = False
+        except ValueError:
+            pass  # if date parsing fails keep existing available flag
+    employees = _apply_availability(_EMPLOYEES, project_start_date)
     results = rank_candidates(
         caps,
-        _EMPLOYEES,
+        employees,
         require_prior_experience=require_prior_experience,
         available_only=available_only,
         role_title=role_title,
     )
+    
     return results
 
 
@@ -838,7 +898,15 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     tags=["LLM"],
     summary="Let the LLM pick the best candidate from the top 5 (auto mode)",
 )
-async def auto_select_candidate(role_id: str):
+async def auto_select_candidate(
+    role_id: str,
+    project_start_date: str = Query(default=None),  # add this
+    current_user: dict = Depends(get_current_user),
+):
+    print(f"DEBUG auto_select role_id={role_id} project_start_date={project_start_date}")
+    employees = _apply_availability(_EMPLOYEES, project_start_date)
+    emp_availability = {e["id"]: e.get("available", True) for e in employees}
+    print(f"DEBUG Uma Brown available: {emp_availability.get('EMP001', 'NOT FOUND')}")
     """
     Use the LLM to select the best-fit candidate from the top 5 embedding
     results (US-S2-03). The LLM may override embedding rank #1; its choice is
@@ -863,8 +931,11 @@ async def auto_select_candidate(role_id: str):
     if cached is not None:
         return cached
 
-    ranked = rank_candidates(caps, _EMPLOYEES, role_title=role["title"])
-    top = ranked[:5]
+    employees = _apply_availability(_EMPLOYEES, project_start_date)
+    emp_availability = {e["id"]: e.get("available", True) for e in employees}
+    ranked = rank_candidates(caps, employees, role_title=role_title)
+    available_ranked = [c for c in ranked if emp_availability.get(c["employee_id"], True)]
+    top = available_ranked[:5] if available_ranked else ranked[:5]
     if not top:
         raise HTTPException(
             status_code=422,
@@ -891,7 +962,7 @@ async def auto_select_candidate(role_id: str):
 
     try:
         result = await select_best_candidate(
-            role_context={"title": role["title"], "description": role["description"]},
+            role_context=role_context,
             role_capabilities=caps,
             top_candidates_with_fit=top_with_fit,
         )

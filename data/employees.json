@@ -60,7 +60,10 @@
       "AWS Solutions Architect",
       "Azure Administrator"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-08-01", "to": "2026-08-31", "reason": "On leave" }
+    ]
   },
   {
     "id": "EMP002",
@@ -125,7 +128,8 @@
       "TOGAF",
       "ITIL"
     ],
-    "available": false
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP003",
@@ -188,7 +192,8 @@
     "certifications": [
       "ITIL"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP004",
@@ -253,7 +258,8 @@
       "ITIL",
       "Azure Administrator"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP005",
@@ -315,7 +321,10 @@
     "certifications": [
       "AWS Solutions Architect"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-07-15", "to": "2026-09-15", "reason": "Assigned to another project" }
+    ]
   },
   {
     "id": "EMP006",
@@ -375,7 +384,8 @@
       "AWS Solutions Architect",
       "Azure Administrator"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP007",
@@ -435,7 +445,8 @@
     "certifications": [
       "Azure Administrator"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP008",
@@ -495,7 +506,8 @@
       "Python"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP009",
@@ -560,7 +572,10 @@
       "Certified Data Management Professional",
       "Azure Administrator"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-08-10", "to": "2026-10-31", "reason": "On leave" }
+    ]
   },
   {
     "id": "EMP010",
@@ -625,7 +640,8 @@
       "Azure Administrator",
       "ITIL"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP011",
@@ -688,7 +704,8 @@
       "ITIL",
       "Azure Administrator"
     ],
-    "available": false
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP012",
@@ -750,7 +767,8 @@
       "Python"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP013",
@@ -805,7 +823,10 @@
       "JIRA"
     ],
     "certifications": [],
-    "available": false
+    "available": true,
+    "unavailability": [
+      { "from": "2026-06-01", "to": "2026-08-20", "reason": "Assigned to another project" }
+    ]
   },
   {
     "id": "EMP014",
@@ -864,7 +885,8 @@
       "Prince2",
       "ITIL"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP015",
@@ -923,7 +945,8 @@
       "Microsoft Teams"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP016",
@@ -981,7 +1004,8 @@
       "JIRA"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP017",
@@ -1036,7 +1060,10 @@
     "certifications": [
       "Prince2"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-08-01", "to": "2026-09-30", "reason": "On leave" }
+    ]
   },
   {
     "id": "EMP018",
@@ -1092,7 +1119,8 @@
       "Mentimeter"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP019",
@@ -1154,7 +1182,8 @@
     "certifications": [
       "CISSP"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP020",
@@ -1216,7 +1245,8 @@
     "certifications": [
       "ITIL"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP021",
@@ -1280,7 +1310,10 @@
       "CompTIA Security+",
       "CISM"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-07-01", "to": "2026-08-15", "reason": "Assigned to another project" }
+    ]
   },
   {
     "id": "EMP022",
@@ -1343,7 +1376,8 @@
       "Nessus"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP023",
@@ -1402,7 +1436,8 @@
       "Splunk"
     ],
     "certifications": [],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP024",
@@ -1468,7 +1503,8 @@
       "ITIL",
       "CompTIA Security+"
     ],
-    "available": false
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP025",
@@ -1531,7 +1567,10 @@
       "PMP",
       "CAPM"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-08-05", "to": "2026-12-31", "reason": "On leave" }
+    ]
   },
   {
     "id": "EMP026",
@@ -1595,7 +1634,8 @@
       "CAPM",
       "Prince2"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP027",
@@ -1655,7 +1695,8 @@
       "Planview"
     ],
     "certifications": [],
-    "available": false
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP028",
@@ -1717,7 +1758,10 @@
     "certifications": [
       "Prince2"
     ],
-    "available": true
+    "available": true,
+    "unavailability": [
+      { "from": "2026-08-01", "to": "2026-08-31", "reason": "Assigned to another project" }
+    ]
   },
   {
     "id": "EMP029",
@@ -1781,7 +1825,8 @@
       "Scrum Master",
       "CAPM"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   },
   {
     "id": "EMP030",
@@ -1845,6 +1890,7 @@
     "certifications": [
       "CAPM"
     ],
-    "available": true
+    "available": true,
+    "unavailability": []
   }
 ]
