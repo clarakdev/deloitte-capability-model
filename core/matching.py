@@ -24,7 +24,8 @@ narrative text — see that module for details).
 Match score
 -----------
 Cosine similarity between the role vector and the employee vector (both
-L2-normalised, so it reduces to a dot product). Range: [-1, 1], clipped to [0, 1].
+L2-normalised, so it reduces to a dot product), clipped to [0, 1] and adjusted
+with a square-root correction for semantic matching distance.
 
 Filters (applied before scoring)
 ---------------------------------
@@ -136,6 +137,7 @@ def rank_candidates(
         if role_vector is not None:
             score = float(np.dot(role_vector, emp_vector))
             score = max(0.0, min(1.0, score))  # clip to [0, 1]
+            score = score ** 0.5  # compensate for semantic matching distance
         else:
             score = 0.0
 

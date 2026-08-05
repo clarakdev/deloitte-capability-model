@@ -148,6 +148,22 @@ body {
   margin-bottom: 14px;
 }
 
+/* Dashboard shell sizing */
+/* Keeps every role's landing container visually uniform and prevents the
+   tab switcher from shrinking or expanding the panel unpredictably. */
+.dashboard-shell {
+  width: 100%;
+  max-width: 960px;
+  min-width: 920px;
+  min-height: 78vh;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-shell {
+    min-width: 0;
+  }
+}
+
 .card-title { font-size: 12px; font-weight: 600; color: #c8c8c8; }
 
 /* Badges*/

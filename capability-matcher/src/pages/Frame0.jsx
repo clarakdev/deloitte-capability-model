@@ -11,9 +11,13 @@
 //   onSelectProject(project) — called when user clicks a project card
 
 import { useEffect, useState } from 'react'
-import { getProjects, createProject, updateProject, deleteProject } from '../api/api'
+import { getProjects, getAllProjects, createProject, updateProject, deleteProject } from '../api/api'
 
-export default function Frame0({ onSelectProject }) {
+export default function Frame0({ profile, onSelectProject }) {
+  const roleLabel = profile?.role || 'Employee'
+  const normalizedRole = String(roleLabel).toLowerCase()
+  const isAdmin = normalizedRole === 'admin'
+
   const [projects, setProjects]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
@@ -35,12 +39,13 @@ export default function Frame0({ onSelectProject }) {
   // Load projects
   useEffect(() => {
     loadProjects()
-  }, [])
+  }, [normalizedRole])
 
   async function loadProjects() {
     setLoading(true)
+    setError(null)
     try {
-      const data = await getProjects()
+      const data = isAdmin ? await getAllProjects() : await getProjects()
       setProjects(data)
     } catch (e) {
       setError('Could not load projects. Check your connection.')

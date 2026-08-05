@@ -18,7 +18,7 @@ One dict per capability, ordered to match role_capabilities:
         "cap_name":         str,    # ESCO preferredLabel
         "weight":           int,    # PM-assigned importance (1–5)
         "best_match_skill": str | None,  # DPN skill name with highest similarity
-        "similarity":       float,  # cosine similarity 0–1 (0 if no skills)
+        "similarity":       float,  # adjusted cosine similarity 0–1 (0 if no skills)
         "is_gap":           bool,   # True if similarity < GAP_THRESHOLD
     }
 
@@ -85,6 +85,7 @@ def analyse_fit(role_capabilities: list[dict], employee: dict) -> list[dict]:
         best_idx = int(np.argmax(sims))
         best_sim = float(sims[best_idx])
         best_sim = max(0.0, min(1.0, best_sim))  # clip to [0, 1]
+        best_sim = best_sim ** 0.5  # compensate for semantic matching distance
 
         results.append({
             "cap_id":           cap.get("cap_id", ""),

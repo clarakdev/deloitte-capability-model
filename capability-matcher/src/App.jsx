@@ -12,8 +12,9 @@ import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
 import Frame4 from './pages/Frame4'
 import Login from './pages/Login'
-import Portal from './pages/Portal'
+import Dashboard from './pages/Dashboard'
 import { requestAutoSelect } from './api/api'
+import './index.css'
 import './App.css'
 
 const STEPS = [
@@ -45,12 +46,10 @@ export default function App() {
   function handleLoginSuccess(profileData) {
     setProfile(profileData)
 
-    if (profileData?.role === 'Employee') {
-      setView('employee-portal')
-      return
-    }
-
-    setView('portal')
+    // The shared dashboard now becomes the immediate post-login landing page
+    // for every role. The existing capability-matching flow remains available
+    // from inside the dashboard shell, rather than as a separate portal route.
+    setView('dashboard')
   }
 
   function handleStartMatching() {
@@ -67,6 +66,33 @@ export default function App() {
     } catch {
       return null
     }
+  // Resets the capability-matching session and returns the user to the shared
+  // dashboard shell without leaving the app in a stale frame state.
+  function handleExitToDashboard() {
+    setFrame(0)
+    setRoleId(null)
+    setEmpId(null)
+    setMode('hands')
+    setSelectedProject(null)
+    setSelectedRole(null)
+    setViewSavedAssignment(false)
+    setAutoSelect(null)
+    setView('dashboard')
+  }
+
+  // Clears the authenticated account surface and sends the user back to the
+  // sign-in entry point for a clean secure handoff.
+  function handleLogout() {
+    setProfile(null)
+    setFrame(0)
+    setRoleId(null)
+    setEmpId(null)
+    setMode('hands')
+    setSelectedProject(null)
+    setSelectedRole(null)
+    setViewSavedAssignment(false)
+    setAutoSelect(null)
+    setView('login')
   }
 
   return (
@@ -76,23 +102,57 @@ export default function App() {
         <span className="topbar-title">Capability Matcher</span>
         <div className="topbar-divider" />
         <span className="topbar-sub">Deloitte Talent Intelligence</span>
-      {/* Mode toggle — only visible inside the actual matching flow */}
+
+        {/* Flow-only controls live in the shared top bar so users can exit the
+            matching session without losing the dashboard context. */}
         {view === 'flow' && (
-          <div style={{ marginLeft: 'auto', display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
-              onClick={() => setMode('auto')}
-              style={{
-                padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                background: mode === 'auto' ? '#86BC25' : 'transparent',
-                color: mode === 'auto' ? '#0a0a0a' : '#555',
-              }}>Auto</button>
-            <button
-              onClick={() => setMode('hands')}
-              style={{
-                padding: '4px 14px', borderRadius: 4, border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                background: mode === 'hands' ? '#86BC25' : 'transparent',
-                color: mode === 'hands' ? '#0a0a0a' : '#555',
-              }}>Hands-on</button>
+              type="button"
+              className="btn-secondary"
+              onClick={handleExitToDashboard}
+              style={{ padding: '4px 12px', fontSize: 11 }}
+            >
+              Back to Dashboard
+            </button>
+
+            <div style={{ display: 'flex', background: '#1c1c1c', borderRadius: 6, padding: 3, gap: 2 }}>
+              <button
+                type="button"
+                onClick={() => setMode('auto')}
+                style={{
+                  padding: '4px 14px',
+                  borderRadius: 4,
+                  border: 'none',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  background: mode === 'auto' ? '#86BC25' : 'transparent',
+                  color: mode === 'auto' ? '#0a0a0a' : '#555',
+                }}
+              >
+                Auto
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMode('hands')}
+                style={{
+                  padding: '4px 14px',
+                  borderRadius: 4,
+                  border: 'none',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  background: mode === 'hands' ? '#86BC25' : 'transparent',
+                  color: mode === 'hands' ? '#0a0a0a' : '#555',
+                }}
+              >
+                Hands-on
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -118,20 +178,12 @@ export default function App() {
       {/* ── Screen routing ── */}
       {view === 'login' && <Login onLoginSuccess={handleLoginSuccess} />}
 
-      {view === 'portal' && (
-        <Portal
+      {view === 'dashboard' && (
+        <Dashboard
           profile={profile}
           onStartMatching={handleStartMatching}
+          onLogout={handleLogout}
         />
-      )}
-
-      {view === 'employee-portal' && (
-        <div className="page" style={{ minHeight: 'calc(100vh - 88px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card" style={{ width: '100%', maxWidth: 520 }}>
-            <h1 className="page-title">Employee portal coming soon</h1>
-            <p className="page-sub">The employee experience is not part of this iteration.</p>
-          </div>
-        </div>
       )}
 
       {view === 'flow' && (
@@ -139,6 +191,7 @@ export default function App() {
           {/* Frame 0 — Project list */}
           {frame === 0 && (
             <Frame0
+              profile={profile}
               onSelectProject={(project) => {
                 setSelectedProject(project)
                 goTo(1)

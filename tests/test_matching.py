@@ -16,6 +16,7 @@ Covers:
 from __future__ import annotations
 
 import pytest
+import numpy as np
 
 from core.matching import rank_candidates
 
@@ -53,6 +54,26 @@ def test_scores_in_range(pm_caps, employees):
         assert 0.0 <= r["match_score"] <= 1.0, (
             f"Score out of range for {r['name']}: {r['match_score']}"
         )
+
+
+def test_match_score_uses_square_root_correction(monkeypatch):
+    """Overall semantic match scores use the requested 0.5 power correction."""
+    import core.matching as matching
+
+    monkeypatch.setattr(
+        matching,
+        "_build_role_vector",
+        lambda capabilities: np.array([1.0, 0.0], dtype=float),
+    )
+    monkeypatch.setattr(
+        matching,
+        "build_employee_vector",
+        lambda employee: np.array([0.25, np.sqrt(1 - 0.25**2)]),
+    )
+
+    result = matching.rank_candidates([{"embedding": [1.0, 0.0], "weight": 1}], [{"id": "EMP001"}])
+
+    assert result[0]["match_score"] == pytest.approx(0.5, abs=0.0001)
 
 
 # ── Required fields ────────────────────────────────────────────────────────────
