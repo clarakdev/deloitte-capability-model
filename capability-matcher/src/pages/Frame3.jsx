@@ -27,7 +27,7 @@ function scoreColor(score) {
   return { bg: '#2a1e0a', color: '#d4922a' }
 }
 
-export default function Frame3({ roleId, projectId, projectStartDate, onBack, onNext }) {
+export default function Frame3({ roleId, projectId, projectStartDate, projectEndDate, onBack, onNext }) {
   const [candidates, setCandidates] = useState([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
@@ -41,11 +41,11 @@ export default function Frame3({ roleId, projectId, projectStartDate, onBack, on
   useEffect(() => {
     setLoading(true)
     setSelectedId(null)
-    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate)
+    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate)
       .then(setCandidates)
       .catch(() => setError('Could not load candidates. Is the backend running?'))
       .finally(() => setLoading(false))
-  }, [roleId, availableOnly, priorExpOnly])
+  }, [roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate])
 
   // Generate or toggle the LLM report for one candidate
   async function handleGenerateReport(empId) {

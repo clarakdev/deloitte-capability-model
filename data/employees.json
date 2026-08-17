@@ -1569,7 +1569,7 @@
     ],
     "available": true,
     "unavailability": [
-      { "from": "2026-08-05", "to": "2026-12-31", "reason": "On leave" }
+      { "from": "2026-07-01", "to": "2026-08-2", "reason": "On leave" }
     ]
   },
   {

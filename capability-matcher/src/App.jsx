@@ -239,7 +239,10 @@ export default function App() {
                 if (mode === 'auto') {
                   setAutoSelect(null)
                   setAutoSelectLoading(true)
-                  requestAutoSelect(id, parseProjectStartDate(selectedProject?.start_date))
+                  requestAutoSelect(id, 
+                    parseProjectStartDate(selectedProject?.start_date),
+                    selectedProject?.end_date || null
+                  )
                     .then(result => {
                       setAutoSelect(result)
                       setAutoSelectLoading(false)
@@ -263,6 +266,7 @@ export default function App() {
               roleId={roleId}
               projectId={selectedProject?.id}
               projectStartDate={parseProjectStartDate(selectedProject?.start_date)}
+              projectEndDate={selectedProject?.end_date || null}
               onBack={() => goTo(2)}
               onNext={(eid) => { setEmpId(eid); goTo(4) }}
             />

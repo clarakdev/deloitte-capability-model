@@ -237,7 +237,7 @@ def _require_capabilities_exist(role_id: str) -> None:
             detail=f"No capabilities found for role '{role_id}'. Call /capabilities/infer first."
         )
     
-def _apply_availability(employees: list, project_start_date: str = None) -> list:
+def _apply_availability(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
     """
     Returns a deep copy of employees with availability overridden
     based on project start date and unavailability periods.
@@ -251,11 +251,13 @@ def _apply_availability(employees: list, project_start_date: str = None) -> list
         return employees
     try:
         start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+
         for emp in employees:
             unavailability = emp.get("unavailability", [])
             is_unavailable = any(
-                datetime.strptime(u["from"], "%Y-%m-%d").date() <= start <=
-                datetime.strptime(u["to"], "%Y-%m-%d").date()
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end and
+                datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
                 for u in unavailability
             )
             if is_unavailable:
@@ -736,6 +738,8 @@ def get_candidates(
         default=None,
         description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
     ),
+    project_end_date: str = Query(default=None),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Return all employees ranked by semantic fit to the role (US005, US006).
@@ -748,25 +752,8 @@ def get_candidates(
     role_title = role["title"] if role is not None else ""
     caps = _get_or_infer_capabilities(role_id)
 
-    # Deep copy employees so we don't mutate the global _EMPLOYEES list
-    employees = copy.deepcopy(_EMPLOYEES)
-
-    # US023 — override availability based on project start date
-    if project_start_date:
-        try:
-            start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
-            for emp in employees:
-                unavailability = emp.get("unavailability", [])
-                is_unavailable = any(
-                    datetime.strptime(u["from"], "%Y-%m-%d").date() <= start <=
-                    datetime.strptime(u["to"], "%Y-%m-%d").date()
-                    for u in unavailability
-                )
-                if is_unavailable:
-                    emp["available"] = False
-        except ValueError:
-            pass  # if date parsing fails keep existing available flag
-    employees = _apply_availability(_EMPLOYEES, project_start_date)
+    # US023/US32 — override availability based on project start date
+    employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
     results = rank_candidates(
         caps,
         employees,
@@ -901,6 +888,7 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
 async def auto_select_candidate(
     role_id: str,
     project_start_date: str = Query(default=None),  # add this
+    project_end_date: str = Query(default=None),
     current_user: dict = Depends(get_current_user),
 ):
     print(f"DEBUG auto_select role_id={role_id} project_start_date={project_start_date}")
@@ -931,7 +919,7 @@ async def auto_select_candidate(
     if cached is not None:
         return cached
 
-    employees = _apply_availability(_EMPLOYEES, project_start_date)
+    employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
     emp_availability = {e["id"]: e.get("available", True) for e in employees}
     ranked = rank_candidates(caps, employees, role_title=role_title)
     available_ranked = [c for c in ranked if emp_availability.get(c["employee_id"], True)]
