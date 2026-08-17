@@ -415,3 +415,39 @@ export function inferCapabilities(roleId, title, description, topK = 5) {
     body: JSON.stringify({ title, description, top_k: topK }),
   })
 }
+
+export async function generateTeamReport(projectId, payload) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+
+  const res = await fetch(
+    `${BASE_URL}/projects/${projectId}/team-report`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token
+          ? { 'Authorization': `Bearer ${token}` }
+          : {}),
+      },
+      body: JSON.stringify(payload),
+    }
+  )
+
+  if (!res.ok) {
+    let message = `API error ${res.status}`
+
+    try {
+      const errorData = await res.json()
+      if (errorData?.detail) {
+        message = errorData.detail
+      }
+    } catch {
+      // Ignore JSON parsing failure.
+    }
+
+    throw new Error(message)
+  }
+
+  return res.blob()
+}

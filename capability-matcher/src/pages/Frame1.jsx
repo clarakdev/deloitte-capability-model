@@ -1,124 +1,161 @@
 // Frame1.jsx — Project overview screen (Step 1 of 4).
 
-import { useEffect, useState } from 'react'
-import { getRoles, createRole, updateRole, deleteRole, getSavedCapabilities, getProjectAssignments } from '../api/api'
+import { useEffect, useState } from "react";
+import {
+  getRoles,
+  createRole,
+  updateRole,
+  deleteRole,
+  getSavedCapabilities,
+  getProjectAssignments,
+  generateTeamReport,
+} from "../api/api";
 
 const ROLE_COLORS = [
-  { bg: '#1e2a14', color: '#86BC25', initials: 'SA' },
-  { bg: '#0d1f33', color: '#5b9bd5', initials: 'DE' },
-  { bg: '#1c0d33', color: '#9b6dd4', initials: 'CL' },
-  { bg: '#2a1800', color: '#d4922a', initials: 'CA' },
-  { bg: '#2a0d0d', color: '#e05252', initials: 'PM' },
-  { bg: '#082020', color: '#1D9E75', initials: 'NR' },
-]
+  { bg: "#1e2a14", color: "#86BC25", initials: "SA" },
+  { bg: "#0d1f33", color: "#5b9bd5", initials: "DE" },
+  { bg: "#1c0d33", color: "#9b6dd4", initials: "CL" },
+  { bg: "#2a1800", color: "#d4922a", initials: "CA" },
+  { bg: "#2a0d0d", color: "#e05252", initials: "PM" },
+  { bg: "#082020", color: "#1D9E75", initials: "NR" },
+];
 
 function getInitials(title) {
-  return title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  return title
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-export default function Frame1({ project: initialProject, onSelectRole, onBack }) {
-  const [project] = useState(initialProject)
-  const [roles, setRoles] = useState([])
-  const [rolesLoading, setRolesLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [expanded, setExpanded] = useState(null)
+export default function Frame1({
+  project: initialProject,
+  onSelectRole,
+  onBack,
+}) {
+  const [project] = useState(initialProject);
+  const [roles, setRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(null);
 
   // Add form
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newTitle, setNewTitle] = useState('')
-  const [newDesc, setNewDesc] = useState('')
-  const [formError, setFormError] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [formError, setFormError] = useState("");
 
   // Edit
-  const [editingRole, setEditingRole] = useState(null)
-  const [editFields, setEditFields] = useState({ title: '', description: '' })
+  const [editingRole, setEditingRole] = useState(null);
+  const [editFields, setEditFields] = useState({ title: "", description: "" });
 
   // Drag and drop
-  const [dragId, setDragId] = useState(null)
-  const [dragOverId, setDragOverId] = useState(null)
+  const [dragId, setDragId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
-  const [assignments, setAssignments] = useState({}) // roleId -> assignment
-  const [savedCaps, setSavedCaps] = useState({})  // roleId -> caps array
+  const [assignments, setAssignments] = useState({}); // roleId -> assignment
+  const [savedCaps, setSavedCaps] = useState({}); // roleId -> caps array
 
-  const [topKValues, setTopKValues] = useState({}) // roleId -> number
+  const [topKValues, setTopKValues] = useState({}); // roleId -> number
+  const [teamReportStatus, setTeamReportStatus] = useState("idle");
 
   // Load assignments for this project
   useEffect(() => {
-    if (!initialProject?.id) return
+    if (!initialProject?.id) return;
     getProjectAssignments(initialProject.id)
-      .then(data => {
-        const map = {}
-        data.forEach(a => { map[a.role_id] = a })
-        setAssignments(map)
+      .then((data) => {
+        const map = {};
+        data.forEach((a) => {
+          map[a.role_id] = a;
+        });
+        setAssignments(map);
       })
-      .catch(console.error)
-  }, [initialProject?.id])
+      .catch(console.error);
+  }, [initialProject?.id]);
 
   // Load roles from Supabase
   useEffect(() => {
-    if (!initialProject?.id) return
-    console.log('Loading roles for project:', initialProject.id)
+    if (!initialProject?.id) return;
+    console.log("Loading roles for project:", initialProject.id);
     getRoles(initialProject.id)
-      .then(data => {
-        console.log('Roles loaded:', data)
-        setRoles(data)
+      .then((data) => {
+        console.log("Roles loaded:", data);
+        setRoles(data);
       })
-      .catch(e => {
-        console.error('Roles error:', e)
-        setError('Could not load roles.')
+      .catch((e) => {
+        console.error("Roles error:", e);
+        setError("Could not load roles.");
       })
       .finally(() => {
-        console.log('Roles loading done')
-        setRolesLoading(false)
-      })
-  }, [initialProject?.id])
+        console.log("Roles loading done");
+        setRolesLoading(false);
+      });
+  }, [initialProject?.id]);
+
+  const allRolesAssigned =
+    roles.length > 0 && roles.every((role) => Boolean(assignments[role.id]));
 
   //Add role
   async function handleAddRole() {
-    if (!newTitle.trim()) { setFormError('Role title is required.'); return }
-    if (!newDesc.trim()) { setFormError('Role description is required.'); return }
+    if (!newTitle.trim()) {
+      setFormError("Role title is required.");
+      return;
+    }
+    if (!newDesc.trim()) {
+      setFormError("Role description is required.");
+      return;
+    }
     try {
       const newRole = await createRole(initialProject.id, {
         title: newTitle.trim(),
         description: newDesc.trim(),
         sort_order: roles.length,
-      })
-      setRoles(prev => [...prev, newRole])
-      setNewTitle('')
-      setNewDesc('')
-      setFormError('')
-      setShowAddForm(false)
+      });
+      setRoles((prev) => [...prev, newRole]);
+      setNewTitle("");
+      setNewDesc("");
+      setFormError("");
+      setShowAddForm(false);
     } catch (e) {
-      setFormError('Failed to save role. Try again.')
+      setFormError("Failed to save role. Try again.");
     }
   }
 
   // Edit role
   async function handleSaveEdit() {
-    if (!editFields.title.trim()) { setFormError('Role title is required.'); return }
-    if (!editFields.description.trim()) { setFormError('Role description is required.'); return }
+    if (!editFields.title.trim()) {
+      setFormError("Role title is required.");
+      return;
+    }
+    if (!editFields.description.trim()) {
+      setFormError("Role description is required.");
+      return;
+    }
     try {
       const updated = await updateRole(editingRole, {
         title: editFields.title.trim(),
         description: editFields.description.trim(),
-      })
-      setRoles(prev => prev.map(r => r.id === editingRole ? { ...r, ...updated } : r))
-      setEditingRole(null)
-      setEditFields({ title: '', description: '' })
-      setFormError('')
+      });
+      setRoles((prev) =>
+        prev.map((r) => (r.id === editingRole ? { ...r, ...updated } : r)),
+      );
+      setEditingRole(null);
+      setEditFields({ title: "", description: "" });
+      setFormError("");
     } catch (e) {
-      setFormError('Failed to update role. Try again.')
+      setFormError("Failed to update role. Try again.");
     }
   }
 
   // Remove role
   async function handleRemoveRole(roleId) {
-    if (!window.confirm('Remove this role? This cannot be undone.')) return
+    if (!window.confirm("Remove this role? This cannot be undone.")) return;
     try {
-      await deleteRole(roleId)
-      setRoles(prev => prev.filter(r => r.id !== roleId))
+      await deleteRole(roleId);
+      setRoles((prev) => prev.filter((r) => r.id !== roleId));
     } catch (e) {
-      alert('Failed to delete role. Try again.')
+      alert("Failed to delete role. Try again.");
     }
   }
 
@@ -129,69 +166,162 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
         title: `${role.title} (copy)`,
         description: role.description,
         sort_order: roles.length,
-      })
-      setRoles(prev => [...prev, duplicate])
+      });
+      setRoles((prev) => [...prev, duplicate]);
     } catch (e) {
-      alert('Failed to duplicate role. Try again.')
+      alert("Failed to duplicate role. Try again.");
     }
   }
 
   //Expand role details
   async function handleExpand(roleId) {
-    setExpanded(prev => prev === roleId ? null : roleId)
+    setExpanded((prev) => (prev === roleId ? null : roleId));
     if (!savedCaps[roleId]) {
       try {
-        const caps = await getSavedCapabilities(roleId)
-        setSavedCaps(prev => ({ ...prev, [roleId]: caps }))
+        const caps = await getSavedCapabilities(roleId);
+        setSavedCaps((prev) => ({ ...prev, [roleId]: caps }));
       } catch (e) {
-        console.error('Failed to load caps for role', roleId)
+        console.error("Failed to load caps for role", roleId);
       }
     }
   }
 
+  async function handleGenerateTeamReport() {
+    if (!allRolesAssigned || teamReportStatus === "loading") return;
+
+    setTeamReportStatus("loading");
+
+    try {
+      // Load the SAVED capabilities from Supabase for every role.
+      // This preserves manual edits and capability weights rather than
+      // re-running capability inference.
+      const rolesForReport = await Promise.all(
+        roles.map(async (role) => {
+          const capabilities = await getSavedCapabilities(role.id);
+          const assignment = assignments[role.id];
+
+          return {
+            id: role.id,
+            title: role.title,
+            description: role.description || "",
+            assignment: {
+              employee_id: assignment.employee_id,
+              employee_name: assignment.employee_name,
+              match_score: assignment.match_score,
+            },
+            capabilities: capabilities.map((capability) => ({
+              cap_id: capability.cap_id,
+              name: capability.name,
+              esco_description: capability.esco_description || "",
+              weight: capability.weight,
+              is_inferred: Boolean(capability.is_inferred),
+            })),
+          };
+        }),
+      );
+
+      const payload = {
+        project_id: project.id,
+        project_name: project.name,
+        project_description: project.description || "",
+        client: project.client || null,
+        roles: rolesForReport,
+      };
+
+      const blob = await generateTeamReport(project.id, payload);
+
+      const projectName = project.name
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9-]/g, "");
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${projectName || "Project"}-Team-Report.docx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      setTeamReportStatus("done");
+
+      setTimeout(() => {
+        setTeamReportStatus("idle");
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to generate team report:", error);
+
+      window.alert(
+        error?.message ||
+          "Could not generate the team report. Please try again.",
+      );
+
+      setTeamReportStatus("error");
+    }
+  }
+
   // Drag and drop reordering
-  function handleDragStart(roleId) { setDragId(roleId) }
+  function handleDragStart(roleId) {
+    setDragId(roleId);
+  }
 
   function handleDragOver(e, roleId) {
-    e.preventDefault()
-    setDragOverId(roleId)
+    e.preventDefault();
+    setDragOverId(roleId);
   }
 
   async function handleDrop(targetId) {
-    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
-    const from = roles.findIndex(r => r.id === dragId)
-    const to = roles.findIndex(r => r.id === targetId)
-    if (from === -1 || to === -1) { setDragId(null); setDragOverId(null); return }
+    if (!dragId || dragId === targetId) {
+      setDragId(null);
+      setDragOverId(null);
+      return;
+    }
+    const from = roles.findIndex((r) => r.id === dragId);
+    const to = roles.findIndex((r) => r.id === targetId);
+    if (from === -1 || to === -1) {
+      setDragId(null);
+      setDragOverId(null);
+      return;
+    }
 
-    const reordered = [...roles]
-    const [moved] = reordered.splice(from, 1)
-    reordered.splice(to, 0, moved)
+    const reordered = [...roles];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
 
-    setRoles(reordered)
-    setDragId(null)
-    setDragOverId(null)
+    setRoles(reordered);
+    setDragId(null);
+    setDragOverId(null);
 
     // Persist new order to Supabase
     // Each role gets an order value based on its new position
     try {
       await Promise.all(
-        reordered.map((role, index) => updateRole(role.id, { sort_order: index }))
-      )
+        reordered.map((role, index) =>
+          updateRole(role.id, { sort_order: index }),
+        ),
+      );
     } catch (e) {
-      alert('Failed to save new order. Try again.')
+      alert("Failed to save new order. Try again.");
     }
   }
 
-  function handleDragEnd() { setDragId(null); setDragOverId(null) }
+  function handleDragEnd() {
+    setDragId(null);
+    setDragOverId(null);
+  }
 
-  if (error) return <div className="error">{error}</div>
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="page">
       <button
         className="btn-secondary"
         onClick={onBack}
-        style={{ marginBottom: 16, fontSize: 11, padding: '5px 14px' }}
+        style={{ marginBottom: 16, fontSize: 11, padding: "5px 14px" }}
       >
         Back to projects
       </button>
@@ -204,7 +334,7 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
         <div className="card-head">
           <span className="card-title">Project overview</span>
         </div>
-        <p style={{ fontSize: 13, color: '#cccccc', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.7 }}>
           {project.description}
         </p>
       </div>
@@ -213,369 +343,699 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
       <div className="card">
         <div className="card-head">
           <span className="card-title">Roles required</span>
-          <span className="badge badge-green">{roles.length} roles</span>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span className="badge badge-green">{roles.length} roles</span>
+
+            <span
+              title={
+                !allRolesAssigned
+                  ? "Assign a team member to every project role before generating the team report."
+                  : ""
+              }
+              style={{
+                display: "inline-flex",
+                cursor: !allRolesAssigned ? "not-allowed" : "default",
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleGenerateTeamReport}
+                disabled={!allRolesAssigned || teamReportStatus === "loading"}
+                style={{
+                  border: allRolesAssigned
+                    ? "1px solid #86BC25"
+                    : "1px solid #2a2a2a",
+
+                  background: allRolesAssigned ? "#86BC25" : "#181818",
+
+                  color: allRolesAssigned ? "#0a0a0a" : "#555555",
+
+                  borderRadius: 6,
+                  padding: "6px 12px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+
+                  cursor:
+                    allRolesAssigned && teamReportStatus !== "loading"
+                      ? "pointer"
+                      : "not-allowed",
+
+                  opacity: teamReportStatus === "loading" ? 0.6 : 1,
+                }}
+              >
+                {teamReportStatus === "loading"
+                  ? "Generating report..."
+                  : teamReportStatus === "done"
+                    ? "Report generated ✓"
+                    : "Generate Team Report"}
+              </button>
+            </span>
+          </div>
         </div>
 
         {rolesLoading ? (
-          <div style={{ fontSize: 12, color: '#555', padding: '12px 0' }}>Loading roles...</div>
+          <div style={{ fontSize: 12, color: "#555", padding: "12px 0" }}>
+            Loading roles...
+          </div>
         ) : roles.length === 0 ? (
-          <div style={{ fontSize: 12, color: '#555', padding: '12px 0' }}>No roles yet. Add one below.</div>
-        ) : roles.map((role, i) => {
-          const c = ROLE_COLORS[i % ROLE_COLORS.length]
-          const isExpanded = expanded === role.id
+          <div style={{ fontSize: 12, color: "#555", padding: "12px 0" }}>
+            No roles yet. Add one below.
+          </div>
+        ) : (
+          roles.map((role, i) => {
+            const c = ROLE_COLORS[i % ROLE_COLORS.length];
+            const isExpanded = expanded === role.id;
 
-          return (
-            <div
-              key={role.id}
-              draggable={true}
-              onDragStart={() => handleDragStart(role.id)}
-              onDragOver={(e) => handleDragOver(e, role.id)}
-              onDrop={() => handleDrop(role.id)}
-              onDragEnd={handleDragEnd}
-              style={{
-                borderBottom: i < roles.length - 1 ? '1px solid #1f1f1f' : 'none',
-                opacity: dragId === role.id ? 0.4 : 1,
-                borderTop: dragOverId === role.id && dragId !== role.id
-                  ? '2px solid #86BC25' : '2px solid transparent',
-                transition: 'opacity 0.15s',
-              }}
-            >
-              {/* Role row */}
+            return (
               <div
-                onClick={() => handleExpand(role.id)}
+                key={role.id}
+                draggable={true}
+                onDragStart={() => handleDragStart(role.id)}
+                onDragOver={(e) => handleDragOver(e, role.id)}
+                onDrop={() => handleDrop(role.id)}
+                onDragEnd={handleDragEnd}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '12px 0', cursor: 'pointer',
+                  borderBottom:
+                    i < roles.length - 1 ? "1px solid #1f1f1f" : "none",
+                  opacity: dragId === role.id ? 0.4 : 1,
+                  borderTop:
+                    dragOverId === role.id && dragId !== role.id
+                      ? "2px solid #86BC25"
+                      : "2px solid transparent",
+                  transition: "opacity 0.15s",
                 }}
               >
-                {/* Drag handle */}
-                <span style={{
-                  color: '#333', fontSize: 14, cursor: 'grab',
-                  flexShrink: 0, userSelect: 'none',
-                }}>⠿</span>
+                {/* Role row */}
+                <div
+                  onClick={() => handleExpand(role.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "12px 0",
+                    cursor: "pointer",
+                  }}
+                >
+                  {/* Drag handle */}
+                  <span
+                    style={{
+                      color: "#333",
+                      fontSize: 14,
+                      cursor: "grab",
+                      flexShrink: 0,
+                      userSelect: "none",
+                    }}
+                  >
+                    ⠿
+                  </span>
 
-                {/* Avatar */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: c.bg, color: c.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, flexShrink: 0,
-                }}>{getInitials(role.title)}</div>
+                  {/* Avatar */}
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: c.bg,
+                      color: c.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {getInitials(role.title)}
+                  </div>
 
-                {/* Title */}
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#eeeeee' }}>
-                  {role.title}
+                  {/* Title */}
+                  <div
+                    style={{
+                      flex: 1,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#eeeeee",
+                    }}
+                  >
+                    {role.title}
+                  </div>
+
+                  {/* Action buttons */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingRole(role.id);
+                      setEditFields({
+                        title: role.title,
+                        description: role.description,
+                      });
+                      setExpanded(role.id);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "1px solid #2a2a2a",
+                      cursor: "pointer",
+                      color: "#888888",
+                      fontSize: 11,
+                      padding: "3px 10px",
+                      fontFamily: "inherit",
+                      borderRadius: 5,
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicateRole(role);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "1px solid #2a2a2a",
+                      cursor: "pointer",
+                      color: "#888888",
+                      fontSize: 11,
+                      padding: "3px 10px",
+                      fontFamily: "inherit",
+                      borderRadius: 5,
+                    }}
+                  >
+                    Duplicate
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveRole(role.id);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "1px solid #2a2a2a",
+                      cursor: "pointer",
+                      color: "#888888",
+                      fontSize: 11,
+                      padding: "3px 10px",
+                      fontFamily: "inherit",
+                      borderRadius: 5,
+                    }}
+                  >
+                    Remove
+                  </button>
+
+                  {/* Chevron */}
+                  <span
+                    style={{
+                      color: "#444",
+                      fontSize: 12,
+                      display: "inline-block",
+                      transition: "transform 0.2s",
+                      marginLeft: 4,
+                      transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                    }}
+                  >
+                    ›
+                  </span>
                 </div>
 
-                {/* Action buttons */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setEditingRole(role.id)
-                    setEditFields({ title: role.title, description: role.description })
-                    setExpanded(role.id)
-                  }}
-                  style={{
-                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                    color: '#888888', fontSize: 11, padding: '3px 10px',
-                    fontFamily: 'inherit', borderRadius: 5,
-                  }}
-                >Edit</button>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDuplicateRole(role) }}
-                  style={{
-                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                    color: '#888888', fontSize: 11, padding: '3px 10px',
-                    fontFamily: 'inherit', borderRadius: 5,
-                  }}
-                >Duplicate</button>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemoveRole(role.id) }}
-                  style={{
-                    background: 'none', border: '1px solid #2a2a2a', cursor: 'pointer',
-                    color: '#888888', fontSize: 11, padding: '3px 10px',
-                    fontFamily: 'inherit', borderRadius: 5,
-                  }}
-                >Remove</button>
-
-                {/* Chevron */}
-                <span style={{
-                  color: '#444', fontSize: 12, display: 'inline-block',
-                  transition: 'transform 0.2s', marginLeft: 4,
-                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                }}>›</span>
-              </div>
-
-              {/* Expanded content */}
-              {isExpanded && (
-                <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
-                  {editingRole === role.id ? (
-
-                    // Edit form
-                    <div style={{
-                      padding: 16, background: '#141414',
-                      border: '1px solid #2a2a2a', borderRadius: 8,
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#e0e0e0', marginBottom: 12 }}>
-                        Edit role
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label style={{
-                          fontSize: 10, fontWeight: 600, color: '#888888',
-                          textTransform: 'uppercase', letterSpacing: '0.06em',
-                          display: 'block', marginBottom: 5,
-                        }}>
-                          Role title <span style={{ color: '#e05252' }}>*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={editFields.title}
-                          onChange={e => { setEditFields(f => ({ ...f, title: e.target.value })); setFormError('') }}
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div style={{ paddingBottom: 16, paddingLeft: 50 }}>
+                    {editingRole === role.id ? (
+                      // Edit form
+                      <div
+                        style={{
+                          padding: 16,
+                          background: "#141414",
+                          border: "1px solid #2a2a2a",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <div
                           style={{
-                            width: '100%', background: '#111', border: '1px solid #2a2a2a',
-                            borderRadius: 6, padding: '8px 11px', fontSize: 12,
-                            color: '#e0e0e0', fontFamily: 'inherit',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#e0e0e0",
+                            marginBottom: 12,
                           }}
-                        />
-                      </div>
-                      <div style={{ marginBottom: 14 }}>
-                        <label style={{
-                          fontSize: 10, fontWeight: 600, color: '#888888',
-                          textTransform: 'uppercase', letterSpacing: '0.06em',
-                          display: 'block', marginBottom: 5,
-                        }}>
-                          Description <span style={{ color: '#e05252' }}>*</span>
-                        </label>
-                        <textarea
-                          value={editFields.description}
-                          onChange={e => { setEditFields(f => ({ ...f, description: e.target.value })); setFormError('') }}
-                          rows={3}
-                          style={{
-                            width: '100%', background: '#111', border: '1px solid #2a2a2a',
-                            borderRadius: 6, padding: '8px 11px', fontSize: 12,
-                            color: '#e0e0e0', fontFamily: 'inherit', resize: 'vertical',
-                          }}
-                        />
-                        {formError && (
-                          <div style={{ fontSize: 11, color: '#e05252', marginTop: 4 }}>
-                            {formError}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn-primary" onClick={handleSaveEdit}>
-                          Save changes
-                        </button>
-                        <button
-                          className="btn-secondary"
-                          onClick={() => {
-                            setEditingRole(null)
-                            setEditFields({ title: '', description: '' })
-                            setFormError('')
-                          }}
-                        >Cancel</button>
-                      </div>
-                    </div>
-
-                  ) : (
-
-                    // Normal view
-                    <>
-                      {/* Capabilities preview */}
-                      {savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
-                        <div style={{ marginBottom: 12 }}>
-                          <div style={{
-                            fontSize: 10, fontWeight: 600, color: '#888888',
-                            textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
-                          }}>
-                            Required capabilities ({savedCaps[role.id].length})
-                          </div>
-                          {savedCaps[role.id].map(cap => (
-                            <div key={cap.cap_id} style={{
-                              display: 'flex', alignItems: 'center', gap: 8,
-                              fontSize: 12, color: '#aaaaaa', padding: '3px 0',
-                            }}>
-                              <span style={{ color: '#86BC25', fontSize: 10 }}>›</span>
-                              {cap.name}
-                              <span style={{
-                                fontSize: 10, background: '#1e2a14', color: '#86BC25',
-                                borderRadius: 3, padding: '1px 6px', marginLeft: 'auto',
-                              }}>{cap.weight}</span>
-                            </div>
-                          ))}
+                        >
+                          Edit role
                         </div>
-                      ) : (
-                        <p style={{
-                          fontSize: 12, color: '#999999', lineHeight: 1.8,
-                          borderLeft: '2px solid #2a2a2a',
-                          paddingLeft: 12, marginBottom: 14, textAlign: 'left',
-                        }}>
-                          {role.description}
-                        </p>
-                      )}
-
-                      {/* Assigned employee */}
-                      {assignments[role.id] && (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          background: '#1e2a14', border: '1px solid #2a3a18',
-                          borderRadius: 7, padding: '8px 12px', marginBottom: 12,
-                        }}>
-                          <span style={{ fontSize: 11, color: '#86BC25', fontWeight: 600 }}>
-                            {assignments[role.id].employee_name}
-                          </span>
-                          <span style={{ fontSize: 10, color: '#5a8a00', marginLeft: 'auto' }}>
-                            {Math.round(assignments[role.id].match_score * 100)}% match
-                          </span>
-                        </div>
-                      )}
-
-                      {/* TopK picker — only shown before capabilities are inferred */}
-                      {(!savedCaps[role.id] || savedCaps[role.id].length === 0) && !assignments[role.id] && (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          marginBottom: 14,
-                          padding: '10px 12px',
-                          background: '#141414',
-                          border: '1px solid #2a2a2a',
-                          borderRadius: 7,
-                        }}>
-                          <span style={{ fontSize: 12, color: '#aaaaaa' }}>
-                            AI suggested capabilities
-                          </span>
-                          <input
-                            type="number"
-                            min={1} max={10}
-                            value={topKValues[role.id] ?? 5}
-                            onChange={e => setTopKValues(prev => ({
-                              ...prev,
-                              [role.id]: Math.max(1, Math.min(10, Number(e.target.value)))
-                            }))}
+                        <div style={{ marginBottom: 10 }}>
+                          <label
                             style={{
-                              width: 52, background: '#111',
-                              border: '1px solid #2a2a2a', borderRadius: 5,
-                              padding: '4px 8px', fontSize: 13, fontWeight: 600,
-                              color: '#86BC25', textAlign: 'center',
-                              fontFamily: 'inherit',
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "#888888",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.06em",
+                              display: "block",
+                              marginBottom: 5,
+                            }}
+                          >
+                            Role title{" "}
+                            <span style={{ color: "#e05252" }}>*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={editFields.title}
+                            onChange={(e) => {
+                              setEditFields((f) => ({
+                                ...f,
+                                title: e.target.value,
+                              }));
+                              setFormError("");
+                            }}
+                            style={{
+                              width: "100%",
+                              background: "#111",
+                              border: "1px solid #2a2a2a",
+                              borderRadius: 6,
+                              padding: "8px 11px",
+                              fontSize: 12,
+                              color: "#e0e0e0",
+                              fontFamily: "inherit",
                             }}
                           />
-                          <span style={{ fontSize: 11, color: '#555' }}>of 10 max</span>
                         </div>
-                      )}
-
-                      {/* Action button — changes based on progress */}
-                      {assignments[role.id] ? (
-                        // Employee already assigned — show view analysis + option to redo
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ marginBottom: 14 }}>
+                          <label
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "#888888",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.06em",
+                              display: "block",
+                              marginBottom: 5,
+                            }}
+                          >
+                            Description{" "}
+                            <span style={{ color: "#e05252" }}>*</span>
+                          </label>
+                          <textarea
+                            value={editFields.description}
+                            onChange={(e) => {
+                              setEditFields((f) => ({
+                                ...f,
+                                description: e.target.value,
+                              }));
+                              setFormError("");
+                            }}
+                            rows={3}
+                            style={{
+                              width: "100%",
+                              background: "#111",
+                              border: "1px solid #2a2a2a",
+                              borderRadius: 6,
+                              padding: "8px 11px",
+                              fontSize: 12,
+                              color: "#e0e0e0",
+                              fontFamily: "inherit",
+                              resize: "vertical",
+                            }}
+                          />
+                          {formError && (
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: "#e05252",
+                                marginTop: 4,
+                              }}
+                            >
+                              {formError}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
                           <button
                             className="btn-primary"
-                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, true, assignments[role.id].employee_id) }}
-                            style={{ fontSize: 11, padding: '7px 16px' }}
+                            onClick={handleSaveEdit}
                           >
-                            View analysis →
+                            Save changes
                           </button>
                           <button
                             className="btn-secondary"
-                            onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
-                            style={{ fontSize: 11, padding: '7px 16px' }}
+                            onClick={() => {
+                              setEditingRole(null);
+                              setEditFields({ title: "", description: "" });
+                              setFormError("");
+                            }}
                           >
-                            Redo matching
+                            Cancel
                           </button>
                         </div>
-                      ) : savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
-                        <button
-                          className="btn-primary"
-                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
-                          style={{ fontSize: 11, padding: '7px 16px' }}
-                        >
-                          Continue matching →
-                        </button>
-                      ) : (
-                        <button
-                          className="btn-primary"
-                          onClick={(e) => { e.stopPropagation(); onSelectRole(role, false, null, topKValues[role.id] ?? 5) }}
-                          style={{ fontSize: 11, padding: '7px 16px' }}
-                        >
-                          Match this role →
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
+                      </div>
+                    ) : (
+                      // Normal view
+                      <>
+                        {/* Capabilities preview */}
+                        {savedCaps[role.id] && savedCaps[role.id].length > 0 ? (
+                          <div style={{ marginBottom: 12 }}>
+                            <div
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 600,
+                                color: "#888888",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                                marginBottom: 6,
+                              }}
+                            >
+                              Required capabilities ({savedCaps[role.id].length}
+                              )
+                            </div>
+                            {savedCaps[role.id].map((cap) => (
+                              <div
+                                key={cap.cap_id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  fontSize: 12,
+                                  color: "#aaaaaa",
+                                  padding: "3px 0",
+                                }}
+                              >
+                                <span
+                                  style={{ color: "#86BC25", fontSize: 10 }}
+                                >
+                                  ›
+                                </span>
+                                {cap.name}
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    background: "#1e2a14",
+                                    color: "#86BC25",
+                                    borderRadius: 3,
+                                    padding: "1px 6px",
+                                    marginLeft: "auto",
+                                  }}
+                                >
+                                  {cap.weight}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p
+                            style={{
+                              fontSize: 12,
+                              color: "#999999",
+                              lineHeight: 1.8,
+                              borderLeft: "2px solid #2a2a2a",
+                              paddingLeft: 12,
+                              marginBottom: 14,
+                              textAlign: "left",
+                            }}
+                          >
+                            {role.description}
+                          </p>
+                        )}
+
+                        {/* Assigned employee */}
+                        {assignments[role.id] && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              background: "#1e2a14",
+                              border: "1px solid #2a3a18",
+                              borderRadius: 7,
+                              padding: "8px 12px",
+                              marginBottom: 12,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "#86BC25",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {assignments[role.id].employee_name}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                color: "#5a8a00",
+                                marginLeft: "auto",
+                              }}
+                            >
+                              {Math.round(
+                                assignments[role.id].match_score * 100,
+                              )}
+                              % match
+                            </span>
+                          </div>
+                        )}
+
+                        {/* TopK picker — only shown before capabilities are inferred */}
+                        {(!savedCaps[role.id] ||
+                          savedCaps[role.id].length === 0) &&
+                          !assignments[role.id] && (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                                marginBottom: 14,
+                                padding: "10px 12px",
+                                background: "#141414",
+                                border: "1px solid #2a2a2a",
+                                borderRadius: 7,
+                              }}
+                            >
+                              <span style={{ fontSize: 12, color: "#aaaaaa" }}>
+                                AI suggested capabilities
+                              </span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={10}
+                                value={topKValues[role.id] ?? 5}
+                                onChange={(e) =>
+                                  setTopKValues((prev) => ({
+                                    ...prev,
+                                    [role.id]: Math.max(
+                                      1,
+                                      Math.min(10, Number(e.target.value)),
+                                    ),
+                                  }))
+                                }
+                                style={{
+                                  width: 52,
+                                  background: "#111",
+                                  border: "1px solid #2a2a2a",
+                                  borderRadius: 5,
+                                  padding: "4px 8px",
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "#86BC25",
+                                  textAlign: "center",
+                                  fontFamily: "inherit",
+                                }}
+                              />
+                              <span style={{ fontSize: 11, color: "#555" }}>
+                                of 10 max
+                              </span>
+                            </div>
+                          )}
+
+                        {/* Action button — changes based on progress */}
+                        {assignments[role.id] ? (
+                          // Employee already assigned — show view analysis + option to redo
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              className="btn-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectRole(
+                                  role,
+                                  true,
+                                  assignments[role.id].employee_id,
+                                );
+                              }}
+                              style={{ fontSize: 11, padding: "7px 16px" }}
+                            >
+                              View analysis →
+                            </button>
+                            <button
+                              className="btn-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectRole(
+                                  role,
+                                  false,
+                                  null,
+                                  topKValues[role.id] ?? 5,
+                                );
+                              }}
+                              style={{ fontSize: 11, padding: "7px 16px" }}
+                            >
+                              Redo matching
+                            </button>
+                          </div>
+                        ) : savedCaps[role.id] &&
+                          savedCaps[role.id].length > 0 ? (
+                          <button
+                            className="btn-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectRole(
+                                role,
+                                false,
+                                null,
+                                topKValues[role.id] ?? 5,
+                              );
+                            }}
+                            style={{ fontSize: 11, padding: "7px 16px" }}
+                          >
+                            Continue matching →
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectRole(
+                                role,
+                                false,
+                                null,
+                                topKValues[role.id] ?? 5,
+                              );
+                            }}
+                            style={{ fontSize: 11, padding: "7px 16px" }}
+                          >
+                            Match this role →
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
 
         {/* Add role form */}
         {showAddForm && (
-          <div style={{
-            marginTop: 16, padding: 16,
-            background: '#141414', border: '1px solid #2a2a2a', borderRadius: 8,
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#e0e0e0', marginBottom: 12 }}>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 16,
+              background: "#141414",
+              border: "1px solid #2a2a2a",
+              borderRadius: 8,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#e0e0e0",
+                marginBottom: 12,
+              }}
+            >
               New role
             </div>
             <div style={{ marginBottom: 10 }}>
-              <label style={{
-                fontSize: 10, fontWeight: 600, color: '#888888',
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                display: 'block', marginBottom: 5,
-              }}>
-                Role title <span style={{ color: '#e05252' }}>*</span>
+              <label
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: "#888888",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  display: "block",
+                  marginBottom: 5,
+                }}
+              >
+                Role title <span style={{ color: "#e05252" }}>*</span>
               </label>
               <input
                 type="text"
                 placeholder="e.g. Business Analyst"
                 value={newTitle}
-                onChange={e => { setNewTitle(e.target.value); setFormError('') }}
+                onChange={(e) => {
+                  setNewTitle(e.target.value);
+                  setFormError("");
+                }}
                 style={{
-                  width: '100%', background: '#111', border: '1px solid #2a2a2a',
-                  borderRadius: 6, padding: '8px 11px', fontSize: 12,
-                  color: '#e0e0e0', fontFamily: 'inherit',
+                  width: "100%",
+                  background: "#111",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: 6,
+                  padding: "8px 11px",
+                  fontSize: 12,
+                  color: "#e0e0e0",
+                  fontFamily: "inherit",
                 }}
               />
               {formError && (
-                <div style={{ fontSize: 11, color: '#e05252', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: "#e05252", marginTop: 4 }}>
                   {formError}
                 </div>
               )}
             </div>
             <div style={{ marginBottom: 14 }}>
-              <label style={{
-                fontSize: 10, fontWeight: 600, color: '#888888',
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                display: 'block', marginBottom: 5,
-              }}>
-                Description <span style={{ color: '#e05252' }}>*</span>
+              <label
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: "#888888",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  display: "block",
+                  marginBottom: 5,
+                }}
+              >
+                Description <span style={{ color: "#e05252" }}>*</span>
               </label>
               <textarea
                 placeholder="Describe the responsibilities and requirements of this role"
                 value={newDesc}
-                onChange={e => setNewDesc(e.target.value)}
+                onChange={(e) => setNewDesc(e.target.value)}
                 rows={3}
                 style={{
-                  width: '100%', background: '#111', border: '1px solid #2a2a2a',
-                  borderRadius: 6, padding: '8px 11px', fontSize: 12,
-                  color: '#e0e0e0', fontFamily: 'inherit', resize: 'vertical',
+                  width: "100%",
+                  background: "#111",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: 6,
+                  padding: "8px 11px",
+                  fontSize: 12,
+                  color: "#e0e0e0",
+                  fontFamily: "inherit",
+                  resize: "vertical",
                 }}
               />
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <button className="btn-primary" onClick={handleAddRole}>
                 Add role
               </button>
               <button
                 className="btn-secondary"
                 onClick={() => {
-                  setShowAddForm(false)
-                  setNewTitle('')
-                  setNewDesc('')
-                  setFormError('')
+                  setShowAddForm(false);
+                  setNewTitle("");
+                  setNewDesc("");
+                  setFormError("");
                 }}
-              >Cancel</button>
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
@@ -583,26 +1043,38 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
         {/* Bottom drop zone — allows dragging to the very end of the list */}
         {dragId && (
           <div
-            onDragOver={(e) => { e.preventDefault(); setDragOverId('bottom') }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverId("bottom");
+            }}
             onDrop={() => {
-              if (!dragId) return
-              const from = roles.findIndex(r => r.id === dragId)
-              if (from === -1) { setDragId(null); setDragOverId(null); return }
-              const reordered = [...roles]
-              const [moved] = reordered.splice(from, 1)
-              reordered.push(moved)
-              setRoles(reordered)
-              setDragId(null)
-              setDragOverId(null)
+              if (!dragId) return;
+              const from = roles.findIndex((r) => r.id === dragId);
+              if (from === -1) {
+                setDragId(null);
+                setDragOverId(null);
+                return;
+              }
+              const reordered = [...roles];
+              const [moved] = reordered.splice(from, 1);
+              reordered.push(moved);
+              setRoles(reordered);
+              setDragId(null);
+              setDragOverId(null);
               Promise.all(
-                reordered.map((role, index) => updateRole(role.id, { sort_order: index }))
-              ).catch(() => alert('Failed to save new order.'))
+                reordered.map((role, index) =>
+                  updateRole(role.id, { sort_order: index }),
+                ),
+              ).catch(() => alert("Failed to save new order."));
             }}
             style={{
               height: 24,
-              borderTop: dragOverId === 'bottom' ? '2px solid #86BC25' : '2px solid transparent',
+              borderTop:
+                dragOverId === "bottom"
+                  ? "2px solid #86BC25"
+                  : "2px solid transparent",
               marginTop: 4,
-              transition: 'border-color 0.1s',
+              transition: "border-color 0.1s",
             }}
           />
         )}
@@ -612,11 +1084,18 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
           <button
             onClick={() => setShowAddForm(true)}
             style={{
-              marginTop: 14, display: 'flex', alignItems: 'center', gap: 6,
-              background: 'none', border: '1px dashed #2a2a2a',
-              borderRadius: 6, padding: '7px 14px',
-              fontSize: 11, color: '#777777',
-              cursor: 'pointer', fontFamily: 'inherit',
+              marginTop: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "none",
+              border: "1px dashed #2a2a2a",
+              borderRadius: 6,
+              padding: "7px 14px",
+              fontSize: 11,
+              color: "#777777",
+              cursor: "pointer",
+              fontFamily: "inherit",
             }}
           >
             + Add role
@@ -628,5 +1107,5 @@ export default function Frame1({ project: initialProject, onSelectRole, onBack }
         This service uses the ESCO classification of the European Commission.
       </div>
     </div>
-  )
+  );
 }
