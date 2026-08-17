@@ -183,6 +183,7 @@ class CandidateOut(BaseModel):
     match_score: float
     available: bool
     has_prior_experience: bool
+    available_from: str | None = None
 
 
 class FitItemOut(BaseModel):
@@ -761,7 +762,25 @@ def get_candidates(
         available_only=available_only,
         role_title=role_title,
     )
-    
+    # US033 — calculate available_from for unavailable employees
+    if project_start_date:
+        try:
+            from datetime import datetime, timedelta
+            start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+            end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+
+            for candidate in results:
+                if not candidate.get("available", True):
+                    orig_emp = _EMP_BY_ID.get(candidate["employee_id"])
+                    if orig_emp:
+                        for u in orig_emp.get("unavailability", []):
+                            u_from = datetime.strptime(u["from"], "%Y-%m-%d").date()
+                            u_to   = datetime.strptime(u["to"], "%Y-%m-%d").date()
+                            if u_from <= end and u_to >= start:
+                                candidate["available_from"] = (u_to + timedelta(days=1)).strftime("%d %b %Y")
+                                break
+        except ValueError:
+            pass
     return results
 
 

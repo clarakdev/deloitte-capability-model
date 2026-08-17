@@ -151,6 +151,7 @@ def rank_candidates(
             "match_score":          round(score, 4),
             "available":            emp.get("available", True),
             "has_prior_experience": emp_has_prior,
+            "available_from": None,  # populated in get_candidates (US033)
         })
 
     results.sort(key=lambda x: x["match_score"], reverse=True)

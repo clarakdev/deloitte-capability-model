@@ -194,6 +194,15 @@ export default function Frame3({ roleId, projectId, projectStartDate, projectEnd
                   }}>
                     {c.available ? 'Available' : 'Unavailable'}
                   </span>
+                  {/* US033 — show when unavailable employee becomes available */}
+                  {!c.available && c.available_from && (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#1e1a0d', color: '#d4922a',
+                    }}>
+                      Available from {c.available_from}
+                    </span>
+                  )}
                   {c.has_prior_experience && (
                     <span style={{
                       fontSize: 10, padding: '2px 7px', borderRadius: 10,
