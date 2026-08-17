@@ -108,7 +108,7 @@ export default function Frame3({ roleId, projectId, projectStartDate, projectEnd
         </label>
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
-          {loading ? 'Loading…' : `${candidates.length} candidates`}
+          {loading ? 'Loading…' : candidates.length === 25 ? 'Top 25 candidates' : `${candidates.length} candidates`}
         </span>
       </div>
 

@@ -762,6 +762,8 @@ def get_candidates(
         available_only=available_only,
         role_title=role_title,
     )
+    # US034 — limit candidate list to 25
+    results = results[:25]
     # US033 — calculate available_from for unavailable employees
     if project_start_date:
         try:
