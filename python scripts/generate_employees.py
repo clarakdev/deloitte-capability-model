@@ -1,14 +1,15 @@
 """
-Generate 30 synthetic DPN-format employees for the sprint 1 demo.
+Generate 100 synthetic DPN-format employees for the sprint 1 demo.
 
 Employees are organised into 5 archetypes matching the 5 demo project roles
-(Architecture, Data, Change, Security, PM) with 6 employees each.
+(Architecture, Data, Change, Security, PM) with 20 employees each.
 
 Within each archetype:
   - Positions 0-2 have the exact demo role title in their prior_roles list,
     enabling US005 (prior-experience filter) testing.
   - One position per archetype is marked unavailable, enabling US006 testing.
-  - Seniority varies across the 6 positions to produce a realistic spread.
+    - Seniority varies across the 20 positions to produce a realistic spread.
+    - Availability blocks are generated from August 2026 onwards.
 
 Output is fully deterministic: random.seed(42) is set at module level.
 
@@ -23,6 +24,7 @@ from __future__ import annotations
 
 import json
 import random
+from datetime import date, timedelta
 from pathlib import Path
 
 random.seed(42)
@@ -46,7 +48,19 @@ LAST_NAMES = [
     "Patel", "Jackson", "Wood", "Turner", "Martin", "Cooper", "Hill", "Ward",
 ]
 
-LOCATIONS = ["London", "Manchester", "Birmingham", "Edinburgh", "Leeds", "Bristol"]
+# Ordered from the largest / most likely Deloitte locations to smaller centres.
+# Keep LOCATION_WEIGHTS aligned with LOCATIONS: earlier locations deliberately
+# receive a greater probability when synthetic records are generated.
+LOCATIONS = [
+    "Auckland", "Auckland-North Shore", "Christchurch", "Wellington",
+    "Hamilton", "Dunedin", "Queenstown", "Rotorua", "Tauranga",
+]
+LOCATION_WEIGHTS = list(range(len(LOCATIONS), 0, -1))
+
+# Availability periods are deliberately generated around the current demo
+# timeframe. Each employee has one booked block (60%), one leave block (20%),
+# or no scheduled unavailability (20%).
+AVAILABILITY_START_DATE = date(2026, 8, 1)
 
 BUSINESS_UNITS = [
     "Technology",
@@ -56,19 +70,36 @@ BUSINESS_UNITS = [
     "Risk Advisory",
 ]
 
-# ── Seniority tiers (applied to positions 0-5 within each archetype) ──────────
+# ── Seniority tiers (applied to positions 0-19 within each archetype) ─────────
 #
-# title_rank is the index into the archetype's titles list.
+# title_rank is the index into the archetype's role-specialism titles list; it
+# is intentionally separate from Deloitte's organisational role level. The
+# four available title ranks describe growing specialist scope, so Director and
+# Partner profiles use the highest rank (3).
 # Positions 0-2 receive the demo role title in prior_roles (has_prior=True).
 # One position per archetype is marked unavailable (see archetype["unavailable_position"]).
 
 SENIORITY_TIERS = [
-    {"level": "Manager",           "years_range": (12, 18), "title_rank": 3},
+    {"level": "Partner",           "years_range": (25, 35), "title_rank": 3},
+    {"level": "Director",          "years_range": (20, 30), "title_rank": 3},
+    {"level": "Senior Manager",    "years_range": (15, 24), "title_rank": 3},
+    {"level": "Manager",           "years_range": (11, 18), "title_rank": 3},
+    {"level": "Senior Manager",    "years_range": (14, 22), "title_rank": 3},
+    {"level": "Manager",           "years_range": (10, 16), "title_rank": 3},
+    {"level": "Manager",           "years_range": (9, 15),  "title_rank": 3},
+    {"level": "Senior Consultant", "years_range": (7, 12),  "title_rank": 2},
     {"level": "Senior Consultant", "years_range": (6, 11),  "title_rank": 2},
+    {"level": "Senior Consultant", "years_range": (6, 10),  "title_rank": 2},
+    {"level": "Senior Consultant", "years_range": (5, 9),   "title_rank": 2},
+    {"level": "Consultant",        "years_range": (3, 7),   "title_rank": 1},
     {"level": "Consultant",        "years_range": (3, 6),   "title_rank": 1},
-    {"level": "Senior Consultant", "years_range": (8, 15),  "title_rank": 3},
-    {"level": "Consultant",        "years_range": (4, 8),   "title_rank": 2},
-    {"level": "Analyst",           "years_range": (1, 4),   "title_rank": 0},
+    {"level": "Consultant",        "years_range": (2, 5),   "title_rank": 1},
+    {"level": "Consultant",        "years_range": (2, 5),   "title_rank": 1},
+    {"level": "Consultant",        "years_range": (2, 4),   "title_rank": 1},
+    {"level": "Analyst",           "years_range": (1, 3),   "title_rank": 0},
+    {"level": "Analyst",           "years_range": (1, 3),   "title_rank": 0},
+    {"level": "Analyst",           "years_range": (0, 2),   "title_rank": 0},
+    {"level": "Analyst",           "years_range": (0, 2),   "title_rank": 0},
 ]
 
 PRIOR_EXP_POSITIONS = {0, 1, 2}
@@ -447,6 +478,30 @@ def get_prior_roles(archetype: dict, has_prior: bool) -> list[str]:
     )
 
 
+def generate_unavailability() -> list[dict[str, str]]:
+    """Return zero or one scheduled availability block from August 2026 onwards."""
+    block_type = random.choices(
+        ["booked", "on leave", None],
+        weights=[60, 20, 20],
+        k=1,
+    )[0]
+    if block_type is None:
+        return []
+
+    start = AVAILABILITY_START_DATE + timedelta(days=random.randint(0, 180))
+    duration_days = (
+        random.randint(28, 84)
+        if block_type == "booked"
+        else random.randint(5, 15)
+    )
+    end = start + timedelta(days=duration_days - 1)
+    return [{
+        "from": start.isoformat(),
+        "to": end.isoformat(),
+        "type": block_type,
+    }]
+
+
 def generate_all_employees() -> list[dict]:
     used_names: set[str] = set()
     employees = []
@@ -496,6 +551,7 @@ def generate_all_employees() -> list[dict]:
                 k=random.randint(2, min(4, len(archetype["project_experience"]))),
             )
             prior_roles = get_prior_roles(archetype, has_prior)
+            unavailability = generate_unavailability()
             summary = build_summary(
                 first_name=first_name,
                 years=years,
@@ -512,7 +568,7 @@ def generate_all_employees() -> list[dict]:
                 "title": title,
                 "role_level": tier["level"],
                 "business_unit": random.choice(BUSINESS_UNITS),
-                "location": random.choice(LOCATIONS),
+                "location": random.choices(LOCATIONS, weights=LOCATION_WEIGHTS, k=1)[0],
                 "summary": summary,
                 "years_experience": years,
                 "current_role": title,
@@ -523,6 +579,7 @@ def generate_all_employees() -> list[dict]:
                 "tools": tools,
                 "certifications": certs,
                 "available": available,
+                "unavailability": unavailability,
             })
             emp_id += 1
 
