@@ -23,7 +23,7 @@ from core.matching import rank_candidates
 _PM_TITLE = "Project Manager"
 
 # Expected counts from the generated demo data (deterministic seed=42)
-_TOTAL_EMPLOYEES = 30
+_TOTAL_EMPLOYEES = 100
 _UNAVAILABLE_COUNT = 5          # one per archetype
 _PM_PRIOR_EXP_COUNT = 3         # positions 0-2 of the PM archetype
 
