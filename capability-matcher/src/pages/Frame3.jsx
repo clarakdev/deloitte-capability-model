@@ -268,6 +268,8 @@ export default function Frame3({
               rpt.status === "done" ||
               rpt.status === "error");
 
+
+        
           return (
             <div key={c.employee_id} style={{ marginBottom: 8 }}>
               <div
@@ -317,7 +319,7 @@ export default function Frame3({
                     {c.name}
                   </div>
                   <div style={{ fontSize: 11, color: "#999999", marginTop: 2 }}>
-                    {c.title} · {c.business_unit} · {c.location}
+                    {c.title} · {c.role_level} · {c.business_unit} · {c.location}
                   </div>
                   <div
                     style={{
