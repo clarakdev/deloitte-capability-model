@@ -40,6 +40,7 @@ from datetime import datetime
 import copy
 
 from core.capability_inference import infer_capabilities
+from core.employee_levels import is_valid_role_level
 from core.embedding_engine import (
     embed_texts,
     get_esco_embeddings,
@@ -79,6 +80,17 @@ def _load_json(path: Path) -> object:
 
 _PROJECT: dict = _load_json(_DATA_DIR / "project.json")
 _EMPLOYEES: list[dict] = _load_json(_DATA_DIR / "employees.json")
+_invalid_role_levels = [
+    (employee.get("id", "<unknown>"), employee.get("role_level"))
+    for employee in _EMPLOYEES
+    if not is_valid_role_level(employee.get("role_level"))
+]
+if _invalid_role_levels:
+    invalid_summary = ", ".join(
+        f"{emp_id}: {value!r}" for emp_id, value in _invalid_role_levels
+    )
+    raise ValueError(f"Invalid employee role_level values: {invalid_summary}")
+
 _EMP_BY_ID: dict[str, dict] = {e["id"]: e for e in _EMPLOYEES}
 _ROLE_BY_ID: dict[str, dict] = {r["id"]: r for r in _PROJECT["roles"]}
 
