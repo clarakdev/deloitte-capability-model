@@ -143,6 +143,43 @@ You must respond with a single JSON object, exactly this shape:
 }
 """
 
+_TEAM_SYSTEM = """\
+You are a workforce capability analyst preparing a concise team assessment
+for a Deloitte project staffing report.
+
+You receive:
+- the project name and description
+- all project roles
+- the employee assigned to each role
+- each assignment's deterministic match score
+- condensed capability-fit results for each assignment
+
+Your job is to write a SHORT, OBJECTIVE team-level assessment that:
+  - Summarises the overall alignment of the proposed team with the project's
+    role requirements.
+  - Identifies notable strengths or consistently strong role assignments.
+  - Identifies where capability gaps are concentrated, if any.
+  - Mentions relevant experience only when it is explicitly provided.
+  - Focuses on team-level patterns rather than repeating every individual's
+    detailed fit report.
+
+STRICT RULES:
+  - Use ONLY the supplied data.
+  - Do not invent capabilities, experience, certifications, or project facts.
+  - Do not calculate or invent a new team score.
+  - Do not recommend replacing employees.
+  - Do not claim that a similarity score proves mastery of a capability.
+  - Objective, professional tone.
+  - No marketing language or superlatives.
+  - No markdown, bullet lists, or headings.
+  - Keep the assessment to approximately 100-180 words.
+
+You must respond with a single JSON object, exactly this shape:
+{
+  "summary": "<concise team assessment>"
+}
+"""
+
 # ── Prompt builders (pure, sync, unit-testable) ───────────────────────────────
 
 
@@ -337,6 +374,108 @@ def _build_auto_prompt(
         {"role": "user", "content": user},
     ]
 
+def _build_team_prompt(
+    project_context: dict,
+    team_entries: list[dict],
+) -> list[dict]:
+    """
+    Build the team-level assessment prompt.
+
+    Each entry in team_entries should contain:
+        {
+            "role_title": str,
+            "employee": dict,
+            "match_score": float,
+            "fit_report": list[dict],
+        }
+    """
+    project_name = project_context.get("name", "(untitled project)")
+    project_description = (
+        project_context.get("description", "") or ""
+    ).strip()
+
+    assignment_blocks: list[str] = []
+
+    for entry in team_entries:
+        role_title = entry.get("role_title", "")
+        employee = entry.get("employee", {}) or {}
+        match_score = float(entry.get("match_score", 0.0))
+        fit_report = entry.get("fit_report", []) or []
+
+        gaps = [item for item in fit_report if item.get("is_gap")]
+        covered = [item for item in fit_report if not item.get("is_gap")]
+
+        strongest = sorted(
+            covered,
+            key=lambda item: float(item.get("similarity", 0.0)),
+            reverse=True,
+        )[:3]
+
+        weakest = sorted(
+            gaps,
+            key=lambda item: (
+                int(item.get("weight", 1)),
+                -float(item.get("similarity", 0.0)),
+            ),
+            reverse=True,
+        )[:3]
+
+        strongest_text = (
+            ", ".join(
+                f"{item.get('cap_name', '')} "
+                f"({float(item.get('similarity', 0.0)):.2f})"
+                for item in strongest
+            )
+            if strongest
+            else "none recorded"
+        )
+
+        gap_text = (
+            ", ".join(
+                f"{item.get('cap_name', '')} "
+                f"(weight {item.get('weight', 1)}, "
+                f"similarity {float(item.get('similarity', 0.0)):.2f})"
+                for item in weakest
+            )
+            if weakest
+            else "none"
+        )
+
+        project_exp = employee.get("project_experience", []) or []
+        industry_exp = employee.get("industry_experience", []) or []
+
+        assignment_blocks.append(
+            f"Role: {role_title}\n"
+            f"Assigned employee: {employee.get('name', '')}\n"
+            f"Current title: {employee.get('title', '')}\n"
+            f"Level: {employee.get('role_level', '')}\n"
+            f"Deterministic overall match: {match_score * 100:.0f}%\n"
+            f"Capabilities covered: {len(covered)}\n"
+            f"Capability gaps: {len(gaps)}\n"
+            f"Strongest capability alignments: {strongest_text}\n"
+            f"Key gaps: {gap_text}\n"
+            f"Project experience: "
+            f"{', '.join(project_exp) if project_exp else '(none recorded)'}\n"
+            f"Industry experience: "
+            f"{', '.join(industry_exp) if industry_exp else '(none recorded)'}"
+        )
+
+    assignments_section = "\n\n".join(assignment_blocks)
+
+    user = (
+        f"PROJECT\n"
+        f"Name: {project_name}\n"
+        f"Description: {project_description}\n\n"
+        f"PROPOSED TEAM\n"
+        f"{assignments_section}\n\n"
+        f"Write the team assessment now. "
+        f"Respond with only the JSON object."
+    )
+
+    return [
+        {"role": "system", "content": _TEAM_SYSTEM},
+        {"role": "user", "content": user},
+    ]
 
 # ── Schema validation ─────────────────────────────────────────────────────────
 
@@ -423,6 +562,23 @@ def _validate_auto_response(
         "rationale": _sanitise_text(rationale.strip()),
     }
 
+def _validate_team_response(raw: dict) -> dict:
+    """Validate the team-level LLM response."""
+    if not isinstance(raw, dict):
+        raise LLMReportError(
+            f"Expected a JSON object, got {type(raw).__name__}."
+        )
+
+    summary = raw.get("summary")
+
+    if not isinstance(summary, str) or not summary.strip():
+        raise LLMReportError(
+            "'summary' must be a non-empty string."
+        )
+
+    return {
+        "summary": _sanitise_text(summary.strip())
+    }
 
 # ── Internal API call helper ──────────────────────────────────────────────────
 
@@ -521,16 +677,46 @@ async def select_best_candidate(
     raw = _parse_json_content(content)
     return _validate_auto_response(raw, valid_ids)
 
+async def generate_team_summary(
+    project_context: dict,
+    team_entries: list[dict],
+) -> dict:
+    """
+    Generate a concise AI assessment of the proposed project team.
+
+    Returns:
+        {"summary": str}
+
+    The LLM interprets deterministic role-match and capability-fit results.
+    It does not calculate new fit scores.
+    """
+    if not team_entries:
+        raise LLMReportError(
+            "No team assignments were provided."
+        )
+
+    messages = _build_team_prompt(
+        project_context=project_context,
+        team_entries=team_entries,
+    )
+
+    content = await _call_model(messages)
+    raw = _parse_json_content(content)
+
+    return _validate_team_response(raw)
 
 __all__ = [
     "ConfigError",
     "LLMReportError",
     "generate_fit_report",
+    "generate_team_summary",
     "select_best_candidate",
     "_build_hands_on_prompt",
     "_build_auto_prompt",
+    "_build_team_prompt",
     "_validate_hands_on_response",
     "_validate_auto_response",
+    "_validate_team_response",
     "_condense_fit",
     "_sanitise_text",
 ]

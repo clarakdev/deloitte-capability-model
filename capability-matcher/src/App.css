@@ -265,3 +265,137 @@ body {
   border-top: 1px solid var(--border);
   margin-top: 40px;
 }
+
+/* Frame 3 location multiselect filter */
+
+.location-filter {
+  position: relative;
+}
+
+.location-filter-button {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #1a1a1a;
+  border: 1px solid #222;
+  border-radius: 7px;
+  padding: 7px 14px;
+  color: #888;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.location-filter-button:hover {
+  border-color: var(--border2);
+  color: var(--muted2);
+}
+
+.location-filter-button.active {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.location-count {
+  min-width: 17px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: #0a0a0a;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.location-arrow {
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+.location-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 230px;
+  background: #161616;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 50;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.location-search {
+  width: 100%;
+  background: #0f0f0f;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+  margin-bottom: 6px;
+}
+
+.location-search::placeholder {
+  color: #666;
+}
+
+.location-search:focus {
+  border-color: var(--green);
+}
+
+.location-options {
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.location-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: 5px;
+  color: var(--muted2);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.location-option:hover {
+  background: #202020;
+  color: var(--text);
+}
+
+.location-option input {
+  accent-color: var(--green);
+}
+
+.location-empty {
+  padding: 10px 6px;
+  color: #666;
+  font-size: 11px;
+}
+
+.location-clear {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding: 8px 4px 2px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.location-clear:hover {
+  color: var(--green);
+}
