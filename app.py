@@ -1221,14 +1221,10 @@ async def generate_project_team_report(
 )
 async def auto_select_candidate(
     role_id: str,
-    project_start_date: str = Query(default=None),  # add this
+    project_start_date: str = Query(default=None), 
     project_end_date: str = Query(default=None),
     current_user: dict = Depends(get_current_user),
 ):
-    print(f"DEBUG auto_select role_id={role_id} project_start_date={project_start_date}")
-    employees = _apply_availability(_EMPLOYEES, project_start_date)
-    emp_availability = {e["id"]: e.get("available", True) for e in employees}
-    print(f"DEBUG Uma Brown available: {emp_availability.get('EMP001', 'NOT FOUND')}")
     """
     Use the LLM to select the best-fit candidate from the top 5 embedding
     results (US-S2-03). The LLM may override embedding rank #1; its choice is
