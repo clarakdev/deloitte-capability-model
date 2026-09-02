@@ -26,9 +26,10 @@ export default function Frame0({ profile, onSelectProject }) {
   const [showForm, setShowForm]     = useState(false)
   const [formError, setFormError]   = useState('')
   const [saving, setSaving]         = useState(false)
-  const [fields, setFields]         = useState({
-    name: '', client: '', description: '', duration: '', start_date: ''
-  })
+  const [fields, setFields] = useState({
+  name: '', location: '', client: '', description: '', 
+  duration: '', start_date: '', end_date: ''
+})
 
   // Edit state
   const [editingId, setEditingId]   = useState(null)
@@ -131,11 +132,13 @@ export default function Frame0({ profile, onSelectProject }) {
               </div>
               {formError && <div style={{ fontSize: 11, color: '#e05252', marginBottom: 8 }}>{formError}</div>}
               {[
-                { key: 'name', label: 'Project name', required: true },
-                { key: 'client', label: 'Client' },
+                { key: 'name',        label: 'Project name',     required: true },
+                { key: 'location',    label: 'Location (city)',   required: true },
+                { key: 'client',      label: 'Client' },
                 { key: 'description', label: 'Description' },
-                { key: 'duration', label: 'Duration' },
-                { key: 'start_date', label: 'Start date', type: 'date' },
+                { key: 'duration',    label: 'Duration (months)', type: 'number' },
+                { key: 'start_date',  label: 'Start date',        type: 'date' },
+                { key: 'end_date',    label: 'End date',          type: 'date' },
               ].map(f => (
                 <div key={f.key} style={{ marginBottom: 10 }}>
                   <label style={{
@@ -147,8 +150,23 @@ export default function Frame0({ profile, onSelectProject }) {
                   </label>
                   <input
                     type={f.type || 'text'}
-                    value={fields[f.key]}
-                    onChange={e => { setEditFields(prev => ({ ...prev, [f.key]: e.target.value })); setFormError('') }}
+                    min={f.type === 'number' ? 1 : undefined}
+                    value={editFields[f.key] || ''}
+                    onChange={e => {
+                      const val = f.type === 'number' ? Number(e.target.value) : e.target.value
+                      if (f.key === 'duration' || f.key === 'start_date') {
+                        const start = f.key === 'start_date' ? e.target.value : editFields.start_date
+                        const months = f.key === 'duration' ? Number(e.target.value) : Number(editFields.duration)
+                        if (start && months) {
+                          const endDate = new Date(start)
+                          endDate.setMonth(endDate.getMonth() + months)
+                          setEditFields(prev => ({ ...prev, [f.key]: val, end_date: endDate.toISOString().split('T')[0] }))
+                          return
+                        }
+                      }
+                      setEditFields(prev => ({ ...prev, [f.key]: val }))
+                      setFormError('')
+                    }}
                     style={{
                       width: '100%', background: '#111', border: '1px solid #2a2a2a',
                       borderRadius: 6, padding: '8px 11px', fontSize: 12,
@@ -186,18 +204,30 @@ export default function Frame0({ profile, onSelectProject }) {
                       {project.description}
                     </p>
                   )}
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {project.location && (
+                      <span style={{
+                        fontSize: 10, background: '#1a1a1a', border: '1px solid #2a2a2a',
+                        borderRadius: 4, padding: '2px 8px', color: '#666666',
+                      }}>📍 {project.location}</span>
+                    )}
                     {project.duration && (
                       <span style={{
                         fontSize: 10, background: '#1a1a1a', border: '1px solid #2a2a2a',
                         borderRadius: 4, padding: '2px 8px', color: '#666666',
-                      }}>{project.duration}</span>
+                      }}>{project.duration} months</span>
                     )}
                     {project.start_date && (
                       <span style={{
                         fontSize: 10, background: '#1a1a1a', border: '1px solid #2a2a2a',
                         borderRadius: 4, padding: '2px 8px', color: '#666666',
-                      }}>{project.start_date}</span>
+                      }}>Start: {project.start_date}</span>
+                    )}
+                    {project.end_date && (
+                      <span style={{
+                        fontSize: 10, background: '#1e2a14', border: '1px solid #2a3a18',
+                        borderRadius: 4, padding: '2px 8px', color: '#86BC25',
+                      }}>End: {project.end_date}</span>
                     )}
                     <span style={{
                       fontSize: 10, background: '#1e2a14', border: '1px solid #2a3a18',
@@ -218,10 +248,12 @@ export default function Frame0({ profile, onSelectProject }) {
                       setEditingId(project.id)
                       setEditFields({
                         name:        project.name || '',
+                        location:    project.location || '',
                         client:      project.client || '',
                         description: project.description || '',
                         duration:    project.duration || '',
                         start_date:  project.start_date || '',
+                        end_date:    project.end_date || '',
                       })
                       setFormError('')
                     }}
@@ -254,11 +286,13 @@ export default function Frame0({ profile, onSelectProject }) {
           </div>
           {formError && <div style={{ fontSize: 11, color: '#e05252', marginBottom: 8 }}>{formError}</div>}
           {[
-            { key: 'name', label: 'Project name', required: true },
-            { key: 'client', label: 'Client' },
+            { key: 'name',        label: 'Project name',     required: true },
+            { key: 'location',    label: 'Location (city)',   required: true },
+            { key: 'client',      label: 'Client' },
             { key: 'description', label: 'Description' },
-            { key: 'duration', label: 'Duration' },
-            { key: 'start_date', label: 'Start date', type: 'date' },
+            { key: 'duration',    label: 'Duration (months)', type: 'number' },
+            { key: 'start_date',  label: 'Start date',        type: 'date' },
+            { key: 'end_date',    label: 'End date',          type: 'date' },
           ].map(f => (
             <div key={f.key} style={{ marginBottom: 10 }}>
               <label style={{
@@ -270,8 +304,24 @@ export default function Frame0({ profile, onSelectProject }) {
               </label>
               <input
                 type={f.type || 'text'}
-                value={fields[f.key]}
-                onChange={e => { setFields(prev => ({ ...prev, [f.key]: e.target.value })); setFormError('') }}
+                min={f.type === 'number' ? 1 : undefined}
+                value={fields[f.key] || ''}
+                onChange={e => {
+                  const val = f.type === 'number' ? Number(e.target.value) : e.target.value
+                  // Auto-calculate end date when start date or duration changes
+                  if (f.key === 'duration' || f.key === 'start_date') {
+                    const start = f.key === 'start_date' ? e.target.value : fields.start_date
+                    const months = f.key === 'duration' ? Number(e.target.value) : Number(fields.duration)
+                    if (start && months) {
+                      const endDate = new Date(start)
+                      endDate.setMonth(endDate.getMonth() + months)
+                      setFields(prev => ({ ...prev, [f.key]: val, end_date: endDate.toISOString().split('T')[0] }))
+                      return
+                    }
+                  }
+                  setFields(prev => ({ ...prev, [f.key]: val }))
+                  setFormError('')
+                }}
                 style={{
                   width: '100%', background: '#111', border: '1px solid #2a2a2a',
                   borderRadius: 6, padding: '8px 11px', fontSize: 12,
@@ -284,7 +334,10 @@ export default function Frame0({ profile, onSelectProject }) {
             <button className="btn-primary" onClick={handleCreate} disabled={saving}>
               {saving ? 'Creating...' : 'Create project'}
             </button>
-            <button className="btn-secondary" onClick={() => { setShowForm(false); setFormError('') }}>
+            <button
+              className="btn-secondary"
+              onClick={() => { setShowForm(false); setFormError('') }}
+            >
               Cancel
             </button>
           </div>

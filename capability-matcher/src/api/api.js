@@ -92,9 +92,10 @@ export function searchEsco(query) {
 //   requirePriorExp — only show employees who have held this role title before
 // The match_score (0–1) is computed by the backend's matching engine.
 // Backend endpoint: GET /roles/{roleId}/candidates
-export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null) {
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null, projectEndDate = null) {
   let url = `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
   if (projectStartDate) url += `&project_start_date=${projectStartDate}`
+  if (projectEndDate) url += `&project_end_date=${projectEndDate}`
   return request(url)
 }
 
@@ -120,9 +121,12 @@ export function requestLLMReport(roleId, empId) {
 
 // Ask the LLM to pick the best candidate from the top 5 (auto mode).
 // Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
-export function requestAutoSelect(roleId, projectStartDate = null) {
+export function requestAutoSelect(roleId, projectStartDate = null, projectEndDate = null) {
   let url = `/roles/${roleId}/auto-select`
-  if (projectStartDate) url += `?project_start_date=${projectStartDate}`
+  const params = []
+  if (projectStartDate) params.push(`project_start_date=${projectStartDate}`)
+  if (projectEndDate) params.push(`project_end_date=${projectEndDate}`)
+  if (params.length) url += `?${params.join('&')}`
   return request(url, { method: 'POST' })
 }
 

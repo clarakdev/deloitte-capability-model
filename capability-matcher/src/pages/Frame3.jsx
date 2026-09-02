@@ -36,6 +36,7 @@ export default function Frame3({
   roleId,
   projectId,
   projectStartDate,
+  projectEndDate,
   onBack,
   onNext,
 }) {
@@ -53,15 +54,13 @@ export default function Frame3({
   const [reports, setReports] = useState({});
 
   useEffect(() => {
-    setLoading(true);
-    setSelectedId(null);
-    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate)
+    setLoading(true)
+    setSelectedId(null)
+    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate)
       .then(setCandidates)
-      .catch(() =>
-        setError("Could not load candidates. Is the backend running?"),
-      )
-      .finally(() => setLoading(false));
-  }, [roleId, availableOnly, priorExpOnly]);
+      .catch(() => setError('Could not load candidates. Is the backend running?'))
+      .finally(() => setLoading(false))
+  }, [roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate])
 
   // Generate or toggle the LLM report for one candidate
   async function handleGenerateReport(empId) {
@@ -231,15 +230,8 @@ export default function Frame3({
           )}
         </div>
 
-        <span
-          style={{
-            marginLeft: "auto",
-            fontSize: 11,
-            color: "#555",
-            alignSelf: "center",
-          }}
-        >
-          {loading ? "Loading…" : `${displayedCandidates.length} candidates`}
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
+          {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
         </span>
       </div>
 
@@ -254,251 +246,166 @@ export default function Frame3({
         </div>
       )}
 
-      {!loading &&
-        displayedCandidates.map((c) => {
-          const av = avatarColor(c.employee_id);
-          const sc = scoreColor(c.match_score);
-          const isSelected = c.employee_id === selectedId;
-          const isUnavailable = !c.available; // can't select unavailable employees
-          const rpt = reports[c.employee_id];
-          const showPanel =
-            rpt &&
-            !rpt.hidden &&
-            (rpt.status === "loading" ||
-              rpt.status === "done" ||
-              rpt.status === "error");
+      {!loading && displayedCandidates.map((c) => {
+        const av = avatarColor(c.employee_id)
+        const sc = scoreColor(c.match_score)
+        const isSelected = c.employee_id === selectedId
+        const isUnavailable = !c.available  // can't select unavailable employees
+        const rpt = reports[c.employee_id]
+        const showPanel = rpt && !rpt.hidden &&
+          (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
 
+        return (
+          <div key={c.employee_id} style={{ marginBottom: 8 }}>
+            <div
+              onClick={() => !isUnavailable && setSelectedId(c.employee_id)}
+              title={isUnavailable ? 'This employee is unavailable for the project start date' : ''}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '12px 16px',
+                background: isSelected ? '#131a0d' : '#161616',
+                border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
+                borderRadius: showPanel ? '8px 8px 0 0' : 8,
+                cursor: isUnavailable ? 'not-allowed' : 'pointer',
+                opacity: isUnavailable ? 0.45 : 1,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              {/* Avatar */}
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                background: av.bg, color: av.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700,
+              }}>
+                {getInitials(c.name)}
+              </div>
 
-        
-          return (
-            <div key={c.employee_id} style={{ marginBottom: 8 }}>
-              <div
-                onClick={() => !isUnavailable && setSelectedId(c.employee_id)}
-                title={
-                  isUnavailable
-                    ? "This employee is unavailable for the project start date"
-                    : ""
-                }
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "12px 16px",
-                  background: isSelected ? "#131a0d" : "#161616",
-                  border: `1px solid ${isSelected ? "#86BC25" : "#2a2a2a"}`,
-                  borderRadius: showPanel ? "8px 8px 0 0" : 8,
-                  cursor: isUnavailable ? "not-allowed" : "pointer",
-                  opacity: isUnavailable ? 0.45 : 1,
-                  transition: "opacity 0.15s",
-                }}
-              >
-                {/* Avatar */}
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    flexShrink: 0,
-                    background: av.bg,
-                    color: av.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  {getInitials(c.name)}
+              {/* Name, title, score bar */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
+                  {c.name}
                 </div>
-
-                {/* Name, title, score bar */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#d0d0d0" }}
-                  >
-                    {c.name}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#999999", marginTop: 2 }}>
-                    {c.title} · {c.role_level} · {c.business_unit} · {c.location}
-                  </div>
-                  <div
-                    style={{
-                      height: 3,
-                      background: "#1f1f1f",
-                      borderRadius: 2,
-                      marginTop: 7,
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: 3,
-                        borderRadius: 2,
-                        width: `${Math.round(c.match_score * 100)}%`,
-                        background: "#86BC25",
-                      }}
-                    />
-                  </div>
+                <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
+                  {c.title} · {c.business_unit} · {c.location}
                 </div>
-
-                {/* Right side: score, badges, AI report button */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: 5,
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      background: sc.bg,
-                      color: sc.color,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: "3px 9px",
-                      borderRadius: 20,
-                    }}
-                  >
-                    {Math.round(c.match_score * 100)}%
-                  </span>
-
-                  <div style={{ display: "flex", gap: 5 }}>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        padding: "2px 7px",
-                        borderRadius: 10,
-                        background: c.available ? "#1e2a14" : "#2a0d0d",
-                        color: c.available ? "#86BC25" : "#e05252",
-                      }}
-                    >
-                      {c.available ? "Available" : "Unavailable"}
-                    </span>
-                    {c.has_prior_experience && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          padding: "2px 7px",
-                          borderRadius: 10,
-                          background: "#0d1f33",
-                          color: "#5b9bd5",
-                        }}
-                      >
-                        Prior exp
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Generate AI report button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleGenerateReport(c.employee_id);
-                    }}
-                    disabled={rpt?.status === "loading"}
-                    style={{
-                      marginTop: 4,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: "4px 10px",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      border: `1px solid ${rpt?.status === "done" ? "#86BC25" : "#333"}`,
-                      background:
-                        rpt?.status === "done" ? "#1e2a14" : "transparent",
-                      color: rpt?.status === "done" ? "#86BC25" : "#888",
-                      opacity: rpt?.status === "loading" ? 0.5 : 1,
-                    }}
-                  >
-                    {rpt?.status === "loading"
-                      ? "Generating…"
-                      : rpt?.status === "done"
-                        ? "AI report ✓"
-                        : rpt?.status === "error"
-                          ? "AI report — retry"
-                          : "Generate AI report"}
-                  </button>
-                </div>
-
-                {/* Selection checkmark */}
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    flexShrink: 0,
-                    border: `1.5px solid ${isSelected ? "#86BC25" : "#2a2a2a"}`,
-                    background: isSelected ? "#86BC25" : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 10,
-                    color: "#0a0a0a",
-                    fontWeight: 700,
-                  }}
-                >
-                  {isSelected && "✓"}
+                <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2, marginTop: 7 }}>
+                  <div style={{
+                    height: 3, borderRadius: 2,
+                    width: `${Math.round(c.match_score * 100)}%`,
+                    background: '#86BC25',
+                  }} />
                 </div>
               </div>
 
-              {/* Inline AI report panel */}
-              {showPanel && (
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: "#0f0f0f",
-                    border: "1px solid #2a2a2a",
-                    borderTop: "none",
-                    borderBottomLeftRadius: 8,
-                    borderBottomRightRadius: 8,
-                  }}
-                >
-                  {rpt.status === "loading" && (
-                    <div style={{ fontSize: 12, color: "#888" }}>
-                      Generating AI report…
-                    </div>
+              {/* Right side: score, badges, AI report button */}
+              <div style={{
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'flex-end', gap: 5, flexShrink: 0,
+              }}>
+                <span style={{
+                  background: sc.bg, color: sc.color,
+                  fontSize: 11, fontWeight: 700,
+                  padding: '3px 9px', borderRadius: 20,
+                }}>
+                  {Math.round(c.match_score * 100)}%
+                </span>
+
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <span style={{
+                    fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                    background: c.available ? '#1e2a14' : '#2a0d0d',
+                    color: c.available ? '#86BC25' : '#e05252',
+                  }}>
+                    {c.available ? 'Available' : 'Unavailable'}
+                  </span>
+                  {/* US033 — show when unavailable employee becomes available */}
+                  {!c.available && c.available_from && (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#1e1a0d', color: '#d4922a',
+                    }}>
+                      Available from {c.available_from}
+                    </span>
                   )}
-                  {rpt.status === "error" && (
-                    <div style={{ fontSize: 12, color: "#e05252" }}>
-                      {rpt.error}
-                    </div>
-                  )}
-                  {rpt.status === "done" && (
-                    <>
-                      <p
-                        style={{
-                          fontSize: 12,
-                          lineHeight: 1.5,
-                          color: "#c0c0c0",
-                          margin: 0,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {rpt.data.report}
-                      </p>
-                    </>
+                  {c.has_prior_experience && (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#0d1f33', color: '#5b9bd5',
+                    }}>
+                      Prior exp
+                    </span>
                   )}
                 </div>
-              )}
+
+                {/* Generate AI report button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleGenerateReport(c.employee_id) }}
+                  disabled={rpt?.status === 'loading'}
+                  style={{
+                    marginTop: 4, fontSize: 10, fontWeight: 600,
+                    padding: '4px 10px', borderRadius: 10, cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    border: `1px solid ${rpt?.status === 'done' ? '#86BC25' : '#333'}`,
+                    background: rpt?.status === 'done' ? '#1e2a14' : 'transparent',
+                    color: rpt?.status === 'done' ? '#86BC25' : '#888',
+                    opacity: rpt?.status === 'loading' ? 0.5 : 1,
+                  }}
+                >
+                  {rpt?.status === 'loading' ? 'Generating…'
+                    : rpt?.status === 'done' ? 'AI report ✓'
+                    : rpt?.status === 'error' ? 'AI report — retry'
+                    : 'Generate AI report'}
+                </button>
+              </div>
+
+              {/* Selection checkmark */}
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                border: `1.5px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
+                background: isSelected ? '#86BC25' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, color: '#0a0a0a', fontWeight: 700,
+              }}>
+                {isSelected && '✓'}
+              </div>
             </div>
-          );
-        })}
+
+            {/* Inline AI report panel */}
+            {showPanel && (
+              <div style={{
+                padding: '12px 16px', background: '#0f0f0f',
+                border: '1px solid #2a2a2a',
+                borderTop: 'none',
+                borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
+              }}>
+                {rpt.status === 'loading' && (
+                  <div style={{ fontSize: 12, color: '#888' }}>Generating AI report…</div>
+                )}
+                {rpt.status === 'error' && (
+                  <div style={{ fontSize: 12, color: '#e05252' }}>{rpt.error}</div>
+                )}
+                {rpt.status === 'done' && (
+                  <>
+                    <p style={{ fontSize: 12, lineHeight: 1.5, color: '#c0c0c0', margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {rpt.data.report}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
 
       {/* Navigation */}
       <div className="actions">
-        <button className="btn-secondary" onClick={onBack}>
-          ← Back
-        </button>
+        <button className="btn-secondary" onClick={onBack}>← Back</button>
         <button
           className="btn-primary"
           disabled={!selectedId}
           onClick={() => onNext(selectedId)}
-          style={{
-            opacity: selectedId ? 1 : 0.4,
-            cursor: selectedId ? "pointer" : "default",
-          }}
+          style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
           View gap analysis →
         </button>
@@ -508,5 +415,5 @@ export default function Frame3({
         This service uses the ESCO classification of the European Commission.
       </div>
     </div>
-  );
+  )
 }
