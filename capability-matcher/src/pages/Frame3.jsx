@@ -287,7 +287,7 @@ export default function Frame3({
                   {c.name}
                 </div>
                 <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
-                  {c.title} · {c.business_unit} · {c.location}
+                  {c.title} · {c.role_level} · {c.business_unit} · {c.location}
                 </div>
                 <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2, marginTop: 7 }}>
                   <div style={{
