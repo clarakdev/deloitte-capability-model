@@ -1,42 +1,57 @@
 // Frame3.jsx — Candidate selection screen (Step 3 of 4). Hands-on mode only.
 
-import { useEffect, useState } from 'react'
-import { getCandidates, requestLLMReport } from '../api/api'
+import { useEffect, useState } from "react";
+import { getCandidates, requestLLMReport } from "../api/api";
 
 function getInitials(name) {
-  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 const AVATAR_COLORS = [
-  { bg: '#1e2a14', color: '#86BC25' },
-  { bg: '#0d1f33', color: '#5b9bd5' },
-  { bg: '#1c0d33', color: '#9b6dd4' },
-  { bg: '#2a1800', color: '#d4922a' },
-  { bg: '#2a0d0d', color: '#e05252' },
-  { bg: '#082020', color: '#1D9E75' },
-]
+  { bg: "#1e2a14", color: "#86BC25" },
+  { bg: "#0d1f33", color: "#5b9bd5" },
+  { bg: "#1c0d33", color: "#9b6dd4" },
+  { bg: "#2a1800", color: "#d4922a" },
+  { bg: "#2a0d0d", color: "#e05252" },
+  { bg: "#082020", color: "#1D9E75" },
+];
 
 function avatarColor(empId) {
-  const n = parseInt(empId.replace(/\D/g, ''), 10) || 0
-  return AVATAR_COLORS[n % AVATAR_COLORS.length]
+  const n = parseInt(empId.replace(/\D/g, ""), 10) || 0;
+  return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
 
 function scoreColor(score) {
-  if (score >= 0.85) return { bg: '#1e2a14', color: '#86BC25' }
-  if (score >= 0.70) return { bg: '#0d1f33', color: '#5b9bd5' }
-  return { bg: '#2a1e0a', color: '#d4922a' }
+  if (score >= 0.85) return { bg: "#1e2a14", color: "#86BC25" };
+  if (score >= 0.7) return { bg: "#0d1f33", color: "#5b9bd5" };
+  return { bg: "#2a1e0a", color: "#d4922a" };
 }
 
-export default function Frame3({ roleId, projectId, projectStartDate, projectEndDate, onBack, onNext }) {
-  const [candidates, setCandidates] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
-  const [availableOnly, setAvailableOnly] = useState(false)
-  const [priorExpOnly, setPriorExpOnly]   = useState(false)
+export default function Frame3({
+  roleId,
+  projectId,
+  projectStartDate,
+  projectEndDate,
+  onBack,
+  onNext,
+}) {
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [priorExpOnly, setPriorExpOnly] = useState(false);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [locationSearch, setLocationSearch] = useState("");
+  const [locationOpen, setLocationOpen] = useState(false);
 
   // Per-employee LLM report state: empId → { status, data, error, hidden }
-  const [reports, setReports] = useState({})
+  const [reports, setReports] = useState({});
 
   useEffect(() => {
     setLoading(true)
@@ -49,26 +64,52 @@ export default function Frame3({ roleId, projectId, projectStartDate, projectEnd
 
   // Generate or toggle the LLM report for one candidate
   async function handleGenerateReport(empId) {
-    const existing = reports[empId]
-    if (existing?.status === 'done' || existing?.status === 'error') {
-      setReports(r => ({ ...r, [empId]: { ...existing, hidden: !existing.hidden } }))
-      return
+    const existing = reports[empId];
+    if (existing?.status === "done" || existing?.status === "error") {
+      setReports((r) => ({
+        ...r,
+        [empId]: { ...existing, hidden: !existing.hidden },
+      }));
+      return;
     }
-    if (existing?.status === 'loading') return
+    if (existing?.status === "loading") return;
 
-    setReports(r => ({ ...r, [empId]: { status: 'loading', hidden: false } }))
+    setReports((r) => ({
+      ...r,
+      [empId]: { status: "loading", hidden: false },
+    }));
     try {
-      const data = await requestLLMReport(roleId, empId)
-      setReports(r => ({ ...r, [empId]: { status: 'done', data, hidden: false } }))
+      const data = await requestLLMReport(roleId, empId);
+      setReports((r) => ({
+        ...r,
+        [empId]: { status: "done", data, hidden: false },
+      }));
     } catch (err) {
-      const msg = err?.message?.includes('503')
-        ? 'AI report unavailable — check OPENROUTER_API_KEY. Deterministic matching still works.'
-        : 'Could not generate AI report. Is the backend running?'
-      setReports(r => ({ ...r, [empId]: { status: 'error', error: msg, hidden: false } }))
+      const msg = err?.message?.includes("503")
+        ? "AI report unavailable — check OPENROUTER_API_KEY. Deterministic matching still works."
+        : "Could not generate AI report. Is the backend running?";
+      setReports((r) => ({
+        ...r,
+        [empId]: { status: "error", error: msg, hidden: false },
+      }));
     }
   }
 
-  if (error) return <div className="error">{error}</div>
+  const locationOptions = [
+    ...new Set(candidates.map((c) => c.location).filter(Boolean)),
+  ].sort();
+
+  const filteredLocationOptions = locationOptions.filter((location) =>
+    location.toLowerCase().includes(locationSearch.toLowerCase()),
+  );
+
+  const displayedCandidates = candidates.filter(
+    (candidate) =>
+      selectedLocations.length === 0 ||
+      selectedLocations.includes(candidate.location),
+  );
+
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="page">
@@ -78,50 +119,134 @@ export default function Frame3({ roleId, projectId, projectStartDate, projectEnd
       </div>
 
       {/* Filter toggles */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: availableOnly ? '#1e2a14' : '#1a1a1a',
-          border: `1px solid ${availableOnly ? '#86BC25' : '#222'}`,
-          borderRadius: 7, padding: '7px 14px', cursor: 'pointer',
-          fontSize: 12, color: availableOnly ? '#86BC25' : '#888',
-          fontWeight: availableOnly ? 600 : 400,
-        }}>
-          <input type="checkbox" checked={availableOnly}
-            onChange={e => setAvailableOnly(e.target.checked)}
-            style={{ accentColor: '#86BC25' }} />
+      <div
+        style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}
+      >
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: availableOnly ? "#1e2a14" : "#1a1a1a",
+            border: `1px solid ${availableOnly ? "#86BC25" : "#222"}`,
+            borderRadius: 7,
+            padding: "7px 14px",
+            cursor: "pointer",
+            fontSize: 12,
+            color: availableOnly ? "#86BC25" : "#888",
+            fontWeight: availableOnly ? 600 : 400,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={availableOnly}
+            onChange={(e) => setAvailableOnly(e.target.checked)}
+            style={{ accentColor: "#86BC25" }}
+          />
           Available only
         </label>
 
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: priorExpOnly ? '#1e2a14' : '#1a1a1a',
-          border: `1px solid ${priorExpOnly ? '#86BC25' : '#222'}`,
-          borderRadius: 7, padding: '7px 14px', cursor: 'pointer',
-          fontSize: 12, color: priorExpOnly ? '#86BC25' : '#888',
-          fontWeight: priorExpOnly ? 600 : 400,
-        }}>
-          <input type="checkbox" checked={priorExpOnly}
-            onChange={e => setPriorExpOnly(e.target.checked)}
-            style={{ accentColor: '#86BC25' }} />
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: priorExpOnly ? "#1e2a14" : "#1a1a1a",
+            border: `1px solid ${priorExpOnly ? "#86BC25" : "#222"}`,
+            borderRadius: 7,
+            padding: "7px 14px",
+            cursor: "pointer",
+            fontSize: 12,
+            color: priorExpOnly ? "#86BC25" : "#888",
+            fontWeight: priorExpOnly ? 600 : 400,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={priorExpOnly}
+            onChange={(e) => setPriorExpOnly(e.target.checked)}
+            style={{ accentColor: "#86BC25" }}
+          />
           Prior experience only
         </label>
 
+        <div className="location-filter">
+          <button
+            type="button"
+            className={`location-filter-button ${selectedLocations.length > 0 ? "active" : ""}`}
+            onClick={() => setLocationOpen((open) => !open)}
+          >
+            Location
+            {selectedLocations.length > 0 && (
+              <span className="location-count">{selectedLocations.length}</span>
+            )}
+            <span className="location-arrow">▾</span>
+          </button>
+
+          {locationOpen && (
+            <div className="location-dropdown">
+              <input
+                type="text"
+                className="location-search"
+                placeholder="Search locations..."
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+              />
+
+              <div className="location-options">
+                {filteredLocationOptions.length === 0 ? (
+                  <div className="location-empty">No matching locations</div>
+                ) : (
+                  filteredLocationOptions.map((location) => (
+                    <label key={location} className="location-option">
+                      <input
+                        type="checkbox"
+                        checked={selectedLocations.includes(location)}
+                        onChange={() => {
+                          setSelectedLocations((current) =>
+                            current.includes(location)
+                              ? current.filter((item) => item !== location)
+                              : [...current, location],
+                          );
+                        }}
+                      />
+
+                      <span>{location}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+
+              {selectedLocations.length > 0 && (
+                <button
+                  type="button"
+                  className="location-clear"
+                  onClick={() => setSelectedLocations([])}
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
-          {loading ? 'Loading…' : candidates.length === 25 ? 'Top 25 candidates' : `${candidates.length} candidates`}
+          {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
         </span>
       </div>
 
       {/* Candidate cards */}
       {loading && <div className="loading">Ranking candidates…</div>}
 
-      {!loading && candidates.length === 0 && (
-        <div style={{ color: 'var(--muted2)', fontSize: 13, padding: '24px 0' }}>
+      {!loading && displayedCandidates.length === 0 && (
+        <div
+          style={{ color: "var(--muted2)", fontSize: 13, padding: "24px 0" }}
+        >
           No candidates match the current filters.
         </div>
       )}
 
-      {!loading && candidates.map((c) => {
+      {!loading && displayedCandidates.map((c) => {
         const av = avatarColor(c.employee_id)
         const sc = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId

@@ -27,11 +27,13 @@ import hashlib
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
+from io import BytesIO
 from typing import Annotated
 
 import numpy as np
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -40,6 +42,7 @@ from datetime import datetime
 import copy
 
 from core.capability_inference import infer_capabilities
+from core.employee_levels import is_valid_role_level
 from core.embedding_engine import (
     embed_texts,
     get_esco_embeddings,
@@ -52,6 +55,7 @@ from core.llm_report import (
     ConfigError as LLMConfigError,
     LLMReportError,
     generate_fit_report,
+    generate_team_summary,
     select_best_candidate,
 )
 from core.matching import rank_candidates
@@ -62,6 +66,8 @@ from core.security import (
     get_supabase_client,
     resolve_profile_from_user_id,
 )
+
+from core.team_report import build_team_report_docx
 
 # Load .env (OPENROUTER_API_KEY / OPENROUTER_BASE_URL / OPENROUTER_MODEL) at
 # import time so the LLM client picks up config without manual env exports.
@@ -79,6 +85,17 @@ def _load_json(path: Path) -> object:
 
 _PROJECT: dict = _load_json(_DATA_DIR / "project.json")
 _EMPLOYEES: list[dict] = _load_json(_DATA_DIR / "employees.json")
+_invalid_role_levels = [
+    (employee.get("id", "<unknown>"), employee.get("role_level"))
+    for employee in _EMPLOYEES
+    if not is_valid_role_level(employee.get("role_level"))
+]
+if _invalid_role_levels:
+    invalid_summary = ", ".join(
+        f"{emp_id}: {value!r}" for emp_id, value in _invalid_role_levels
+    )
+    raise ValueError(f"Invalid employee role_level values: {invalid_summary}")
+
 _EMP_BY_ID: dict[str, dict] = {e["id"]: e for e in _EMPLOYEES}
 _ROLE_BY_ID: dict[str, dict] = {r["id"]: r for r in _PROJECT["roles"]}
 
@@ -216,6 +233,34 @@ class AutoSelectOut(BaseModel):
     rationale: str
     all_top_candidates: list[dict]  # [{employee_id, name, match_score}, ...]
 
+class TeamReportCapabilityIn(BaseModel):
+    cap_id: str
+    name: str
+    esco_description: str = ""
+    weight: int = Field(default=3, ge=1, le=5)
+    is_inferred: bool = False
+
+
+class TeamReportAssignmentIn(BaseModel):
+    employee_id: str
+    employee_name: str = ""
+    match_score: float
+
+
+class TeamReportRoleIn(BaseModel):
+    id: str
+    title: str
+    description: str = ""
+    assignment: TeamReportAssignmentIn
+    capabilities: list[TeamReportCapabilityIn]
+
+
+class TeamReportIn(BaseModel):
+    project_id: str
+    project_name: str
+    project_description: str = ""
+    client: str | None = None
+    roles: list[TeamReportRoleIn]
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -300,6 +345,41 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
         reuse_level=s.get("reuseLevel", ""),
         description=s.get("description", ""),
     )
+
+def _hydrate_report_capabilities(
+    capabilities: list[TeamReportCapabilityIn],
+) -> list[dict]:
+    """
+    Convert saved Supabase capabilities into the full capability structure
+    required by analyse_fit(), including ESCO embeddings.
+    """
+    uri_to_index = get_uri_to_index()
+    esco_embeddings = get_esco_embeddings()
+
+    hydrated: list[dict] = []
+
+    for capability in capabilities:
+        skill_index = uri_to_index.get(capability.cap_id)
+
+        if skill_index is None:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Capability '{capability.name}' could not be matched "
+                    f"to the ESCO embedding dataset."
+                ),
+            )
+
+        hydrated.append({
+            "cap_id": capability.cap_id,
+            "name": capability.name,
+            "esco_description": capability.esco_description,
+            "weight": capability.weight,
+            "is_inferred": capability.is_inferred,
+            "embedding": esco_embeddings[skill_index].copy(),
+        })
+
+    return hydrated
 
 # ── Authentication and RBAC ────────────────────────────────────────────────
 
@@ -899,6 +979,239 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     _llm_cache[cache_key] = payload
     return payload
 
+@app.post(
+    "/projects/{project_id}/team-report",
+    tags=["Reports"],
+    summary="Generate a Word Team Capability Report",
+    dependencies=[
+        Depends(
+            require_roles(
+                ["Admin", "HR User", "Project Manager"]
+            )
+        )
+    ],
+)
+async def generate_project_team_report(
+    project_id: str,
+    body: TeamReportIn,
+):
+    """
+    Generate a project-level DOCX report after every role has an assignment.
+
+    The report contains:
+    - project overview
+    - proposed team mapping
+    - average team match
+    - roles with capability gaps
+    - AI-generated team assessment
+    - individual employee profiles
+    - per-role capability alignment
+    - individual AI assignment rationales
+    """
+
+    if project_id != body.project_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Project id does not match request body.",
+        )
+
+    if not body.roles:
+        raise HTTPException(
+            status_code=422,
+            detail="The project has no roles.",
+        )
+
+    team_entries: list[dict] = []
+
+    for role in body.roles:
+        employee = _EMP_BY_ID.get(
+            role.assignment.employee_id
+        )
+
+        if employee is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Employee "
+                    f"'{role.assignment.employee_id}' "
+                    f"was not found."
+                ),
+            )
+
+        if not role.capabilities:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Role '{role.title}' has no saved capabilities."
+                ),
+            )
+
+        capabilities = _hydrate_report_capabilities(
+            role.capabilities
+        )
+
+        fit_report = analyse_fit(
+            capabilities,
+            employee,
+        )
+
+        gap_count = sum(
+            1
+            for item in fit_report
+            if item.get("is_gap")
+        )
+
+        covered_count = len(fit_report) - gap_count
+
+        avg_similarity = (
+            sum(
+                float(item.get("similarity", 0.0))
+                for item in fit_report
+            )
+            / len(fit_report)
+            if fit_report
+            else 0.0
+        )
+
+        # Same calculation used by Frame4's scoreOutOfFive().
+        avg_fit = min(
+            5,
+            max(
+                0,
+                int(avg_similarity * 5 + 0.999999),
+            ),
+        )
+
+        role_context = {
+            "title": role.title,
+            "description": role.description,
+        }
+
+        # Reuse the existing individual AI report mechanism.
+        #
+        # If this exact employee/capability combination has already had
+        # an AI report generated, use the existing in-memory cache.
+        cap_hash = _capability_hash(capabilities)
+
+        individual_cache_key = (
+            "report",
+            role.id,
+            employee["id"],
+            cap_hash,
+        )
+
+        cached_rationale = _llm_cache.get(
+            individual_cache_key
+        )
+
+        if cached_rationale is not None:
+            rationale = cached_rationale.report
+        else:
+            try:
+                individual_result = await generate_fit_report(
+                    role_context=role_context,
+                    role_capabilities=capabilities,
+                    employee=employee,
+                    fit_report=fit_report,
+                )
+
+                rationale = individual_result["report"]
+
+                _llm_cache[
+                    individual_cache_key
+                ] = LLMReportOut(
+                    employee_id=employee["id"],
+                    overall_fit_score=individual_result[
+                        "overall_fit_score"
+                    ],
+                    report=individual_result["report"],
+                )
+
+            except (
+                LLMConfigError,
+                LLMReportError,
+            ):
+                rationale = (
+                    "AI-generated assignment rationale "
+                    "was unavailable for this export."
+                )
+
+        team_entries.append({
+            "role_id": role.id,
+            "role_title": role.title,
+            "role_description": role.description,
+            "employee": employee,
+            "match_score": float(
+                role.assignment.match_score
+            ),
+            "fit_report": fit_report,
+            "avg_fit": avg_fit,
+            "covered_count": covered_count,
+            "gap_count": gap_count,
+            "rationale": rationale,
+        })
+
+    project_context = {
+        "id": body.project_id,
+        "name": body.project_name,
+        "description": body.project_description,
+        "client": body.client,
+    }
+
+    # New team-level AI assessment.
+    try:
+        team_result = await generate_team_summary(
+            project_context=project_context,
+            team_entries=team_entries,
+        )
+
+        team_summary = team_result["summary"]
+
+    except (
+        LLMConfigError,
+        LLMReportError,
+    ):
+        team_summary = (
+            "AI-generated team assessment was unavailable "
+            "for this export."
+        )
+
+    report_buffer = build_team_report_docx(
+        project=project_context,
+        entries=team_entries,
+        team_summary=team_summary,
+    )
+
+    safe_project_name = "".join(
+        character
+        if character.isalnum() or character in ("-", "_")
+        else "-"
+        for character in body.project_name.strip()
+    )
+
+    safe_project_name = "-".join(
+        part
+        for part in safe_project_name.split("-")
+        if part
+    )
+
+    filename = (
+        f"{safe_project_name or 'Project'}"
+        f"-Team-Report.docx"
+    )
+
+    return StreamingResponse(
+        report_buffer,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{filename}"'
+            )
+        },
+    )
 
 @app.post(
     "/roles/{role_id}/auto-select",
