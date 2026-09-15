@@ -111,9 +111,7 @@ _llm_cache: dict[tuple, dict] = {}
 
 def _capability_hash(caps: list[dict]) -> str:
     """Stable digest of a role's capability ids + weights (order-independent)."""
-    pairs = sorted(
-        (str(c.get("cap_id", "")), int(c.get("weight", 1))) for c in caps
-    )
+    pairs = sorted((str(c.get("cap_id", "")), int(c.get("weight", 1))) for c in caps)
     raw = json.dumps(pairs, sort_keys=True).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()[:16]
 
@@ -127,11 +125,12 @@ def _invalidate_llm_cache(role_id: str) -> None:
 
 # ── Startup warm-up ───────────────────────────────────────────────────────────
 
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     """Pre-load the sentence-transformer model and ESCO embeddings on startup
     so the first API call is fast."""
-    get_esco_embeddings()   # triggers model load + cache read
+    get_esco_embeddings()  # triggers model load + cache read
     yield
 
 
@@ -158,6 +157,7 @@ app.add_middleware(
 
 
 # ── Pydantic models ────────────────────────────────────────────────────────────
+
 
 class RoleOut(BaseModel):
     id: str
@@ -201,6 +201,9 @@ class CandidateOut(BaseModel):
     available: bool
     has_prior_experience: bool
     available_from: str | None = None
+    remaining_capacity: int = 100
+    capacity_status: str | None = None
+    business_chemistry: str | None = None
 
 
 class FitItemOut(BaseModel):
@@ -232,6 +235,7 @@ class AutoSelectOut(BaseModel):
     selected_employee_id: str
     rationale: str
     all_top_candidates: list[dict]  # [{employee_id, name, match_score}, ...]
+
 
 class TeamReportCapabilityIn(BaseModel):
     cap_id: str
@@ -265,13 +269,16 @@ class TeamReportIn(BaseModel):
     worked_together_score: int | None = None
     rm_notes: str | None = None
 
+
 # ── Internal helpers ───────────────────────────────────────────────────────────
+
 
 def _require_role(role_id: str) -> dict:
     role = _ROLE_BY_ID.get(role_id)
     if role is None:
         raise HTTPException(status_code=404, detail=f"Role '{role_id}' not found.")
     return role
+
 
 def _require_capabilities_exist(role_id: str) -> None:
     """
@@ -283,14 +290,18 @@ def _require_capabilities_exist(role_id: str) -> None:
     if role_id not in _capability_state and role_id not in _ROLE_BY_ID:
         raise HTTPException(
             status_code=404,
-            detail=f"No capabilities found for role '{role_id}'. Call /capabilities/infer first."
+            detail=f"No capabilities found for role '{role_id}'. Call /capabilities/infer first.",
         )
-    
-def _apply_availability(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
+
+
+def _apply_availability(
+    employees: list, project_start_date: str = None, project_end_date: str = None
+) -> list:
     """
-    Returns a deep copy of employees with availability overridden
+    Returns a deep copy of employees with availability recalculated
     based on project start date and unavailability periods.
-    If no date provided, returns employees as-is.
+    If no date provided, returns employees as-is (using each employee's
+    static `available` field from the dataset).
     """
     import copy
     from datetime import datetime
@@ -300,20 +311,24 @@ def _apply_availability(employees: list, project_start_date: str = None, project
         return employees
     try:
         start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+        end = (
+            datetime.strptime(project_end_date, "%Y-%m-%d").date()
+            if project_end_date
+            else start
+        )
 
         for emp in employees:
             unavailability = emp.get("unavailability", [])
             is_unavailable = any(
-                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end and
-                datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end
+                and datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
                 for u in unavailability
             )
-            if is_unavailable:
-                emp["available"] = False
+            emp["available"] = not is_unavailable
     except ValueError:
         pass
     return employees
+
 
 def _get_or_infer_capabilities(role_id: str) -> list[dict]:
     """Return capabilities for a role, inferring them on first access."""
@@ -323,9 +338,11 @@ def _get_or_infer_capabilities(role_id: str) -> list[dict]:
         if role is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Role '{role_id}' not found. For Supabase roles, call /capabilities/infer first."
+                detail=f"Role '{role_id}' not found. For Supabase roles, call /capabilities/infer first.",
             )
-        _capability_state[role_id] = infer_capabilities(role["title"], role["description"])
+        _capability_state[role_id] = infer_capabilities(
+            role["title"], role["description"]
+        )
     return _capability_state[role_id]
 
 
@@ -348,6 +365,7 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
         reuse_level=s.get("reuseLevel", ""),
         description=s.get("description", ""),
     )
+
 
 def _hydrate_report_capabilities(
     capabilities: list[TeamReportCapabilityIn],
@@ -373,16 +391,67 @@ def _hydrate_report_capabilities(
                 ),
             )
 
-        hydrated.append({
-            "cap_id": capability.cap_id,
-            "name": capability.name,
-            "esco_description": capability.esco_description,
-            "weight": capability.weight,
-            "is_inferred": capability.is_inferred,
-            "embedding": esco_embeddings[skill_index].copy(),
-        })
+        hydrated.append(
+            {
+                "cap_id": capability.cap_id,
+                "name": capability.name,
+                "esco_description": capability.esco_description,
+                "weight": capability.weight,
+                "is_inferred": capability.is_inferred,
+                "embedding": esco_embeddings[skill_index].copy(),
+            }
+        )
 
     return hydrated
+
+def _calculate_capacity(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
+    """
+    Returns a deep copy of employees with remaining_capacity and
+    capacity_status computed from allocations overlapping the given
+    project date range (US040).
+
+    remaining_capacity: 100 minus the sum of percentages from overlapping
+    allocations, floored at 0.
+    capacity_status: "On Leave" when the employee is on leave for these
+    dates, takes precedence over the percentage number for display purposes.
+
+    If no project dates are given, everyone defaults to 100% and no status.
+    """
+    import copy
+    from datetime import datetime
+
+    employees = copy.deepcopy(employees)
+    for emp in employees:
+        emp["remaining_capacity"] = 100
+        emp["capacity_status"] = None
+
+    if not project_start_date:
+        return employees
+
+    try:
+        start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+
+        for emp in employees:
+            committed = 0
+            for a in emp.get("allocations", []):
+                a_start = datetime.strptime(a["start_date"], "%Y-%m-%d").date()
+                a_end = datetime.strptime(a["end_date"], "%Y-%m-%d").date()
+                if a_start <= end and a_end >= start:
+                    committed += a.get("percentage", 0)
+            emp["remaining_capacity"] = max(0, 100 - committed)
+
+            on_leave = any(
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end and
+                datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
+                for u in emp.get("unavailability", [])
+            )
+            if on_leave:
+                emp["capacity_status"] = "On Leave"
+    except ValueError:
+        pass
+
+    return employees
 
 # ── Authentication and RBAC ────────────────────────────────────────────────
 
@@ -468,7 +537,8 @@ def require_roles(allowed_roles: list[str]):
         normalized_allowed = {str(item).strip().lower() for item in allowed_roles}
         if normalized_role not in normalized_allowed:
             log_security_event(
-                username=current_user.get("user_id") or current_user.get("username", "unknown"),
+                username=current_user.get("user_id")
+                or current_user.get("username", "unknown"),
                 role=current_user.get("role", "unknown"),
                 action="access_denied",
                 status="FAILED",
@@ -503,7 +573,9 @@ async def login(payload: UserLogin) -> TokenResponse:
             status="FAILED",
             details="supabase_auth_failed",
         )
-        raise HTTPException(status_code=401, detail="Invalid username or password") from exc
+        raise HTTPException(
+            status_code=401, detail="Invalid username or password"
+        ) from exc
 
     session = getattr(auth_response, "session", None)
     access_token = None
@@ -554,6 +626,7 @@ async def login(payload: UserLogin) -> TokenResponse:
 
 # ── Project ────────────────────────────────────────────────────────────────────
 
+
 @app.get(
     "/project",
     response_model=ProjectOut,
@@ -566,6 +639,7 @@ def get_project():
 
 
 # ── Capabilities ───────────────────────────────────────────────────────────────
+
 
 class InferCapabilitiesIn(BaseModel):
     title: str
@@ -588,9 +662,7 @@ def infer_capabilities_from_description(role_id: str, body: InferCapabilitiesIn)
     cached = _capability_state.get(role_id)
     if cached is None or len(cached) != body.top_k:
         _capability_state[role_id] = infer_capabilities(
-            body.title,
-            body.description,
-            top_k=max(1, min(10, body.top_k))
+            body.title, body.description, top_k=max(1, min(10, body.top_k))
         )
     return [_cap_to_out(c) for c in _capability_state[role_id]]
 
@@ -645,16 +717,19 @@ def add_capability(role_id: str, body: AddCapabilityIn):
     esco_embs = get_esco_embeddings()
     skill = skills[skill_idx]
 
-    caps.append({
-        "cap_id":           skill["conceptUri"],
-        "name":             skill["preferredLabel"],
-        "esco_description": skill.get("description", ""),
-        "embedding":        esco_embs[skill_idx].copy(),
-        "weight":           body.weight,
-        "is_inferred":      False,
-    })
+    caps.append(
+        {
+            "cap_id": skill["conceptUri"],
+            "name": skill["preferredLabel"],
+            "esco_description": skill.get("description", ""),
+            "embedding": esco_embs[skill_idx].copy(),
+            "weight": body.weight,
+            "is_inferred": False,
+        }
+    )
     _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in caps]
+
 
 @app.put(
     "/roles/{role_id}/capabilities/{cap_id:path}",
@@ -710,11 +785,11 @@ def update_capability(role_id: str, cap_id: str, body: UpdateCapabilityIn):
         skills = get_esco_skills()
         esco_embs = get_esco_embeddings()
         skill = skills[skill_idx]
-        cap["cap_id"]           = skill["conceptUri"]
-        cap["name"]             = skill["preferredLabel"]
+        cap["cap_id"] = skill["conceptUri"]
+        cap["name"] = skill["preferredLabel"]
         cap["esco_description"] = skill.get("description", "")
-        cap["embedding"]        = esco_embs[skill_idx].copy()
-        cap["is_inferred"]      = False
+        cap["embedding"] = esco_embs[skill_idx].copy()
+        cap["is_inferred"] = False
 
     _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in caps]
@@ -748,6 +823,7 @@ def delete_capability(role_id: str, cap_id: str):
 
 # ── ESCO search ────────────────────────────────────────────────────────────────
 
+
 @app.get(
     "/esco/search",
     response_model=list[EscoSkillOut],
@@ -775,7 +851,8 @@ def search_esco(
     if len(label_matches) < limit:
         label_uris = {s["conceptUri"] for s in label_matches}
         alt_matches = [
-            s for s in skills
+            s
+            for s in skills
             if s["conceptUri"] not in label_uris
             and q_lower in s.get("altLabels", "").lower()
         ]
@@ -791,7 +868,8 @@ def search_esco(
         existing_uris = {s["conceptUri"] for s in combined}
         top_indices = np.argsort(sims)[::-1]
         semantic = [
-            skills[i] for i in top_indices
+            skills[i]
+            for i in top_indices
             if skills[i]["conceptUri"] not in existing_uris
         ][: limit - len(combined)]
         combined = combined + semantic
@@ -800,13 +878,28 @@ def search_esco(
 
 
 # ── Matching ───────────────────────────────────────────────────────────────────
+@app.get(
+    "/employees/locations",
+    response_model=list[str],
+    tags=["Matching"],
+    summary="Get all distinct employee locations (for filter dropdown)",
+)
+def get_employee_locations():
+    """
+    Returns the full set of distinct employee locations, unfiltered by any
+    candidate ranking or cap. Used to populate the location filter dropdown
+    in Frame3 so it doesn't shrink once a location filter is already applied
+    (BUG002).
+    """
+    return sorted({e["location"] for e in _EMPLOYEES if e.get("location")})
+
 
 @app.get(
     "/roles/{role_id}/candidates",
     response_model=list[CandidateOut],
     tags=["Matching"],
     summary="Rank employees by fit to a role",
-    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))]
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))],
 )
 def get_candidates(
     role_id: str,
@@ -823,6 +916,10 @@ def get_candidates(
         description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
     ),
     project_end_date: str = Query(default=None),
+    locations: list[str] | None = Query(
+        default=None,
+        description="Only return employees whose location is in this list (BUG002 fix — filters before the 25-candidate cap)",
+    ),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -830,7 +927,7 @@ def get_candidates(
 
     Uses the role's current capability list (auto-inferred on first call).
     """
-    
+
     _require_capabilities_exist(role_id)
     role = _ROLE_BY_ID.get(role_id)
     role_title = role["title"] if role is not None else ""
@@ -838,6 +935,7 @@ def get_candidates(
 
     # US023/US32 — override availability based on project start date
     employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
+    employees = _calculate_capacity(employees, project_start_date, project_end_date)
     results = rank_candidates(
         caps,
         employees,
@@ -845,14 +943,23 @@ def get_candidates(
         available_only=available_only,
         role_title=role_title,
     )
+    # BUG002 — location filter must apply before the 25-candidate cap below,
+    # same as availability/prior-experience. Any future filter goes here too.
+    if locations:
+        results = [c for c in results if c.get("location") in locations]
     # US034 — limit candidate list to 25
     results = results[:25]
     # US033 — calculate available_from for unavailable employees
     if project_start_date:
         try:
             from datetime import datetime, timedelta
+
             start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
-            end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+            end = (
+                datetime.strptime(project_end_date, "%Y-%m-%d").date()
+                if project_end_date
+                else start
+            )
 
             for candidate in results:
                 if not candidate.get("available", True):
@@ -860,9 +967,11 @@ def get_candidates(
                     if orig_emp:
                         for u in orig_emp.get("unavailability", []):
                             u_from = datetime.strptime(u["from"], "%Y-%m-%d").date()
-                            u_to   = datetime.strptime(u["to"], "%Y-%m-%d").date()
+                            u_to = datetime.strptime(u["to"], "%Y-%m-%d").date()
                             if u_from <= end and u_to >= start:
-                                candidate["available_from"] = (u_to + timedelta(days=1)).strftime("%d %b %Y")
+                                candidate["available_from"] = (
+                                    u_to + timedelta(days=1)
+                                ).strftime("%d %b %Y")
                                 break
         except ValueError:
             pass
@@ -874,10 +983,14 @@ def get_candidates(
     response_model=list[FitItemOut],
     tags=["Matching"],
     summary="Per-capability fit breakdown for a candidate",
-    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager", "Employee"]))]
+    dependencies=[
+        Depends(require_roles(["Admin", "HR User", "Project Manager", "Employee"]))
+    ],
 )
-def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(get_current_user)):
-    
+def get_candidate_fit(
+    role_id: str, emp_id: str, current_user: dict = Depends(get_current_user)
+):
+
     # If they are an Employee, block them if they try to look at someone else's
     # emp_id. The comparison is performed against the employee_id mapping stored
     # for that account so self-service access remains isolated to the user's own
@@ -889,9 +1002,9 @@ def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(ge
         if str(user_emp_id) != str(emp_id):
             raise HTTPException(
                 status_code=403,
-                detail="Access Denied: Employees are only permitted to view their own fit analysis."
+                detail="Access Denied: Employees are only permitted to view their own fit analysis.",
             )
-    
+
     """
     Return a per-capability fit breakdown for a specific employee (US007).
 
@@ -909,8 +1022,8 @@ def get_candidate_fit(role_id: str, emp_id: str, current_user: dict = Depends(ge
     return analyse_fit(caps, employee)
 
 
-
 # LLM gap analysis
+
 
 @app.post(
     "/roles/{role_id}/candidates/{emp_id}/llm-report",
@@ -931,7 +1044,7 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     """
     _require_capabilities_exist(role_id)
     caps = _get_or_infer_capabilities(role_id)
-    
+
     role = _ROLE_BY_ID.get(role_id)
     role_context = {
         "title": role["title"] if role else "",
@@ -982,17 +1095,12 @@ async def get_llm_fit_report(role_id: str, emp_id: str):
     _llm_cache[cache_key] = payload
     return payload
 
+
 @app.post(
     "/projects/{project_id}/team-report",
     tags=["Reports"],
     summary="Generate a Word Team Capability Report",
-    dependencies=[
-        Depends(
-            require_roles(
-                ["Admin", "HR User", "Project Manager"]
-            )
-        )
-    ],
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))],
 )
 async def generate_project_team_report(
     project_id: str,
@@ -1006,7 +1114,7 @@ async def generate_project_team_report(
     - proposed team mapping
     - average team match
     - roles with capability gaps
-    - AI-generated team assessment
+    - AI-generated executive summary
     - individual employee profiles
     - per-role capability alignment
     - individual AI assignment rationales
@@ -1027,50 +1135,35 @@ async def generate_project_team_report(
     team_entries: list[dict] = []
 
     for role in body.roles:
-        employee = _EMP_BY_ID.get(
-            role.assignment.employee_id
-        )
+        employee = _EMP_BY_ID.get(role.assignment.employee_id)
 
         if employee is None:
             raise HTTPException(
                 status_code=404,
                 detail=(
-                    f"Employee "
-                    f"'{role.assignment.employee_id}' "
-                    f"was not found."
+                    f"Employee " f"'{role.assignment.employee_id}' " f"was not found."
                 ),
             )
 
         if not role.capabilities:
             raise HTTPException(
                 status_code=422,
-                detail=(
-                    f"Role '{role.title}' has no saved capabilities."
-                ),
+                detail=(f"Role '{role.title}' has no saved capabilities."),
             )
 
-        capabilities = _hydrate_report_capabilities(
-            role.capabilities
-        )
+        capabilities = _hydrate_report_capabilities(role.capabilities)
 
         fit_report = analyse_fit(
             capabilities,
             employee,
         )
 
-        gap_count = sum(
-            1
-            for item in fit_report
-            if item.get("is_gap")
-        )
+        gap_count = sum(1 for item in fit_report if item.get("is_gap"))
 
         covered_count = len(fit_report) - gap_count
 
         avg_similarity = (
-            sum(
-                float(item.get("similarity", 0.0))
-                for item in fit_report
-            )
+            sum(float(item.get("similarity", 0.0)) for item in fit_report)
             / len(fit_report)
             if fit_report
             else 0.0
@@ -1103,9 +1196,7 @@ async def generate_project_team_report(
             cap_hash,
         )
 
-        cached_rationale = _llm_cache.get(
-            individual_cache_key
-        )
+        cached_rationale = _llm_cache.get(individual_cache_key)
 
         if cached_rationale is not None:
             rationale = cached_rationale.report
@@ -1120,13 +1211,9 @@ async def generate_project_team_report(
 
                 rationale = individual_result["report"]
 
-                _llm_cache[
-                    individual_cache_key
-                ] = LLMReportOut(
+                _llm_cache[individual_cache_key] = LLMReportOut(
                     employee_id=employee["id"],
-                    overall_fit_score=individual_result[
-                        "overall_fit_score"
-                    ],
+                    overall_fit_score=individual_result["overall_fit_score"],
                     report=individual_result["report"],
                 )
 
@@ -1139,21 +1226,36 @@ async def generate_project_team_report(
                     "was unavailable for this export."
                 )
 
-        team_entries.append({
-            "role_id": role.id,
-            "role_title": role.title,
-            "role_description": role.description,
-            "employee": employee,
-            "match_score": float(
-                role.assignment.match_score
-            ),
-            "fit_report": fit_report,
-            "avg_fit": avg_fit,
-            "covered_count": covered_count,
-            "gap_count": gap_count,
-            "rationale": rationale,
-            "member_note": role.member_note,
-        })
+        team_entries.append(
+            {
+                "role_id": role.id,
+                "role_title": role.title,
+                "role_description": role.description,
+                "employee": employee,
+                "match_score": float(role.assignment.match_score),
+                "fit_report": fit_report,
+                "avg_fit": avg_fit,
+                "covered_count": covered_count,
+                "gap_count": gap_count,
+                "rationale": rationale,
+                "member_note": role.member_note,
+            }
+        )
+
+        team_entries.append(
+            {
+                "role_id": role.id,
+                "role_title": role.title,
+                "role_description": role.description,
+                "employee": employee,
+                "match_score": float(role.assignment.match_score),
+                "fit_report": fit_report,
+                "avg_fit": avg_fit,
+                "covered_count": covered_count,
+                "gap_count": gap_count,
+                "rationale": rationale,
+            }
+        )
 
     project_context = {
         "id": body.project_id,
@@ -1162,23 +1264,36 @@ async def generate_project_team_report(
         "client": body.client,
     }
 
-    # New team-level AI assessment.
+    # Generate the team-level AI executive summary.
     try:
-        team_result = await generate_team_summary(
+        team_summary = await generate_team_summary(
             project_context=project_context,
             team_entries=team_entries,
         )
-
-        team_summary = team_result["summary"]
 
     except (
         LLMConfigError,
         LLMReportError,
     ):
-        team_summary = (
-            "AI-generated team assessment was unavailable "
-            "for this export."
-        )
+        unavailable_message = "AI-generated analysis was unavailable for this export."
+
+        team_summary = {
+            "overall_suitability": {
+                "rating": "Assessment Unavailable",
+                "points": [
+                    unavailable_message,
+                ],
+            },
+            "key_strengths": [],
+            "key_risks": [
+                unavailable_message,
+            ],
+            "priority_capability_gaps": [],
+            "management_judgement": [
+                unavailable_message,
+            ],
+            "recommended_actions": [],
+        }
 
     report_buffer = build_team_report_docx(
         project=project_context,
@@ -1189,35 +1304,22 @@ async def generate_project_team_report(
     )
 
     safe_project_name = "".join(
-        character
-        if character.isalnum() or character in ("-", "_")
-        else "-"
+        character if character.isalnum() or character in ("-", "_") else "-"
         for character in body.project_name.strip()
     )
 
-    safe_project_name = "-".join(
-        part
-        for part in safe_project_name.split("-")
-        if part
-    )
+    safe_project_name = "-".join(part for part in safe_project_name.split("-") if part)
 
-    filename = (
-        f"{safe_project_name or 'Project'}"
-        f"-Team-Report.docx"
-    )
+    filename = f"{safe_project_name or 'Project'}" f"-Team-Report.docx"
 
     return StreamingResponse(
         report_buffer,
         media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "wordprocessingml.document"
+            "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
         ),
-        headers={
-            "Content-Disposition": (
-                f'attachment; filename="{filename}"'
-            )
-        },
+        headers={"Content-Disposition": (f'attachment; filename="{filename}"')},
     )
+
 
 @app.post(
     "/roles/{role_id}/auto-select",
@@ -1227,7 +1329,7 @@ async def generate_project_team_report(
 )
 async def auto_select_candidate(
     role_id: str,
-    project_start_date: str = Query(default=None), 
+    project_start_date: str = Query(default=None),
     project_end_date: str = Query(default=None),
     current_user: dict = Depends(get_current_user),
 ):
@@ -1248,7 +1350,7 @@ async def auto_select_candidate(
     role_title = role["title"] if role else ""
     role_description = role["description"] if role else ""
     role_context = {"title": role_title, "description": role_description}
-    
+
     cap_hash = _capability_hash(caps)
     cache_key = ("auto", role_id, cap_hash)
     cached = _llm_cache.get(cache_key)
@@ -1258,7 +1360,9 @@ async def auto_select_candidate(
     employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
     emp_availability = {e["id"]: e.get("available", True) for e in employees}
     ranked = rank_candidates(caps, employees, role_title=role_title)
-    available_ranked = [c for c in ranked if emp_availability.get(c["employee_id"], True)]
+    available_ranked = [
+        c for c in ranked if emp_availability.get(c["employee_id"], True)
+    ]
     top = available_ranked[:5] if available_ranked else ranked[:5]
     if not top:
         raise HTTPException(
@@ -1271,12 +1375,14 @@ async def auto_select_candidate(
         emp = _EMP_BY_ID.get(cand["employee_id"])
         if emp is None:
             continue
-        top_with_fit.append({
-            "rank": i,
-            "employee": emp,
-            "match_score": cand["match_score"],
-            "fit_report": analyse_fit(caps, emp),
-        })
+        top_with_fit.append(
+            {
+                "rank": i,
+                "employee": emp,
+                "match_score": cand["match_score"],
+                "fit_report": analyse_fit(caps, emp),
+            }
+        )
 
     if not top_with_fit:
         raise HTTPException(
@@ -1312,10 +1418,13 @@ async def auto_select_candidate(
         selected_employee_id=result["selected_employee_id"],
         rationale=result["rationale"],
         all_top_candidates=[
-            {"employee_id": c["employee_id"], "name": c["name"], "match_score": c["match_score"]}
+            {
+                "employee_id": c["employee_id"],
+                "name": c["name"],
+                "match_score": c["match_score"],
+            }
             for c in top
         ],
     )
     _llm_cache[cache_key] = payload
     return payload
-

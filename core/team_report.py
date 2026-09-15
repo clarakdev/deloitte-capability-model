@@ -14,7 +14,6 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
-
 DELOITTE_GREEN = "86BC25"
 DARK_GREY = "333333"
 LIGHT_GREY = "F2F2F2"
@@ -175,6 +174,345 @@ def _add_team_metrics(
     document.add_paragraph()
 
 
+def _add_bullet_list(
+    document: Document,
+    items: list[str],
+) -> None:
+    """Render concise executive-summary bullet points."""
+
+    if not items:
+        paragraph = document.add_paragraph()
+
+        run = paragraph.add_run("None identified from the supplied data.")
+
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor.from_string(MID_GREY)
+
+        return
+
+    for item in items:
+
+        paragraph = document.add_paragraph(style="List Bullet")
+
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(4)
+        paragraph.paragraph_format.line_spacing = 1.1
+
+        run = paragraph.add_run(str(item))
+
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
+
+def _add_summary_subheading(
+    document: Document,
+    text: str,
+) -> None:
+
+    paragraph = document.add_paragraph()
+
+    paragraph.paragraph_format.space_before = Pt(8)
+    paragraph.paragraph_format.space_after = Pt(3)
+
+    run = paragraph.add_run(text)
+
+    run.bold = True
+    run.font.name = "Arial"
+    run.font.size = Pt(10)
+    run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
+
+def _add_executive_summary(
+    document: Document,
+    team_summary: dict,
+) -> None:
+    """
+    Render the structured AI team assessment as a concise,
+    visually scannable executive summary.
+    """
+
+    # ------------------------------------------------------------
+    # Overall suitability + rating
+    # ------------------------------------------------------------
+
+    overall = team_summary.get("overall_suitability", {}) or {}
+
+    rating = overall.get(
+        "rating",
+        "Assessment Unavailable",
+    )
+
+    points = overall.get("points", []) or []
+
+    heading = document.add_paragraph()
+
+    heading.paragraph_format.space_after = Pt(6)
+
+    label_run = heading.add_run("Overall Team Suitability: ")
+
+    label_run.bold = True
+    label_run.font.name = "Arial"
+    label_run.font.size = Pt(11)
+    label_run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
+    rating_run = heading.add_run(str(rating).upper())
+
+    rating_run.bold = True
+    rating_run.font.name = "Arial"
+    rating_run.font.size = Pt(11)
+
+    if rating == "Strong":
+        rating_color = DELOITTE_GREEN
+
+    elif rating == "Suitable with Considerations":
+        rating_color = "C47F00"
+
+    elif rating == "Requires Review":
+        rating_color = "C00000"
+
+    else:
+        rating_color = MID_GREY
+
+    rating_run.font.color.rgb = RGBColor.from_string(rating_color)
+
+    _add_bullet_list(
+        document,
+        points,
+    )
+
+    # ------------------------------------------------------------
+    # Key strengths
+    # ------------------------------------------------------------
+
+    _add_summary_subheading(
+        document,
+        "Key Strengths",
+    )
+
+    _add_bullet_list(
+        document,
+        team_summary.get(
+            "key_strengths",
+            [],
+        )
+        or [],
+    )
+
+    # ------------------------------------------------------------
+    # Key risks
+    # ------------------------------------------------------------
+
+    _add_summary_subheading(
+        document,
+        "Key Risks",
+    )
+
+    _add_bullet_list(
+        document,
+        team_summary.get(
+            "key_risks",
+            [],
+        )
+        or [],
+    )
+
+    # ------------------------------------------------------------
+    # Priority capability gaps
+    # ------------------------------------------------------------
+
+    _add_summary_subheading(
+        document,
+        "Priority Capability Gaps",
+    )
+
+    gaps = (
+        team_summary.get(
+            "priority_capability_gaps",
+            [],
+        )
+        or []
+    )
+
+    if gaps:
+
+        table = document.add_table(
+            rows=1,
+            cols=3,
+        )
+
+        table.style = "Table Grid"
+
+        headers = [
+            "Priority",
+            "Capability",
+            "Assessment",
+        ]
+
+        for index, header in enumerate(headers):
+
+            cell = table.rows[0].cells[index]
+
+            _set_cell_shading(
+                cell,
+                DARK_GREY,
+            )
+
+            _set_cell_text(
+                cell,
+                header,
+                bold=True,
+                color="FFFFFF",
+                size=8,
+            )
+
+        priority_order = {
+            "High": 0,
+            "Medium": 1,
+            "Low": 2,
+        }
+
+        sorted_gaps = sorted(
+            gaps,
+            key=lambda gap: priority_order.get(
+                gap.get("priority", "Low"),
+                3,
+            ),
+        )
+
+        for gap in sorted_gaps:
+
+            cells = table.add_row().cells
+
+            priority = gap.get(
+                "priority",
+                "",
+            )
+
+            capability = gap.get(
+                "capability",
+                "",
+            )
+
+            insight = gap.get(
+                "insight",
+                "",
+            )
+
+            priority_color = {
+                "High": "C00000",
+                "Medium": "C47F00",
+                "Low": MID_GREY,
+            }.get(
+                priority,
+                MID_GREY,
+            )
+
+            _set_cell_text(
+                cells[0],
+                priority,
+                bold=True,
+                color=priority_color,
+                size=8,
+            )
+
+            _set_cell_text(
+                cells[1],
+                capability,
+                bold=True,
+                size=8,
+            )
+
+            _set_cell_text(
+                cells[2],
+                insight,
+                size=8,
+            )
+
+        document.add_paragraph()
+
+    else:
+
+        paragraph = document.add_paragraph()
+
+        run = paragraph.add_run("No material priority capability gaps identified.")
+
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor.from_string(MID_GREY)
+
+    # ------------------------------------------------------------
+    # Management judgement
+    # ------------------------------------------------------------
+
+    _add_summary_subheading(
+        document,
+        "Management Judgement",
+    )
+
+    _add_bullet_list(
+        document,
+        team_summary.get(
+            "management_judgement",
+            [],
+        )
+        or [],
+    )
+
+    # ------------------------------------------------------------
+    # Recommended actions
+    # ------------------------------------------------------------
+
+    _add_summary_subheading(
+        document,
+        "Recommended Actions",
+    )
+
+    actions = (
+        team_summary.get(
+            "recommended_actions",
+            [],
+        )
+        or []
+    )
+
+    if not actions:
+
+        paragraph = document.add_paragraph()
+
+        run = paragraph.add_run("No additional actions identified.")
+
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor.from_string(MID_GREY)
+
+    else:
+
+        for index, action in enumerate(
+            actions,
+            start=1,
+        ):
+
+            paragraph = document.add_paragraph()
+
+            paragraph.paragraph_format.space_after = Pt(4)
+            paragraph.paragraph_format.line_spacing = 1.1
+
+            number_run = paragraph.add_run(f"{index}. ")
+
+            number_run.bold = True
+            number_run.font.name = "Arial"
+            number_run.font.size = Pt(9)
+            number_run.font.color.rgb = RGBColor.from_string(DELOITTE_GREEN)
+
+            action_run = paragraph.add_run(str(action))
+
+            action_run.font.name = "Arial"
+            action_run.font.size = Pt(9)
+            action_run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
+
 def _add_fit_summary(
     document: Document,
     entry: dict,
@@ -266,11 +604,7 @@ def _add_capability_table(
         ]
 
         for index, value in enumerate(values):
-            color = (
-                "C00000"
-                if fit.get("is_gap") and index == 3
-                else DARK_GREY
-            )
+            color = "C00000" if fit.get("is_gap") and index == 3 else DARK_GREY
 
             _set_cell_text(
                 cells[index],
@@ -285,10 +619,11 @@ def _add_capability_table(
 def build_team_report_docx(
     project: dict,
     entries: list[dict],
-    team_summary: str,
+    team_summary: dict,
     worked_together_score: int | None = None,
     rm_notes: str | None = None,
 ) -> BytesIO:
+    
     """
     Build the final Team Capability Report and return it as an in-memory DOCX.
     """
@@ -362,18 +697,12 @@ def build_team_report_docx(
     _add_team_overview_table(document, entries)
 
     average_team_match = (
-        round(
-            sum(entry["match_score"] for entry in entries)
-            / len(entries)
-            * 100
-        )
+        round(sum(entry["match_score"] for entry in entries) / len(entries) * 100)
         if entries
         else 0
     )
 
-    roles_with_gaps = sum(
-        1 for entry in entries if entry["gap_count"] > 0
-    )
+    roles_with_gaps = sum(1 for entry in entries if entry["gap_count"] > 0)
 
     _add_team_metrics(
         document,
@@ -382,21 +711,14 @@ def build_team_report_docx(
         len(entries),
     )
 
-    # ── Team AI assessment ────────────────────────────────────────────────
+    # ── Executive summary ────────────────────────────────────────────────
 
-    _add_section_heading(document, "Team Assessment")
+    _add_section_heading(document, "Executive Summary")
 
-    assessment = document.add_paragraph(
-        team_summary
-        or "AI-generated team assessment was unavailable for this export."
+    _add_executive_summary(
+        document,
+        team_summary,
     )
-
-    assessment.paragraph_format.line_spacing = 1.15
-
-    for run in assessment.runs:
-        run.font.name = "Arial"
-        run.font.size = Pt(9)
-        run.font.color.rgb = RGBColor.from_string(DARK_GREY)
 
     if worked_together_score is not None or rm_notes:
         _add_section_heading(document, "Resource Manager's Assessment")
@@ -415,6 +737,7 @@ def build_team_report_docx(
                 run.font.name = "Arial"
                 run.font.size = Pt(9)
                 run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
 
     document.add_page_break()
 
@@ -441,9 +764,7 @@ def build_team_report_docx(
 
         employee_name = document.add_paragraph()
 
-        employee_name_run = employee_name.add_run(
-            employee.get("name", "")
-        )
+        employee_name_run = employee_name.add_run(employee.get("name", ""))
         employee_name_run.bold = True
         employee_name_run.font.name = "Arial"
         employee_name_run.font.size = Pt(16)
@@ -459,11 +780,7 @@ def build_team_report_docx(
         ]
 
         detail_run = employee_details.add_run(
-            " | ".join(
-                str(value)
-                for value in detail_values
-                if value
-            )
+            " | ".join(str(value) for value in detail_values if value)
         )
         detail_run.font.name = "Arial"
         detail_run.font.size = Pt(9)
@@ -482,8 +799,7 @@ def build_team_report_docx(
         _add_section_heading(document, "Profile")
 
         profile = document.add_paragraph(
-            employee.get("summary", "")
-            or "No employee summary recorded."
+            employee.get("summary", "") or "No employee summary recorded."
         )
         profile.paragraph_format.line_spacing = 1.15
 
@@ -516,25 +832,19 @@ def build_team_report_docx(
         _add_small_label(
             document,
             "Project experience",
-            _clean_join(
-                employee.get("project_experience", []) or []
-            ),
+            _clean_join(employee.get("project_experience", []) or []),
         )
 
         _add_small_label(
             document,
             "Industry experience",
-            _clean_join(
-                employee.get("industry_experience", []) or []
-            ),
+            _clean_join(employee.get("industry_experience", []) or []),
         )
 
         _add_small_label(
             document,
             "Certifications",
-            _clean_join(
-                employee.get("certifications", []) or []
-            ),
+            _clean_join(employee.get("certifications", []) or []),
         )
 
         if entry.get("member_note"):
