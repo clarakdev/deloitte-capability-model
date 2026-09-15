@@ -87,15 +87,20 @@ export function searchEsco(query) {
 
 // Frame 3
 // Returns all 30 employees ranked by their fit to the role's capabilities.
-// Two optional boolean filters:
+// Optional filters:
 //   availableOnly — only show employees marked available: true
 //   requirePriorExp — only show employees who have held this role title before
+//   locations — only show employees whose location is in this list (BUG002 fix —
+//     filtered on the backend before the 25-candidate cap, same as the other filters)
 // The match_score (0–1) is computed by the backend's matching engine.
 // Backend endpoint: GET /roles/{roleId}/candidates
-export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null, projectEndDate = null) {
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null, projectEndDate = null, locations = []) {
   let url = `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
   if (projectStartDate) url += `&project_start_date=${projectStartDate}`
   if (projectEndDate) url += `&project_end_date=${projectEndDate}`
+  locations.forEach((loc) => {
+    url += `&locations=${encodeURIComponent(loc)}`
+  })
   return request(url)
 }
 
@@ -109,6 +114,14 @@ export function getCandidates(roleId, availableOnly = false, requirePriorExp = f
 export function getCandidateFit(roleId, empId) {
   return request(`/roles/${roleId}/candidates/${empId}/fit`);
 }
+
+// Frame 3 — full list of distinct employee locations, unfiltered.
+// Used to populate the location dropdown so it doesn't shrink once a
+// location filter is already selected (BUG002).
+export function getEmployeeLocations() {
+  return request('/employees/locations')
+}
+
 // LLM gap analysis (hands-on report + auto selection)
 
 // Request an objective prose fit report + 0–100 score for one candidate.
@@ -270,11 +283,11 @@ export async function getAllEmployees() {
 }
 
 // Stamps the new project with the real logged-in user's id.
-export async function createProject({ name, client, description, duration, start_date }) {
+export async function createProject({ name, client, description, duration, start_date, end_date, location }) {
   const userId = await getCurrentUserId()
   const { data, error } = await supabase
     .from('projects')
-    .insert([{ name, client, description, duration, start_date, created_by: userId }])
+    .insert([{ name, client, description, duration, start_date, end_date, location, created_by: userId }])
     .select()
     .single()
   if (error) throw new Error(error.message)
@@ -312,7 +325,7 @@ export async function getRoles(projectId) {
   return data
 }
 
-export async function createRole(projectId, { title, description, sort_order = 0 }) {
+export async function createRole(projectId, { title, description, sort_order = 0, required_percentage = 100 }) {
   const { data, error } = await supabase
     .from('roles')
     .insert([{ project_id: projectId, title, description, sort_order }])

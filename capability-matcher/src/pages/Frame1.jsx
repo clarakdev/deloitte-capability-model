@@ -20,6 +20,17 @@ const ROLE_COLORS = [
   { bg: "#082020", color: "#1D9E75", initials: "NR" },
 ];
 
+function roleColor(roleId) {
+  // Derived from the role's own id, not its position in the list, so the
+  // color travels with the role when it's reordered instead of being
+  // reassigned based on whatever slot it lands in (which made moving a
+  // role look like nothing changed if it swapped colors with its neighbor).
+  const n = String(roleId)
+    .split("")
+    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return ROLE_COLORS[n % ROLE_COLORS.length];
+}
+
 function getInitials(title) {
   return title
     .split(" ")
@@ -50,9 +61,17 @@ export default function Frame1({
   const [editingRole, setEditingRole] = useState(null);
   const [editFields, setEditFields] = useState({ title: "", description: "" });
 
-  // Drag and drop
-  const [dragId, setDragId] = useState(null);
-  const [dragOverId, setDragOverId] = useState(null);
+  // Required time (%) — set inline, per role, before matching runs.
+  // Mirrors the topKValues pattern: local edit state keyed by roleId, saved
+  // to Supabase on blur.
+  const [percentageValues, setPercentageValues] = useState({}); // roleId -> number
+  const [percentageSaving, setPercentageSaving] = useState({}); // roleId -> bool
+
+  // Drag and drop reordering was replaced with simple move up/down buttons
+  // — native HTML5 drag-and-drop kept losing its session mid-drag in this
+  // app (re-renders during the drag disrupting the browser's drag state),
+  // and wasn't worth continuing to fight. Move buttons are far more
+  // reliable for the same "reorder roles" need.
 
   const [assignments, setAssignments] = useState({}); // roleId -> assignment
   const [savedCaps, setSavedCaps] = useState({}); // roleId -> caps array
@@ -111,6 +130,7 @@ export default function Frame1({
         title: newTitle.trim(),
         description: newDesc.trim(),
         sort_order: roles.length,
+        required_percentage: 100, // default — adjusted inline before matching
       });
       setRoles((prev) => [...prev, newRole]);
       setNewTitle("");
@@ -166,6 +186,7 @@ export default function Frame1({
         title: `${role.title} (copy)`,
         description: role.description,
         sort_order: roles.length,
+        required_percentage: role.required_percentage ?? 100,
       });
       setRoles((prev) => [...prev, duplicate]);
     } catch (e) {
@@ -183,6 +204,28 @@ export default function Frame1({
       } catch (e) {
         console.error("Failed to load caps for role", roleId);
       }
+    }
+  }
+
+  // Save the required percentage for a role once the field loses focus.
+  // Mirrors topKValues being local-only until used, except this value needs
+  // to persist immediately since Frame3 reads role.required_percentage
+  // directly from Supabase.
+  async function handlePercentageBlur(role) {
+    const val = percentageValues[role.id] ?? role.required_percentage ?? 100;
+    if (val === (role.required_percentage ?? 100)) return; // no change, skip save
+    setPercentageSaving((prev) => ({ ...prev, [role.id]: true }));
+    try {
+      await updateRole(role.id, { required_percentage: val });
+      setRoles((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, required_percentage: val } : r,
+        ),
+      );
+    } catch (e) {
+      alert("Failed to save required time. Try again.");
+    } finally {
+      setPercentageSaving((prev) => ({ ...prev, [role.id]: false }));
     }
   }
 
@@ -264,40 +307,20 @@ export default function Frame1({
     }
   }
 
-  // Drag and drop reordering
-  function handleDragStart(roleId) {
-    setDragId(roleId);
-  }
-
-  function handleDragOver(e, roleId) {
-    e.preventDefault();
-    setDragOverId(roleId);
-  }
-
-  async function handleDrop(targetId) {
-    if (!dragId || dragId === targetId) {
-      setDragId(null);
-      setDragOverId(null);
-      return;
-    }
-    const from = roles.findIndex((r) => r.id === dragId);
-    const to = roles.findIndex((r) => r.id === targetId);
-    if (from === -1 || to === -1) {
-      setDragId(null);
-      setDragOverId(null);
-      return;
-    }
+  // Move a role up or down one position in the list, persisting the new
+  // sort_order to Supabase for every role (same persistence approach the
+  // old drag-and-drop reordering used).
+  async function handleMoveRole(roleId, direction) {
+    const from = roles.findIndex((r) => r.id === roleId);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (from === -1 || to < 0 || to >= roles.length) return;
 
     const reordered = [...roles];
     const [moved] = reordered.splice(from, 1);
     reordered.splice(to, 0, moved);
 
     setRoles(reordered);
-    setDragId(null);
-    setDragOverId(null);
 
-    // Persist new order to Supabase
-    // Each role gets an order value based on its new position
     try {
       await Promise.all(
         reordered.map((role, index) =>
@@ -307,11 +330,6 @@ export default function Frame1({
     } catch (e) {
       alert("Failed to save new order. Try again.");
     }
-  }
-
-  function handleDragEnd() {
-    setDragId(null);
-    setDragOverId(null);
   }
 
   if (error) return <div className="error">{error}</div>;
@@ -411,81 +429,121 @@ export default function Frame1({
           </div>
         ) : (
           roles.map((role, i) => {
-            const c = ROLE_COLORS[i % ROLE_COLORS.length];
+            const c = roleColor(role.id);
             const isExpanded = expanded === role.id;
 
             return (
               <div
                 key={role.id}
-                draggable={true}
-                onDragStart={() => handleDragStart(role.id)}
-                onDragOver={(e) => handleDragOver(e, role.id)}
-                onDrop={() => handleDrop(role.id)}
-                onDragEnd={handleDragEnd}
                 style={{
                   borderBottom:
                     i < roles.length - 1 ? "1px solid #1f1f1f" : "none",
-                  opacity: dragId === role.id ? 0.4 : 1,
-                  borderTop:
-                    dragOverId === role.id && dragId !== role.id
-                      ? "2px solid #86BC25"
-                      : "2px solid transparent",
-                  transition: "opacity 0.15s",
                 }}
               >
-                {/* Role row */}
                 <div
-                  onClick={() => handleExpand(role.id)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
                     padding: "12px 0",
-                    cursor: "pointer",
                   }}
                 >
-                  {/* Drag handle */}
-                  <span
-                    style={{
-                      color: "#333",
-                      fontSize: 14,
-                      cursor: "grab",
-                      flexShrink: 0,
-                      userSelect: "none",
-                    }}
-                  >
-                    ⠿
-                  </span>
-
-                  {/* Avatar */}
+                  {/* Move up/down — replaced native drag-and-drop reordering,
+                      which kept losing its session mid-drag in this app
+                      (re-renders during the drag disrupting the browser's
+                      native drag state). Buttons are far more reliable. */}
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: c.bg,
-                      color: c.color,
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 700,
+                      flexDirection: "column",
+                      gap: 2,
                       flexShrink: 0,
                     }}
                   >
-                    {getInitials(role.title)}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveRole(role.id, "up");
+                      }}
+                      disabled={i === 0}
+                      title="Move up"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: i === 0 ? "default" : "pointer",
+                        color: i === 0 ? "#333" : "#888",
+                        fontSize: 10,
+                        lineHeight: 1,
+                        padding: "2px 4px",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveRole(role.id, "down");
+                      }}
+                      disabled={i === roles.length - 1}
+                      title="Move down"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: i === roles.length - 1 ? "default" : "pointer",
+                        color: i === roles.length - 1 ? "#333" : "#888",
+                        fontSize: 10,
+                        lineHeight: 1,
+                        padding: "2px 4px",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      ▼
+                    </button>
                   </div>
 
-                  {/* Title */}
+                  {/* Click-to-expand zone — avatar + title */}
                   <div
+                    onClick={() => handleExpand(role.id)}
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
                       flex: 1,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#eeeeee",
+                      cursor: "pointer",
+                      minWidth: 0,
                     }}
                   >
-                    {role.title}
+                    {/* Avatar */}
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        background: c.bg,
+                        color: c.color,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {getInitials(role.title)}
+                    </div>
+
+                    {/* Title */}
+                    <div
+                      style={{
+                        flex: 1,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "#eeeeee",
+                      }}
+                    >
+                      {role.title}
+                    </div>
                   </div>
 
                   {/* Action buttons */}
@@ -626,7 +684,7 @@ export default function Frame1({
                             }}
                           />
                         </div>
-                        <div style={{ marginBottom: 14 }}>
+                        <div style={{ marginBottom: 10 }}>
                           <label
                             style={{
                               fontSize: 10,
@@ -796,6 +854,62 @@ export default function Frame1({
                                 assignments[role.id].match_score * 100,
                               )}
                               % match
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Required time (%) — editable inline, before matching */}
+                        {!assignments[role.id] && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              marginBottom: 14,
+                              padding: "10px 12px",
+                              background: "#141414",
+                              border: "1px solid #2a2a2a",
+                              borderRadius: 7,
+                            }}
+                          >
+                            <span style={{ fontSize: 12, color: "#aaaaaa" }}>
+                              Required availability
+                            </span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={5}
+                              value={
+                                percentageValues[role.id] ??
+                                role.required_percentage ??
+                                100
+                              }
+                              onChange={(e) =>
+                                setPercentageValues((prev) => ({
+                                  ...prev,
+                                  [role.id]: Math.max(
+                                    0,
+                                    Math.min(100, Number(e.target.value)),
+                                  ),
+                                }))
+                              }
+                              onBlur={() => handlePercentageBlur(role)}
+                              style={{
+                                width: 72,
+                                background: "#111",
+                                border: "1px solid #2a2a2a",
+                                borderRadius: 5,
+                                padding: "4px 8px",
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "#86BC25",
+                                textAlign: "center",
+                                fontFamily: "inherit",
+                              }}
+                            />
+                            <span style={{ fontSize: 11, color: "#555" }}>
+                              {percentageSaving[role.id] ? "saving…" : "% of their availability"}
                             </span>
                           </div>
                         )}
@@ -989,7 +1103,7 @@ export default function Frame1({
                 </div>
               )}
             </div>
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 10 }}>
               <label
                 style={{
                   fontSize: 10,
@@ -1031,6 +1145,7 @@ export default function Frame1({
                   setShowAddForm(false);
                   setNewTitle("");
                   setNewDesc("");
+                  setNewPercentage(100);
                   setFormError("");
                 }}
               >
@@ -1038,45 +1153,6 @@ export default function Frame1({
               </button>
             </div>
           </div>
-        )}
-
-        {/* Bottom drop zone — allows dragging to the very end of the list */}
-        {dragId && (
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOverId("bottom");
-            }}
-            onDrop={() => {
-              if (!dragId) return;
-              const from = roles.findIndex((r) => r.id === dragId);
-              if (from === -1) {
-                setDragId(null);
-                setDragOverId(null);
-                return;
-              }
-              const reordered = [...roles];
-              const [moved] = reordered.splice(from, 1);
-              reordered.push(moved);
-              setRoles(reordered);
-              setDragId(null);
-              setDragOverId(null);
-              Promise.all(
-                reordered.map((role, index) =>
-                  updateRole(role.id, { sort_order: index }),
-                ),
-              ).catch(() => alert("Failed to save new order."));
-            }}
-            style={{
-              height: 24,
-              borderTop:
-                dragOverId === "bottom"
-                  ? "2px solid #86BC25"
-                  : "2px solid transparent",
-              marginTop: 4,
-              transition: "border-color 0.1s",
-            }}
-          />
         )}
 
         {/* Add role button */}

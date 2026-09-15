@@ -201,6 +201,9 @@ class CandidateOut(BaseModel):
     available: bool
     has_prior_experience: bool
     available_from: str | None = None
+    remaining_capacity: int = 100
+    capacity_status: str | None = None
+    business_chemistry: str | None = None
 
 
 class FitItemOut(BaseModel):
@@ -285,9 +288,10 @@ def _require_capabilities_exist(role_id: str) -> None:
     
 def _apply_availability(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
     """
-    Returns a deep copy of employees with availability overridden
+    Returns a deep copy of employees with availability recalculated
     based on project start date and unavailability periods.
-    If no date provided, returns employees as-is.
+    If no date provided, returns employees as-is (using each employee's
+    static `available` field from the dataset).
     """
     import copy
     from datetime import datetime
@@ -306,8 +310,7 @@ def _apply_availability(employees: list, project_start_date: str = None, project
                 datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
                 for u in unavailability
             )
-            if is_unavailable:
-                emp["available"] = False
+            emp["available"] = not is_unavailable
     except ValueError:
         pass
     return employees
@@ -380,6 +383,55 @@ def _hydrate_report_capabilities(
         })
 
     return hydrated
+
+def _calculate_capacity(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
+    """
+    Returns a deep copy of employees with remaining_capacity and
+    capacity_status computed from allocations overlapping the given
+    project date range (US040).
+
+    remaining_capacity: 100 minus the sum of percentages from overlapping
+    allocations, floored at 0.
+    capacity_status: "On Leave" when the employee is on leave for these
+    dates, takes precedence over the percentage number for display purposes.
+
+    If no project dates are given, everyone defaults to 100% and no status.
+    """
+    import copy
+    from datetime import datetime
+
+    employees = copy.deepcopy(employees)
+    for emp in employees:
+        emp["remaining_capacity"] = 100
+        emp["capacity_status"] = None
+
+    if not project_start_date:
+        return employees
+
+    try:
+        start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+
+        for emp in employees:
+            committed = 0
+            for a in emp.get("allocations", []):
+                a_start = datetime.strptime(a["start_date"], "%Y-%m-%d").date()
+                a_end = datetime.strptime(a["end_date"], "%Y-%m-%d").date()
+                if a_start <= end and a_end >= start:
+                    committed += a.get("percentage", 0)
+            emp["remaining_capacity"] = max(0, 100 - committed)
+
+            on_leave = any(
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end and
+                datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
+                for u in emp.get("unavailability", [])
+            )
+            if on_leave:
+                emp["capacity_status"] = "On Leave"
+    except ValueError:
+        pass
+
+    return employees
 
 # ── Authentication and RBAC ────────────────────────────────────────────────
 
@@ -797,6 +849,20 @@ def search_esco(
 
 
 # ── Matching ───────────────────────────────────────────────────────────────────
+@app.get(
+    "/employees/locations",
+    response_model=list[str],
+    tags=["Matching"],
+    summary="Get all distinct employee locations (for filter dropdown)",
+)
+def get_employee_locations():
+    """
+    Returns the full set of distinct employee locations, unfiltered by any
+    candidate ranking or cap. Used to populate the location filter dropdown
+    in Frame3 so it doesn't shrink once a location filter is already applied
+    (BUG002).
+    """
+    return sorted({e["location"] for e in _EMPLOYEES if e.get("location")})
 
 @app.get(
     "/roles/{role_id}/candidates",
@@ -820,6 +886,10 @@ def get_candidates(
         description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
     ),
     project_end_date: str = Query(default=None),
+    locations: list[str] | None = Query(
+        default=None,
+        description="Only return employees whose location is in this list (BUG002 fix — filters before the 25-candidate cap)",
+    ),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -835,6 +905,7 @@ def get_candidates(
 
     # US023/US32 — override availability based on project start date
     employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
+    employees = _calculate_capacity(employees, project_start_date, project_end_date)
     results = rank_candidates(
         caps,
         employees,
@@ -842,6 +913,10 @@ def get_candidates(
         available_only=available_only,
         role_title=role_title,
     )
+    # BUG002 — location filter must apply before the 25-candidate cap below,
+    # same as availability/prior-experience. Any future filter goes here too.
+    if locations:
+        results = [c for c in results if c.get("location") in locations]
     # US034 — limit candidate list to 25
     results = results[:25]
     # US033 — calculate available_from for unavailable employees
