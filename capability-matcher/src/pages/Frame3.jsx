@@ -1,7 +1,7 @@
 // Frame3.jsx — Candidate selection screen (Step 3 of 4). Hands-on mode only.
 
 import { useEffect, useState } from "react";
-import { getCandidates, requestLLMReport } from "../api/api";
+import { getCandidates, getEmployeeLocations, requestLLMReport } from "../api/api";
 
 function getInitials(name) {
   return name
@@ -21,6 +21,12 @@ const AVATAR_COLORS = [
   { bg: "#082020", color: "#1D9E75" },
 ];
 
+function capacityColor(remaining) {
+  if (remaining >= 50) return { bg: "#1e2a14", color: "#86BC25" };
+  if (remaining > 0) return { bg: "#2a1e0a", color: "#d4922a" };
+  return { bg: "#2a0d0d", color: "#e05252" };
+}
+
 function avatarColor(empId) {
   const n = parseInt(empId.replace(/\D/g, ""), 10) || 0;
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
@@ -37,6 +43,7 @@ export default function Frame3({
   projectId,
   projectStartDate,
   projectEndDate,
+  requiredPercentage,
   onBack,
   onNext,
 }) {
@@ -49,6 +56,8 @@ export default function Frame3({
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [locationSearch, setLocationSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
+  const [allLocations, setAllLocations] = useState([]);
+
 
   // Per-employee LLM report state: empId → { status, data, error, hidden }
   const [reports, setReports] = useState({});
@@ -56,11 +65,15 @@ export default function Frame3({
   useEffect(() => {
     setLoading(true)
     setSelectedId(null)
-    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate)
+    getCandidates(roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate, selectedLocations)
       .then(setCandidates)
       .catch(() => setError('Could not load candidates. Is the backend running?'))
       .finally(() => setLoading(false))
-  }, [roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate])
+  }, [roleId, availableOnly, priorExpOnly, projectStartDate, projectEndDate, selectedLocations])
+
+  useEffect(() => {
+    getEmployeeLocations().then(setAllLocations).catch(() => {});
+  }, []);
 
   // Generate or toggle the LLM report for one candidate
   async function handleGenerateReport(empId) {
@@ -95,18 +108,10 @@ export default function Frame3({
     }
   }
 
-  const locationOptions = [
-    ...new Set(candidates.map((c) => c.location).filter(Boolean)),
-  ].sort();
+  const locationOptions = allLocations;
 
   const filteredLocationOptions = locationOptions.filter((location) =>
     location.toLowerCase().includes(locationSearch.toLowerCase()),
-  );
-
-  const displayedCandidates = candidates.filter(
-    (candidate) =>
-      selectedLocations.length === 0 ||
-      selectedLocations.includes(candidate.location),
   );
 
   if (error) return <div className="error">{error}</div>;
@@ -231,14 +236,14 @@ export default function Frame3({
         </div>
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
-          {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
+          {loading ? 'Loading…' : candidates.length === 25 ? 'Top 25 candidates' : `${candidates.length} candidates`}
         </span>
       </div>
 
       {/* Candidate cards */}
       {loading && <div className="loading">Ranking candidates…</div>}
 
-      {!loading && displayedCandidates.length === 0 && (
+      {!loading && candidates.length === 0 && (
         <div
           style={{ color: "var(--muted2)", fontSize: 13, padding: "24px 0" }}
         >
@@ -246,29 +251,38 @@ export default function Frame3({
         </div>
       )}
 
-      {!loading && displayedCandidates.map((c) => {
+      {!loading && candidates.map((c) => {
         const av = avatarColor(c.employee_id)
         const sc = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId
-        const isUnavailable = !c.available  // can't select unavailable employees
+        const isUnavailable = !c.available || c.capacity_status === 'On Leave' || c.remaining_capacity <= 0
+        const isUnderCapacity = requiredPercentage != null && requiredPercentage < 100 && c.remaining_capacity > 0 && c.remaining_capacity < requiredPercentage
         const rpt = reports[c.employee_id]
         const showPanel = rpt && !rpt.hidden &&
           (rpt.status === 'loading' || rpt.status === 'done' || rpt.status === 'error')
+
+        const borderColor = isSelected ? '#86BC25' : '#2a2a2a'
 
         return (
           <div key={c.employee_id} style={{ marginBottom: 8 }}>
             <div
               onClick={() => !isUnavailable && setSelectedId(c.employee_id)}
-              title={isUnavailable ? 'This employee is unavailable for the project start date' : ''}
+              title={
+                isUnavailable
+                  ? 'This employee is unavailable or fully allocated for the project dates'
+                  : isUnderCapacity
+                    ? `Only ${c.remaining_capacity}% available — this role needs ${requiredPercentage}%`
+                    : ''
+              }
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '12px 16px',
                 background: isSelected ? '#131a0d' : '#161616',
-                border: `1px solid ${isSelected ? '#86BC25' : '#2a2a2a'}`,
+                border: `1px solid ${borderColor}`,
                 borderRadius: showPanel ? '8px 8px 0 0' : 8,
                 cursor: isUnavailable ? 'not-allowed' : 'pointer',
                 opacity: isUnavailable ? 0.45 : 1,
-                transition: 'opacity 0.15s',
+                transition: 'opacity 0.15s, border-color 0.15s',
               }}
             >
               {/* Avatar */}
@@ -288,6 +302,9 @@ export default function Frame3({
                 </div>
                 <div style={{ fontSize: 11, color: '#999999', marginTop: 2 }}>
                   {c.title} · {c.role_level} · {c.business_unit} · {c.location}
+                  {c.business_chemistry && (
+                    <> · {c.business_chemistry}</>
+                  )}
                 </div>
                 <div style={{ height: 3, background: '#1f1f1f', borderRadius: 2, marginTop: 7 }}>
                   <div style={{
@@ -312,13 +329,32 @@ export default function Frame3({
                 </span>
 
                 <div style={{ display: 'flex', gap: 5 }}>
-                  <span style={{
-                    fontSize: 10, padding: '2px 7px', borderRadius: 10,
-                    background: c.available ? '#1e2a14' : '#2a0d0d',
-                    color: c.available ? '#86BC25' : '#e05252',
-                  }}>
-                    {c.available ? 'Available' : 'Unavailable'}
-                  </span>
+                  {c.capacity_status === 'On Leave' ? (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#2a0d0d', color: '#e05252',
+                    }}>
+                      On Leave
+                    </span>
+                  ) : (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: capacityColor(c.remaining_capacity).bg,
+                      color: capacityColor(c.remaining_capacity).color,
+                    }}>
+                      {c.remaining_capacity}% available
+                    </span>
+                  )}
+
+                  {isUnderCapacity && (
+                    <span style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 10,
+                      background: '#2a0d0d', color: '#e05252',
+                    }}>
+                      Below required {requiredPercentage}%
+                    </span>
+                  )}
+
                   {/* US033 — show when unavailable employee becomes available */}
                   {!c.available && c.available_from && (
                     <span style={{
@@ -328,6 +364,7 @@ export default function Frame3({
                       Available from {c.available_from}
                     </span>
                   )}
+
                   {c.has_prior_experience && (
                     <span style={{
                       fontSize: 10, padding: '2px 7px', borderRadius: 10,
@@ -404,7 +441,24 @@ export default function Frame3({
         <button
           className="btn-primary"
           disabled={!selectedId}
-          onClick={() => onNext(selectedId)}
+          onClick={() => {
+            const selected = candidates.find((c) => c.employee_id === selectedId)
+            const selectedUnderCapacity =
+              selected &&
+              requiredPercentage != null &&
+              requiredPercentage < 100 &&
+              selected.remaining_capacity > 0 &&
+              selected.remaining_capacity < requiredPercentage
+
+            if (selectedUnderCapacity) {
+              const confirmed = window.confirm(
+                `${selected.name} has ${selected.remaining_capacity}% remaining capacity, but this role needs ${requiredPercentage}%. Continue anyway?`
+              )
+              if (!confirmed) return
+            }
+
+            onNext(selectedId)
+          }}
           style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
           View gap analysis →
