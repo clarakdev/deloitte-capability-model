@@ -253,6 +253,7 @@ class TeamReportRoleIn(BaseModel):
     description: str = ""
     assignment: TeamReportAssignmentIn
     capabilities: list[TeamReportCapabilityIn]
+    member_note: str | None = None
 
 
 class TeamReportIn(BaseModel):
@@ -261,6 +262,8 @@ class TeamReportIn(BaseModel):
     project_description: str = ""
     client: str | None = None
     roles: list[TeamReportRoleIn]
+    worked_together_score: int | None = None
+    rm_notes: str | None = None
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -1149,6 +1152,7 @@ async def generate_project_team_report(
             "covered_count": covered_count,
             "gap_count": gap_count,
             "rationale": rationale,
+            "member_note": role.member_note,
         })
 
     project_context = {
@@ -1180,6 +1184,8 @@ async def generate_project_team_report(
         project=project_context,
         entries=team_entries,
         team_summary=team_summary,
+        worked_together_score=body.worked_together_score,
+        rm_notes=body.rm_notes,
     )
 
     safe_project_name = "".join(

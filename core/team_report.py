@@ -286,6 +286,8 @@ def build_team_report_docx(
     project: dict,
     entries: list[dict],
     team_summary: str,
+    worked_together_score: int | None = None,
+    rm_notes: str | None = None,
 ) -> BytesIO:
     """
     Build the final Team Capability Report and return it as an in-memory DOCX.
@@ -395,6 +397,24 @@ def build_team_report_docx(
         run.font.name = "Arial"
         run.font.size = Pt(9)
         run.font.color.rgb = RGBColor.from_string(DARK_GREY)
+
+    if worked_together_score is not None or rm_notes:
+        _add_section_heading(document, "Resource Manager's Assessment")
+
+        if worked_together_score is not None:
+            _add_small_label(
+                document,
+                "Worked together before",
+                f"{worked_together_score}/5",
+            )
+
+        if rm_notes:
+            notes = document.add_paragraph(rm_notes)
+            notes.paragraph_format.line_spacing = 1.15
+            for run in notes.runs:
+                run.font.name = "Arial"
+                run.font.size = Pt(9)
+                run.font.color.rgb = RGBColor.from_string(DARK_GREY)
 
     document.add_page_break()
 
@@ -516,6 +536,13 @@ def build_team_report_docx(
                 employee.get("certifications", []) or []
             ),
         )
+
+        if entry.get("member_note"):
+            _add_small_label(
+                document,
+                "RM Notes",
+                entry["member_note"],
+            )
 
     # ── Methodology note ──────────────────────────────────────────────────
 
