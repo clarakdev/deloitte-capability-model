@@ -30,6 +30,7 @@ with a square-root correction for semantic matching distance.
 Filters (applied before scoring)
 ---------------------------------
 available_only=True         → only employees where available == True
+                               AND remaining_capacity > 0 (US040)
 require_prior_experience=True → only employees whose prior_roles list contains
                                 role_title (case-insensitive exact match)
 
@@ -46,6 +47,9 @@ Sorted list (highest match_score first) of:
         "match_score":          float,  # 0–1, 2 d.p.
         "available":            bool,
         "has_prior_experience": bool,
+        "available_from":       str | None,  # populated in get_candidates (US033)
+        "remaining_capacity":   int,          # 0-100, from overlapping allocations (US040)
+        "capacity_status":      str | None,   # "On Leave" or None (US040)
     }
 
 Employees for whom build_employee_vector returns None are excluded from
@@ -141,6 +145,13 @@ def rank_candidates(
         else:
             score = 0.0
 
+        # ── Availability filter ───────────────────────────────────────────
+        # US040 — also treat 0% remaining capacity (fully allocated elsewhere)
+        # as unavailable, not just leave/old-style full booking. Partial
+        # capacity (anything above 0%) still passes.
+        if available_only and (not emp.get("available", True) or emp.get("remaining_capacity", 100) <= 0):
+            continue
+
         results.append({
             "employee_id":          emp["id"],
             "name":                 emp.get("name", ""),
@@ -152,6 +163,9 @@ def rank_candidates(
             "available":            emp.get("available", True),
             "has_prior_experience": emp_has_prior,
             "available_from": None,  # populated in get_candidates (US033)
+            "remaining_capacity": emp.get("remaining_capacity", 100), #US040
+            "capacity_status":    emp.get("capacity_status"), #US040
+            "business_chemistry":   emp.get("business_chemistry"),
         })
 
     results.sort(key=lambda x: x["match_score"], reverse=True)

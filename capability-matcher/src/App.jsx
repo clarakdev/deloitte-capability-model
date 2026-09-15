@@ -267,6 +267,7 @@ export default function App() {
               projectId={selectedProject?.id}
               projectStartDate={parseProjectStartDate(selectedProject?.start_date)}
               projectEndDate={selectedProject?.end_date || null}
+              requiredPercentage={selectedRole?.required_percentage ?? 100}
               onBack={() => goTo(2)}
               onNext={(eid) => { setEmpId(eid); goTo(4) }}
             />

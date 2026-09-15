@@ -741,6 +741,7 @@ export default function Frame4({
           </button>
         )}
 
+        {/*
         <button
           className="btn-primary"
           onClick={handleExportReport}
@@ -752,6 +753,7 @@ export default function Frame4({
         >
           {exporting ? "Exporting..." : "Export report"}
         </button>
+        */}
       </div>
     </div>
   );
