@@ -21,6 +21,24 @@ const AVATAR_COLORS = [
   { bg: "#082020", color: "#1D9E75" },
 ];
 
+const ROLE_LEVEL_GROUPS = [
+  {
+    id: "junior",
+    label: "Senior Consultant & below",
+    levels: ["Analyst", "Consultant", "Senior Consultant"],
+  },
+  {
+    id: "senior",
+    label: "Manager–Director",
+    levels: ["Manager", "Senior Manager", "Director"],
+  },
+  {
+    id: "partner",
+    label: "Partner",
+    levels: ["Partner"],
+  },
+];
+
 function avatarColor(empId) {
   const n = parseInt(empId.replace(/\D/g, ""), 10) || 0;
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
@@ -49,6 +67,8 @@ export default function Frame3({
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [locationSearch, setLocationSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
+  const [selectedRoleLevelGroups, setSelectedRoleLevelGroups] = useState([]);
+  const [roleLevelOpen, setRoleLevelOpen] = useState(false);
 
   // Per-employee LLM report state: empId → { status, data, error, hidden }
   const [reports, setReports] = useState({});
@@ -103,11 +123,21 @@ export default function Frame3({
     location.toLowerCase().includes(locationSearch.toLowerCase()),
   );
 
-  const displayedCandidates = candidates.filter(
-    (candidate) =>
-      selectedLocations.length === 0 ||
-      selectedLocations.includes(candidate.location),
-  );
+  const selectedRoleLevels = ROLE_LEVEL_GROUPS.filter((group) =>
+    selectedRoleLevelGroups.includes(group.id),
+  ).flatMap((group) => group.levels);
+
+  const displayedCandidates = candidates.filter((candidate) => {
+  const matchesLocation =
+    selectedLocations.length === 0 ||
+    selectedLocations.includes(candidate.location);
+
+  const matchesRoleLevel =
+    selectedRoleLevelGroups.length === 0 ||
+    selectedRoleLevels.includes(candidate.role_level);
+
+  return matchesLocation && matchesRoleLevel;
+});
 
   if (error) return <div className="error">{error}</div>;
 
@@ -222,6 +252,65 @@ export default function Frame3({
                   type="button"
                   className="location-clear"
                   onClick={() => setSelectedLocations([])}
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="role-level-filter">
+          <button
+            type="button"
+            className={`role-level-filter-button ${selectedRoleLevelGroups.length > 0 ? "active" : ""}`}
+            onClick={() => setRoleLevelOpen((open) => !open)}
+          >
+            Role level
+            {selectedRoleLevelGroups.length > 0 && (
+              <span className="location-count">{selectedRoleLevelGroups.length}</span>
+            )}
+            <span className="location-arrow">▾</span>
+          </button>
+
+          {roleLevelOpen && (
+            <div className="location-dropdown">
+              <div className="location-options">
+                {ROLE_LEVEL_GROUPS.map((group) => (
+                  <label
+                    key={group.id}
+                    className="location-option"
+                    style={{ alignItems: "flex-start" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoleLevelGroups.includes(group.id)}
+                      onChange={() => {
+                        setSelectedRoleLevelGroups((current) =>
+                          current.includes(group.id)
+                            ? current.filter((item) => item !== group.id)
+                            : [...current, group.id],
+                        );
+                      }}
+                      style={{ marginTop: 2 }}
+                    />
+                    <div style={{ textAlign: "left" }}>
+                      <div>{group.label}</div>
+                      {group.levels.length > 1 && (
+                        <div style={{ fontSize: 10, color: "#666", marginTop: 2 }}>
+                          {group.levels.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {selectedRoleLevelGroups.length > 0 && (
+                <button
+                  type="button"
+                  className="location-clear"
+                  onClick={() => setSelectedRoleLevelGroups([])}
                 >
                   Clear selection
                 </button>
