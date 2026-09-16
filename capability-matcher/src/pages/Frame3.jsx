@@ -27,6 +27,24 @@ function capacityColor(remaining) {
   return { bg: "#2a0d0d", color: "#e05252" };
 }
 
+const ROLE_LEVEL_GROUPS = [
+  {
+    id: "junior",
+    label: "Senior Consultant & below",
+    levels: ["Analyst", "Consultant", "Senior Consultant"],
+  },
+  {
+    id: "senior",
+    label: "Manager–Director",
+    levels: ["Manager", "Senior Manager", "Director"],
+  },
+  {
+    id: "partner",
+    label: "Partner",
+    levels: ["Partner"],
+  },
+];
+
 function avatarColor(empId) {
   const n = parseInt(empId.replace(/\D/g, ""), 10) || 0;
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
@@ -61,6 +79,8 @@ export default function Frame3({
   const [locationSearch, setLocationSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [allLocations, setAllLocations] = useState([]);
+  const [selectedRoleLevelGroups, setSelectedRoleLevelGroups] = useState([]);
+  const [roleLevelOpen, setRoleLevelOpen] = useState(false);
 
 
   // Per-employee LLM report state: empId → { status, data, error, hidden }
@@ -116,6 +136,15 @@ export default function Frame3({
 
   const filteredLocationOptions = locationOptions.filter((location) =>
     location.toLowerCase().includes(locationSearch.toLowerCase()),
+  );
+
+  const selectedRoleLevels = ROLE_LEVEL_GROUPS.filter((group) =>
+    selectedRoleLevelGroups.includes(group.id),
+  ).flatMap((group) => group.levels);
+
+  const displayedCandidates = candidates.filter((candidate) =>
+    selectedRoleLevelGroups.length === 0 ||
+    selectedRoleLevels.includes(candidate.role_level),
   );
 
   if (error) return <div className="error">{error}</div>;
@@ -239,15 +268,70 @@ export default function Frame3({
           )}
         </div>
 
+        <div className="role-level-filter">
+          <button
+            type="button"
+            className={`role-level-filter-button ${selectedRoleLevelGroups.length > 0 ? "active" : ""}`}
+            onClick={() => setRoleLevelOpen((open) => !open)}
+          >
+            Role level
+            {selectedRoleLevelGroups.length > 0 && (
+              <span className="location-count">{selectedRoleLevelGroups.length}</span>
+            )}
+            <span className="location-arrow">▾</span>
+          </button>
+
+          {roleLevelOpen && (
+            <div className="location-dropdown">
+              <div className="location-options">
+                {ROLE_LEVEL_GROUPS.map((group) => (
+                  <label key={group.id} className="location-option" style={{ alignItems: "flex-start" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRoleLevelGroups.includes(group.id)}
+                      onChange={() => {
+                        setSelectedRoleLevelGroups((current) =>
+                          current.includes(group.id)
+                            ? current.filter((item) => item !== group.id)
+                            : [...current, group.id],
+                        );
+                      }}
+                      style={{ marginTop: 2 }}
+                    />
+                    <div style={{ textAlign: "left" }}>
+                      <div>{group.label}</div>
+                      {group.levels.length > 1 && (
+                        <div style={{ fontSize: 10, color: "#666", marginTop: 2 }}>
+                          {group.levels.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {selectedRoleLevelGroups.length > 0 && (
+                <button
+                  type="button"
+                  className="location-clear"
+                  onClick={() => setSelectedRoleLevelGroups([])}
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
-          {loading ? 'Loading…' : candidates.length === 25 ? 'Top 25 candidates' : `${candidates.length} candidates`}
+          {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
         </span>
       </div>
 
       {/* Candidate cards */}
       {loading && <div className="loading">Ranking candidates…</div>}
 
-      {!loading && candidates.length === 0 && (
+      {!loading && displayedCandidates.length === 0 && (
         <div
           style={{ color: "var(--muted2)", fontSize: 13, padding: "24px 0" }}
         >
@@ -255,7 +339,7 @@ export default function Frame3({
         </div>
       )}
 
-      {!loading && candidates.map((c) => {
+      {!loading && displayedCandidates.map((c) => {
         const av = avatarColor(c.employee_id)
         const sc = scoreColor(c.match_score)
         const isSelected = c.employee_id === selectedId
