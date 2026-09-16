@@ -939,6 +939,10 @@ def get_candidates(
         default=None,
         description="Only return employees whose location is in this list (BUG002 fix — filters before the 25-candidate cap)",
     ),
+    role_levels: list[str] | None = Query(
+    default=None,
+    description="Only return employees whose role_level is in this list (filters before the 25-candidate cap, same pattern as BUG002)",
+    ),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -966,6 +970,8 @@ def get_candidates(
     # same as availability/prior-experience. Any future filter goes here too.
     if locations:
         results = [c for c in results if c.get("location") in locations]
+    if role_levels:
+        results = [c for c in results if c.get("role_level") in role_levels]
     # US034 — limit candidate list to 25
     results = results[:25]
     # US033 — calculate available_from for unavailable employees
@@ -1261,20 +1267,6 @@ async def generate_project_team_report(
             }
         )
 
-        team_entries.append(
-            {
-                "role_id": role.id,
-                "role_title": role.title,
-                "role_description": role.description,
-                "employee": employee,
-                "match_score": float(role.assignment.match_score),
-                "fit_report": fit_report,
-                "avg_fit": avg_fit,
-                "covered_count": covered_count,
-                "gap_count": gap_count,
-                "rationale": rationale,
-            }
-        )
 
     project_context = {
         "id": body.project_id,
