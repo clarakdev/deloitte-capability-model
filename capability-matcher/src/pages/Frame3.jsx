@@ -139,16 +139,9 @@ export default function Frame3({
   ).flatMap((group) => group.levels);
 
   const displayedCandidates = candidates.filter((candidate) =>
-    selectedRoleLevelGroups.length === 0 ||
-    selectedRoleLevels.includes(candidate.role_level),
-  );
-
-  const matchesRoleLevel =
-    selectedRoleLevelGroups.length === 0 ||
-    selectedRoleLevels.includes(candidate.role_level);
-
-  return matchesLocation && matchesRoleLevel;
-});
+  selectedRoleLevelGroups.length === 0 ||
+  selectedRoleLevels.includes(candidate.role_level),
+);
 
   if (error) return <div className="error">{error}</div>;
 
