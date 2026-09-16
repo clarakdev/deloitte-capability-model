@@ -323,7 +323,6 @@ export default function Frame3({
           )}
         </div>
 
-
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
           {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
         </span>
