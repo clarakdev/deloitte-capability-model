@@ -3,8 +3,7 @@ import ProfileTab from './ProfileTab'
 import ProjectsTab from './ProjectsTab'
 import SkillsTab from './SkillsTab'
 import AdminProjectsTab from './AdminProjectsTab'
-
-
+import AdminEmployeesTab from './AdminEmployeesTab'
 
 // Keeps the dashboard shell visually stable for every role and makes the
 // account header action area reusable for secure sign-out.
@@ -38,6 +37,7 @@ export default function Dashboard({ profile, onStartMatching, onLogout }) {
 
     if (isAdmin) {
       baseTabs.push({ id: 'allProjects', label: 'All Projects' })
+      baseTabs.push({ id: 'allEmployees', label: 'All Employees' })
     }
 
     return baseTabs
@@ -68,7 +68,7 @@ export default function Dashboard({ profile, onStartMatching, onLogout }) {
       return <AdminProjectsTab />
     }
 
-    return null
+    return <AdminEmployeesTab />
   }
 
   return (
