@@ -18,6 +18,9 @@ vi.mock('./AdminProjectsTab', () => ({
   default: () => <div>AdminProjectsTab</div>,
 }))
 
+vi.mock('./AdminEmployeesTab', () => ({
+  default: () => <div>AdminEmployeesTab</div>,
+}))
 
 describe('Dashboard role-based tab rendering', () => {
   it('renders only the Employee tabs for an Employee role', () => {
@@ -66,7 +69,7 @@ describe('Dashboard role-based tab rendering', () => {
     expect(screen.getByRole('button', { name: 'My Projects' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'My Skills' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'All Projects' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'All Employees' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'All Employees' })).toBeTruthy()
 
     expect(screen.queryByRole('button', { name: 'Capability Matcher' })).toBeNull()
   })

@@ -21,6 +21,12 @@ const AVATAR_COLORS = [
   { bg: "#082020", color: "#1D9E75" },
 ];
 
+function capacityColor(remaining) {
+  if (remaining >= 50) return { bg: "#1e2a14", color: "#86BC25" };
+  if (remaining > 0) return { bg: "#2a1e0a", color: "#d4922a" };
+  return { bg: "#2a0d0d", color: "#e05252" };
+}
+
 const ROLE_LEVEL_GROUPS = [
   {
     id: "junior",
@@ -39,13 +45,6 @@ const ROLE_LEVEL_GROUPS = [
   },
 ];
 
-function capacityColor(remaining) {
-  if (remaining >= 50) return { bg: "#1e2a14", color: "#86BC25" };
-  if (remaining > 0) return { bg: "#2a1e0a", color: "#d4922a" };
-  return { bg: "#2a0d0d", color: "#e05252" };
-}
-
-
 function avatarColor(empId) {
   const n = parseInt(empId.replace(/\D/g, ""), 10) || 0;
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
@@ -55,6 +54,10 @@ function scoreColor(score) {
   if (score >= 0.85) return { bg: "#1e2a14", color: "#86BC25" };
   if (score >= 0.7) return { bg: "#0d1f33", color: "#5b9bd5" };
   return { bg: "#2a1e0a", color: "#d4922a" };
+}
+
+function scoreOutOfFive(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 5);
 }
 
 export default function Frame3({
@@ -75,9 +78,10 @@ export default function Frame3({
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [locationSearch, setLocationSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
+  const [allLocations, setAllLocations] = useState([]);
   const [selectedRoleLevelGroups, setSelectedRoleLevelGroups] = useState([]);
   const [roleLevelOpen, setRoleLevelOpen] = useState(false);
-  const [allLocations, setAllLocations] = useState([]);
+
 
   // Per-employee LLM report state: empId → { status, data, error, hidden }
   const [reports, setReports] = useState({});
@@ -139,9 +143,9 @@ export default function Frame3({
   ).flatMap((group) => group.levels);
 
   const displayedCandidates = candidates.filter((candidate) =>
-  selectedRoleLevelGroups.length === 0 ||
-  selectedRoleLevels.includes(candidate.role_level),
-);
+    selectedRoleLevelGroups.length === 0 ||
+    selectedRoleLevels.includes(candidate.role_level),
+  );
 
   if (error) return <div className="error">{error}</div>;
 
@@ -281,11 +285,7 @@ export default function Frame3({
             <div className="location-dropdown">
               <div className="location-options">
                 {ROLE_LEVEL_GROUPS.map((group) => (
-                  <label
-                    key={group.id}
-                    className="location-option"
-                    style={{ alignItems: "flex-start" }}
-                  >
+                  <label key={group.id} className="location-option" style={{ alignItems: "flex-start" }}>
                     <input
                       type="checkbox"
                       checked={selectedRoleLevelGroups.includes(group.id)}
@@ -322,6 +322,7 @@ export default function Frame3({
             </div>
           )}
         </div>
+
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
           {loading ? 'Loading…' : displayedCandidates.length === 25 ? 'Top 25 candidates' : `${displayedCandidates.length} candidates`}
@@ -413,7 +414,7 @@ export default function Frame3({
                   fontSize: 11, fontWeight: 700,
                   padding: '3px 9px', borderRadius: 20,
                 }}>
-                  {Math.round(c.match_score * 100)}%
+                  {scoreOutOfFive(c.match_score)}/5
                 </span>
 
                 <div style={{ display: 'flex', gap: 5 }}>

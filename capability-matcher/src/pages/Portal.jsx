@@ -35,7 +35,7 @@ export default function Portal({ profile, onStartMatching }) {
 
         {isAdmin ? (
           <p style={{ color: '#aaaaaa', fontSize: 13 }}>
-            Resource Manager access allows you to view all projects.
+            Resource Manager access allows you to view all projects and all employees.
           </p>
         ) : null}
 
