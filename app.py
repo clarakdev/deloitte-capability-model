@@ -895,6 +895,25 @@ def get_employee_locations():
 
 
 @app.get(
+    "/employees/{employee_id}",
+    tags=["Matching"],
+    summary="Get one employee by ID",
+    dependencies=[Depends(require_roles(["Admin", "HR User", "Project Manager"]))],
+)
+def get_employee(employee_id: str):
+    employee = _EMP_BY_ID.get(employee_id)
+    if employee is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Employee '{employee_id}' not found.",
+        )
+    return {
+        **employee,
+        "employee_id": employee["id"],
+    }
+
+
+@app.get(
     "/roles/{role_id}/candidates",
     response_model=list[CandidateOut],
     tags=["Matching"],

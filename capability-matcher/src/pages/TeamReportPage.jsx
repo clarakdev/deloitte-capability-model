@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   generateTeamReport,
-  getCandidates,
   getAllProjects,
+  getEmployeeById,
   getProjectAssignments,
   getRoles,
   getSavedCapabilities,
@@ -95,10 +95,7 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
                 }
               }
 
-              const candidates = await getCandidates(assignment.role_id, false, false);
-              const employee = (candidates || []).find(
-                (candidate) => candidate.employee_id === assignment.employee_id,
-              );
+              const employee = await getEmployeeById(assignment.employee_id);
 
               if (!employee) return null;
 
