@@ -272,6 +272,10 @@ body {
   position: relative;
 }
 
+.role-level-filter {
+  position: relative;
+}
+
 .location-filter-button {
   height: 34px;
   display: flex;
