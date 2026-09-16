@@ -57,6 +57,10 @@ function scoreColor(score) {
   return { bg: "#2a1e0a", color: "#d4922a" };
 }
 
+function scoreOutOfFive(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 5);
+}
+
 export default function Frame3({
   roleId,
   projectId,
@@ -142,13 +146,6 @@ export default function Frame3({
     selectedRoleLevelGroups.length === 0 ||
     selectedRoleLevels.includes(candidate.role_level),
   );
-
-  const matchesRoleLevel =
-    selectedRoleLevelGroups.length === 0 ||
-    selectedRoleLevels.includes(candidate.role_level);
-
-  return matchesLocation && matchesRoleLevel;
-});
 
   if (error) return <div className="error">{error}</div>;
 
@@ -420,7 +417,7 @@ export default function Frame3({
                   fontSize: 11, fontWeight: 700,
                   padding: '3px 9px', borderRadius: 20,
                 }}>
-                  {Math.round(c.match_score * 100)}%
+                  {scoreOutOfFive(c.match_score)}/5
                 </span>
 
                 <div style={{ display: 'flex', gap: 5 }}>
