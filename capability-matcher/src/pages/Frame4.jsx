@@ -370,7 +370,7 @@ export default function Frame4({
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#86BC25" }}>
-                {Math.round(employee.match_score * 100)}%
+                {scoreOutOfFive(employee.match_score)}/5
               </div>
               <div style={{ fontSize: 10, color: "#999999" }}>
                 overall match
@@ -515,7 +515,7 @@ export default function Frame4({
                           padding: "2px 8px",
                         }}
                       >
-                        {Math.round(c.match_score * 100)}%
+                        {scoreOutOfFive(c.match_score)}/5
                       </span>
                       {c.employee_id === autoSelect.selected_employee_id && (
                         <span
