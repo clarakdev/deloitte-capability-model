@@ -272,6 +272,10 @@ body {
   position: relative;
 }
 
+.role-level-filter {
+  position: relative;
+}
+
 .location-filter-button {
   height: 34px;
   display: flex;
@@ -293,6 +297,33 @@ body {
 }
 
 .location-filter-button.active {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.role-level-filter-button {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #1a1a1a;
+  border: 1px solid #222;
+  border-radius: 7px;
+  padding: 7px 14px;
+  color: #888;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.role-level-filter-button:hover {
+  border-color: var(--border2);
+  color: var(--muted2);
+}
+
+.role-level-filter-button.active {
   background: var(--green-dim);
   border-color: var(--green);
   color: var(--green);

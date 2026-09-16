@@ -122,6 +122,12 @@ export function getEmployeeLocations() {
   return request('/employees/locations')
 }
 
+// Returns one full employee record by employee ID.
+// Backend endpoint: GET /employees/{employeeId}
+export function getEmployeeById(employeeId) {
+  return request(`/employees/${encodeURIComponent(employeeId)}`)
+}
+
 // LLM gap analysis (hands-on report + auto selection)
 
 // Request an objective prose fit report + 0–100 score for one candidate.
