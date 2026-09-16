@@ -11,7 +11,6 @@ import Frame1 from './pages/Frame1'
 import Frame2 from './pages/Frame2'
 import Frame3 from './pages/Frame3'
 import Frame4 from './pages/Frame4'
-import TeamReportPage from './pages/TeamReportPage'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import { requestAutoSelect } from './api/api'
@@ -58,12 +57,6 @@ export default function App() {
     setView('flow')
   }
 
-  function handleViewTeamReport(projectId) {
-    if (projectId && projectId === selectedProject?.id) {
-      setView('teamReport')
-    }
-  }
-
   function parseProjectStartDate(startDateText) {
     if (!startDateText) return null
     try {
@@ -105,7 +98,7 @@ export default function App() {
 
   return (
     <>
-      {view !== 'teamReport' && <div className="topbar">
+      <div className="topbar">
         <div className="topbar-dot" />
         <span className="topbar-title">Capability Matcher</span>
         <div className="topbar-divider" />
@@ -163,7 +156,7 @@ export default function App() {
             </div>
           </div>
         )}
-      </div>}
+      </div>
 
       {/* Step progress bar — only visible inside matching flow */}
       {view === 'flow' && (
@@ -191,13 +184,6 @@ export default function App() {
           profile={profile}
           onStartMatching={handleStartMatching}
           onLogout={handleLogout}
-        />
-      )}
-
-      {view === 'teamReport' && (
-        <TeamReportPage
-          projectId={selectedProject?.id}
-          onBackToDashboard={handleExitToDashboard}
         />
       )}
 
@@ -235,7 +221,6 @@ export default function App() {
                 }
               }}
               onBack={() => goTo(0)}
-              onViewTeamReport={handleViewTeamReport}
             />
           )}
 
