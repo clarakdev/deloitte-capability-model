@@ -271,6 +271,17 @@ export async function getMySkills(profile = null) {
   return ['React', 'Python', 'Data Analysis', 'Agile Delivery']
 }
 
+// Admin-only directory helpers for the dashboard shell.
+export async function getAllEmployees() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, employee_id, role, first_name, last_name')
+    .order('last_name', { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return data || []
+}
+
 // Stamps the new project with the real logged-in user's id.
 export async function createProject({ name, client, description, duration, start_date, end_date, location }) {
   const userId = await getCurrentUserId()

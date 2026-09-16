@@ -5,6 +5,7 @@ import SkillsTab from './SkillsTab'
 import AdminProjectsTab from './AdminProjectsTab'
 
 
+
 // Keeps the dashboard shell visually stable for every role and makes the
 // account header action area reusable for secure sign-out.
 function formatRoleLabel(role) {
