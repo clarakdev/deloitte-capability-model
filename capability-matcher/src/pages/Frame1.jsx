@@ -44,6 +44,7 @@ export default function Frame1({
   project: initialProject,
   onSelectRole,
   onBack,
+  onViewTeamReport,
 }) {
   const [project] = useState(initialProject);
   const [roles, setRoles] = useState([]);
@@ -232,6 +233,11 @@ export default function Frame1({
   async function handleGenerateTeamReport() {
     if (!allRolesAssigned || teamReportStatus === "loading") return;
 
+    if (onViewTeamReport) {
+      onViewTeamReport(project.id);
+      return;
+    }
+
     setTeamReportStatus("loading");
 
     try {
@@ -413,7 +419,9 @@ export default function Frame1({
                   ? "Generating report..."
                   : teamReportStatus === "done"
                     ? "Report generated ✓"
-                    : "Generate Team Report"}
+                    : allRolesAssigned
+                      ? "View Team Report"
+                      : "Generate Team Report"}
               </button>
             </span>
           </div>
