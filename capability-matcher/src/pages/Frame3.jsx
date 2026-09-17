@@ -549,7 +549,7 @@ export default function Frame3({
               if (!confirmed) return
             }
 
-            onNext(selectedId)
+            onNext(selected)
           }}
           style={{ opacity: selectedId ? 1 : 0.4, cursor: selectedId ? 'pointer' : 'default' }}
         >
