@@ -15,6 +15,7 @@ import { supabase } from "../supabase";
 import {
   getCandidateFit,
   getCandidates,
+  getEmployeeById,
   getAssignment,
   saveAssignment,
   requestLLMReport,
@@ -28,7 +29,7 @@ function simColor(sim, isGap) {
 }
 
 function scoreOutOfFive(score) {
-  return Math.ceil(Math.max(0, Math.min(1, score)) * 5)
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 5);
 }
 
 function WeightDots({ weight }) {
@@ -53,6 +54,7 @@ export default function Frame4({
   roleId,
   projectId,
   empId,
+  selectedEmployee,
   mode,
   autoSelect,
   viewSavedAssignment,
@@ -136,34 +138,40 @@ export default function Frame4({
         } else if (mode === "auto") {
           if (autoSelect && !autoSelect.error) {
             // Trust the LLM pick directly
-            resolvedEmpId = autoSelect.selected_employee_id
+            resolvedEmpId = autoSelect.selected_employee_id;
           } else {
             // Fallback — pick top available candidate
-            const availableCandidates = candidates.filter(c => c.available)
-            resolvedEmpId = availableCandidates.length > 0
-              ? availableCandidates[0].employee_id
-              : candidates[0].employee_id
+            const availableCandidates = candidates.filter((c) => c.available);
+            resolvedEmpId =
+              availableCandidates.length > 0
+                ? availableCandidates[0].employee_id
+                : candidates[0].employee_id;
           }
-          resolvedEmployee = candidates.find(c => c.employee_id === resolvedEmpId) || candidates[0]
+          resolvedEmployee =
+            candidates.find((c) => c.employee_id === resolvedEmpId) ||
+            candidates[0];
 
           if (projectId) {
-            await saveAssignment(roleId, projectId, resolvedEmployee)
+            await saveAssignment(roleId, projectId, resolvedEmployee);
           }
           resolvedEmployee =
             candidates.find((c) => c.employee_id === resolvedEmpId) ||
             candidates[0];
         } else if (resolvedEmpId) {
+          // Hands-on mode: preserve the candidate selected in Frame 3,
+          // including its role-specific match_score.
           resolvedEmployee =
-            candidates.find((c) => c.employee_id === resolvedEmpId) || null;
+            selectedEmployee ||
+            candidates.find((c) => c.employee_id === resolvedEmpId) ||
+            null;
+
           if (!resolvedEmployee) {
-            setError("Selected employee could not be found.");
-            return;
+            resolvedEmployee = await getEmployeeById(resolvedEmpId);
           }
         } else {
           setError("No employee was selected.");
           return;
         }
-
         if (!viewSavedAssignment) {
           try {
             const saved = await getAssignment(roleId);
@@ -185,8 +193,16 @@ export default function Frame4({
       }
     }
 
-    load()
-  }, [roleId, empId, projectId, mode, viewSavedAssignment, autoSelect])
+    load();
+  }, [
+    roleId,
+    empId,
+    projectId,
+    mode,
+    viewSavedAssignment,
+    autoSelect,
+    selectedEmployee,
+  ]);
 
   async function handleGenerateReport() {
     if (reportStatus === "loading") return;
@@ -307,11 +323,11 @@ export default function Frame4({
       setExporting(false);
     }
   }
-   // In auto mode, wait for LLM selection before rendering
-  if (mode === 'auto' && !viewSavedAssignment && autoSelect === null) {
-    return <div className="loading">AI is selecting the best candidate…</div>
+  // In auto mode, wait for LLM selection before rendering
+  if (mode === "auto" && !viewSavedAssignment && autoSelect === null) {
+    return <div className="loading">AI is selecting the best candidate…</div>;
   }
-  
+
   if (loading) return <div className="loading">Running gap analysis…</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -432,10 +448,15 @@ export default function Frame4({
               )}
               {reportStatus === "done" && (
                 <>
-                  <p style={{
-                    fontSize: 12, lineHeight: 1.7, color: '#c0c0c0',
-                    margin: 0, whiteSpace: 'pre-wrap',
-                  }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      lineHeight: 1.7,
+                      color: "#c0c0c0",
+                      margin: 0,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {report.report}
                   </p>
                 </>
@@ -550,21 +571,42 @@ export default function Frame4({
         }}
       >
         {[
-          { num: `${scoreOutOfFive(avgSimilarity)}/5`, label: 'Avg fit' },
-          { num: coveredCount,                           label: 'Skills covered' },
-          { num: gapCount,                               label: 'Gaps to address' },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: '#111', borderRadius: 8, padding: 14, textAlign: 'center',
-          }}>
-            <div style={{
-              fontSize: 22, fontWeight: 700,
-              color: s.label === 'Gaps to address' && gapCount > 0 ? '#e05252' : '#e8e8e8',
-            }}>{s.num}</div>
-            <div style={{
-              fontSize: 10, color: '#aaaaaa',
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 3,
-            }}>{s.label}</div>
+          { num: `${scoreOutOfFive(avgSimilarity)}/5`, label: "Avg fit" },
+          { num: coveredCount, label: "Skills covered" },
+          { num: gapCount, label: "Gaps to address" },
+        ].map((s) => (
+          <div
+            key={s.label}
+            style={{
+              background: "#111",
+              borderRadius: 8,
+              padding: 14,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color:
+                  s.label === "Gaps to address" && gapCount > 0
+                    ? "#e05252"
+                    : "#e8e8e8",
+              }}
+            >
+              {s.num}
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: "#aaaaaa",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                marginTop: 3,
+              }}
+            >
+              {s.label}
+            </div>
           </div>
         ))}
       </div>
@@ -595,7 +637,7 @@ export default function Frame4({
           <span>Capability</span>
           <span style={{ textAlign: "center" }}>Weight</span>
           <span>Closest skill</span>
-          <span style={{ textAlign: 'right' }}>Fit (1–5)</span>
+          <span style={{ textAlign: "right" }}>Fit (1–5)</span>
         </div>
 
         {fitData.map((f, i) => {
@@ -644,8 +686,15 @@ export default function Frame4({
               >
                 {f.best_match_skill || "No match found"}
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: barColor, marginBottom: 4 }}>
+              <div style={{ textAlign: "right" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: barColor,
+                    marginBottom: 4,
+                  }}
+                >
                   {scoreOutOfFive(f.similarity)}/5
                 </div>
                 <div
