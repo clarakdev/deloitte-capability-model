@@ -31,6 +31,7 @@ export default function App() {
   const [roleId, setRoleId] = useState(null);
   const [empId, setEmpId] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [mode, setMode] = useState("hands");
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -84,6 +85,7 @@ export default function App() {
     setRoleId(null);
     setEmpId(null);
     setSelectedEmployee(null);
+    setSelectedEmployees([]);
     setMode("hands");
     setSelectedProject(null);
     setSelectedRole(null);
@@ -100,6 +102,7 @@ export default function App() {
     setRoleId(null);
     setEmpId(null);
     setSelectedEmployee(null);
+    setSelectedEmployees([]);
     setMode("hands");
     setSelectedProject(null);
     setSelectedRole(null);
@@ -263,6 +266,7 @@ export default function App() {
                 } else {
                   setEmpId(null);
                   setSelectedEmployee(null);
+                  setSelectedEmployees([]);
                   setViewSavedAssignment(false);
                   setAutoSelect(null);
                   goTo(2);
@@ -321,9 +325,16 @@ export default function App() {
               projectEndDate={selectedProject?.end_date || null}
               requiredPercentage={selectedRole?.required_percentage ?? 100}
               onBack={() => goTo(2)}
-              onNext={(employee) => {
-                setEmpId(employee.employee_id);
-                setSelectedEmployee(employee);
+              onNext={(employees) => {
+                setSelectedEmployees(employees);
+
+                // Keep the existing single-employee state populated with the
+                // first selected candidate for backwards compatibility.
+                const primaryEmployee = employees[0] || null;
+
+                setEmpId(primaryEmployee?.employee_id || null);
+                setSelectedEmployee(primaryEmployee);
+
                 goTo(4);
               }}
             />
@@ -336,6 +347,7 @@ export default function App() {
               projectId={selectedProject?.id}
               empId={empId}
               selectedEmployee={selectedEmployee}
+              selectedEmployees={selectedEmployees}
               mode={mode}
               autoSelect={autoSelect}
               viewSavedAssignment={viewSavedAssignment}
