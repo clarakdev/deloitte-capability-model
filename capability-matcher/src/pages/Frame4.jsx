@@ -1,11 +1,9 @@
 // Frame4.jsx — Gap analysis screen (Step 4 of 4).
 //
-// Handles three entry points:
+// Handles two entry points:
 //   1. viewSavedAssignment=true — came from "View analysis" in Frame 1
 //      loads the saved employee from Supabase assignments table
-//   2. Auto mode — empId is null, autoSelect has the LLM pick
-//      saves the assignment to Supabase
-//   3. Hands-on mode — empId set from Frame 3 candidate selection
+//   2. New matching flow — empId set from Frame 3 candidate selection
 //      saves the assignment to Supabase
 
 import { useEffect, useRef, useState } from "react";
@@ -463,8 +461,6 @@ export default function Frame4({
   empId,
   selectedEmployee,
   selectedEmployees = [],
-  mode,
-  autoSelect,
   viewSavedAssignment,
   selectedRole,
   onBack,
@@ -475,7 +471,6 @@ export default function Frame4({
   const [comparisonData, setComparisonData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showTopCandidates, setShowTopCandidates] = useState(false);
   const [report, setReport] = useState(null);
   const [reportStatus, setReportStatus] = useState("idle");
   const [showReport, setShowReport] = useState(false);
@@ -486,7 +481,7 @@ export default function Frame4({
   const [exporting, setExporting] = useState(false);
 
   const isComparisonMode =
-    mode === "hands" && !viewSavedAssignment && selectedEmployees.length === 2;
+    !viewSavedAssignment && selectedEmployees.length === 2;
 
   useEffect(() => {
     async function load() {
@@ -572,30 +567,8 @@ export default function Frame4({
             business_unit: "",
             location: "",
           };
-        } else if (mode === "auto") {
-          if (autoSelect && !autoSelect.error) {
-            // Trust the LLM pick directly
-            resolvedEmpId = autoSelect.selected_employee_id;
-          } else {
-            // Fallback — pick top available candidate
-            const availableCandidates = candidates.filter((c) => c.available);
-            resolvedEmpId =
-              availableCandidates.length > 0
-                ? availableCandidates[0].employee_id
-                : candidates[0].employee_id;
-          }
-          resolvedEmployee =
-            candidates.find((c) => c.employee_id === resolvedEmpId) ||
-            candidates[0];
-
-          if (projectId) {
-            await saveAssignment(roleId, projectId, resolvedEmployee);
-          }
-          resolvedEmployee =
-            candidates.find((c) => c.employee_id === resolvedEmpId) ||
-            candidates[0];
         } else if (resolvedEmpId) {
-          // Hands-on mode: preserve the candidate selected in Frame 3,
+          // Preserve the candidate selected in Frame 3,
           // including its role-specific match_score.
           resolvedEmployee =
             selectedEmployee ||
@@ -635,9 +608,7 @@ export default function Frame4({
     roleId,
     empId,
     projectId,
-    mode,
     viewSavedAssignment,
-    autoSelect,
     selectedEmployee,
     selectedEmployees,
     isComparisonMode,
@@ -761,10 +732,6 @@ export default function Frame4({
     } finally {
       setExporting(false);
     }
-  }
-  // In auto mode, wait for LLM selection before rendering
-  if (mode === "auto" && !viewSavedAssignment && autoSelect === null) {
-    return <div className="loading">AI is selecting the best candidate…</div>;
   }
 
   if (loading) return <div className="loading">Running gap analysis…</div>;
@@ -892,12 +859,8 @@ export default function Frame4({
     <div ref={exportRef} className="page pdf-snapshot">
       <div className="page-title">Gap analysis</div>
       <div className="page-sub">
-        {mode === "auto"
-          ? "Auto-matched candidate"
-          : viewSavedAssignment
-            ? "Saved assignment"
-            : "Manually selected candidate"}{" "}
-        · per-capability fit breakdown
+        {viewSavedAssignment ? "Saved assignment" : "Selected candidate"} ·
+        per-capability fit breakdown
       </div>
 
       {/* Employee summary card */}
@@ -946,7 +909,7 @@ export default function Frame4({
           </div>
         </div>
       )}
-      {/* Generate AI fit report button — hands-on mode */}
+      {/* Generate AI fit report button */}
       {!loading && employee && (
         <div className="pdf-hide" style={{ marginBottom: 14 }}>
           <button
@@ -1013,101 +976,6 @@ export default function Frame4({
                 </>
               )}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Auto mode — LLM rationale card */}
-      {mode === "auto" && autoSelect && !autoSelect.error && (
-        <div className="card" style={{ marginBottom: 14 }}>
-          <div className="card-head">
-            <span className="card-title">AI selection rationale</span>
-            <span className="badge badge-green">Auto</span>
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "#aaaaaa",
-              lineHeight: 1.7,
-              marginBottom: 12,
-            }}
-          >
-            {autoSelect.rationale}
-          </p>
-
-          {/* Collapsible top-5 panel */}
-          {autoSelect.all_top_candidates?.length > 0 && (
-            <>
-              <button
-                onClick={() => setShowTopCandidates((p) => !p)}
-                style={{
-                  background: "none",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: 6,
-                  padding: "5px 12px",
-                  fontSize: 11,
-                  color: "#888",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                {showTopCandidates ? "Hide" : "Show"} top{" "}
-                {autoSelect.all_top_candidates.length} candidates
-              </button>
-
-              {showTopCandidates && (
-                <div style={{ marginTop: 10 }}>
-                  {autoSelect.all_top_candidates.map((c, i) => (
-                    <div
-                      key={c.employee_id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "7px 0",
-                        borderBottom:
-                          i < autoSelect.all_top_candidates.length - 1
-                            ? "1px solid #1a1a1a"
-                            : "none",
-                      }}
-                    >
-                      <span style={{ fontSize: 11, color: "#555", width: 16 }}>
-                        {i + 1}
-                      </span>
-                      <span style={{ fontSize: 12, color: "#d0d0d0", flex: 1 }}>
-                        {c.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "#86BC25",
-                          background: "#1e2a14",
-                          borderRadius: 4,
-                          padding: "2px 8px",
-                        }}
-                      >
-                        {scoreOutOfFive(c.match_score)}/5
-                      </span>
-                      {c.employee_id === autoSelect.selected_employee_id && (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            color: "#86BC25",
-                            background: "#1e2a14",
-                            borderRadius: 4,
-                            padding: "2px 8px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          Selected
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
           )}
         </div>
       )}

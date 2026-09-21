@@ -56,7 +56,6 @@ from core.llm_report import (
     LLMReportError,
     generate_fit_report,
     generate_team_summary,
-    select_best_candidate,
 )
 from core.matching import rank_candidates
 from core.security import (
@@ -103,8 +102,7 @@ _ROLE_BY_ID: dict[str, dict] = {r["id"]: r for r in _PROJECT["roles"]}
 _capability_state: dict[str, list[dict]] = {}
 
 # In-memory LLM cache, invalidated whenever a role's capabilities change.
-# Keys: ("report", role_id, emp_id, capability_hash) for hands-on reports,
-#       ("auto",   role_id, capability_hash)              for auto-selection.
+# Keys: ("report", role_id, emp_id, capability_hash)
 # capability_hash is a stable digest of the role's capability ids+weights.
 _llm_cache: dict[tuple, dict] = {}
 
@@ -228,13 +226,6 @@ class LLMReportOut(BaseModel):
     employee_id: str
     overall_fit_score: int  # 0–100
     report: str
-
-
-class AutoSelectOut(BaseModel):
-    role_id: str
-    selected_employee_id: str
-    rationale: str
-    all_top_candidates: list[dict]  # [{employee_id, name, match_score}, ...]
 
 
 class TeamReportCapabilityIn(BaseModel):
@@ -1330,112 +1321,3 @@ async def generate_project_team_report(
         ),
         headers={"Content-Disposition": (f'attachment; filename="{filename}"')},
     )
-
-
-@app.post(
-    "/roles/{role_id}/auto-select",
-    response_model=AutoSelectOut,
-    tags=["LLM"],
-    summary="Let the LLM pick the best candidate from the top 5 (auto mode)",
-)
-async def auto_select_candidate(
-    role_id: str,
-    project_start_date: str = Query(default=None),
-    project_end_date: str = Query(default=None),
-    current_user: dict = Depends(get_current_user),
-):
-    """
-    Use the LLM to select the best-fit candidate from the top 5 embedding
-    results (US-S2-03). The LLM may override embedding rank #1; its choice is
-    binding and a short rationale is returned alongside the other top
-    candidates for transparency (US-S2-04).
-
-    Cached per (role, capability hash) and invalidated on capability change
-    (US-S2-07). Returns 503 if the LLM is unavailable; callers should fall
-    back to embedding rank #1 in that case (US-S2-06).
-    """
-    _require_capabilities_exist(role_id)
-    caps = _get_or_infer_capabilities(role_id)
-
-    role = _ROLE_BY_ID.get(role_id)
-    role_title = role["title"] if role else ""
-    role_description = role["description"] if role else ""
-    role_context = {"title": role_title, "description": role_description}
-
-    cap_hash = _capability_hash(caps)
-    cache_key = ("auto", role_id, cap_hash)
-    cached = _llm_cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
-    emp_availability = {e["id"]: e.get("available", True) for e in employees}
-    ranked = rank_candidates(caps, employees, role_title=role_title)
-    available_ranked = [
-        c for c in ranked if emp_availability.get(c["employee_id"], True)
-    ]
-    top = available_ranked[:5] if available_ranked else ranked[:5]
-    if not top:
-        raise HTTPException(
-            status_code=422,
-            detail="No ranked candidates available for this role.",
-        )
-
-    top_with_fit = []
-    for i, cand in enumerate(top, start=1):
-        emp = _EMP_BY_ID.get(cand["employee_id"])
-        if emp is None:
-            continue
-        top_with_fit.append(
-            {
-                "rank": i,
-                "employee": emp,
-                "match_score": cand["match_score"],
-                "fit_report": analyse_fit(caps, emp),
-            }
-        )
-
-    if not top_with_fit:
-        raise HTTPException(
-            status_code=422,
-            detail="No ranked candidates available for this role.",
-        )
-
-    try:
-        result = await select_best_candidate(
-            role_context=role_context,
-            role_capabilities=caps,
-            top_candidates_with_fit=top_with_fit,
-        )
-    except LLMConfigError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "LLM auto-select unavailable: OPENROUTER_API_KEY is not set. "
-                "Falling back to embedding rank #1 is recommended."
-            ),
-        ) from exc
-    except LLMReportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "LLM auto-select unavailable at this time. "
-                "Falling back to embedding rank #1 is recommended."
-            ),
-        ) from exc
-
-    payload = AutoSelectOut(
-        role_id=role_id,
-        selected_employee_id=result["selected_employee_id"],
-        rationale=result["rationale"],
-        all_top_candidates=[
-            {
-                "employee_id": c["employee_id"],
-                "name": c["name"],
-                "match_score": c["match_score"],
-            }
-            for c in top
-        ],
-    )
-    _llm_cache[cache_key] = payload
-    return payload

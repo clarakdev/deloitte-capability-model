@@ -1,7 +1,6 @@
 // Frame2.jsx — Skill requirements screen (Step 2 of 4).
 
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   getCapabilities,
   inferCapabilities,
@@ -11,28 +10,28 @@ import {
   searchEsco,
   saveCapabilities,
   getSavedCapabilities,
-} from '../api/api'
+} from "../api/api";
 
-export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading = false, onBack, onNext }) {
+export default function Frame2({ roleId, role, topK = 5, onBack, onNext }) {
   // caps    — the current list of capabilities for this role
   // loading — true while the initial fetch is running
   // error   — error message if the fetch fails
-  const [caps, setCaps]       = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [caps, setCaps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Search box state
   // query        — what the user has typed in the search box
   // searchResults — list of ESCO skills returned from the backend search
   // searching    — true while the search fetch is in progress
-  const [query, setQuery]             = useState('')
-  const [searchResults, setResults]   = useState([])
-  const [searching, setSearching]     = useState(false)
+  const [query, setQuery] = useState("");
+  const [searchResults, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   // saving — tracks which capId is currently being saved (shows a spinner on that row)
-  const [saving, setSaving] = useState(null)
+  const [saving, setSaving] = useState(null);
 
-  const [weightValues, setWeightValues] = useState({})
+  const [weightValues, setWeightValues] = useState({});
 
   // Load capabilities on mount
   useEffect(() => {
@@ -40,52 +39,61 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
       try {
         // Check if capabilities are already saved in Supabase for this role
         if (role?.title) {
-          const saved = await getSavedCapabilities(roleId)
+          const saved = await getSavedCapabilities(roleId);
           if (saved && saved.length > 0) {
             // Sync saved caps into FastAPI memory
-            await inferCapabilities(roleId, role.title, role.description, topK)
+            await inferCapabilities(roleId, role.title, role.description, topK);
             // Use saved caps for display
-            setCaps(saved.map(c => ({
-              cap_id:           c.cap_id,
-              name:             c.name,
-              esco_description: c.esco_description,
-              weight:           c.weight,
-              is_inferred:      c.is_inferred,
-            })))
-            setLoading(false)
-            return
+            setCaps(
+              saved.map((c) => ({
+                cap_id: c.cap_id,
+                name: c.name,
+                esco_description: c.esco_description,
+                weight: c.weight,
+                is_inferred: c.is_inferred,
+              })),
+            );
+            setLoading(false);
+            return;
           }
           // No saved caps — infer fresh from AI with topK
-          const data = await inferCapabilities(roleId, role.title, role.description, topK)
-          setCaps(data)
+          const data = await inferCapabilities(
+            roleId,
+            role.title,
+            role.description,
+            topK,
+          );
+          setCaps(data);
         } else {
           // Legacy hardcoded role
-          const data = await getCapabilities(roleId)
-          setCaps(data)
+          const data = await getCapabilities(roleId);
+          setCaps(data);
         }
       } catch (e) {
-        console.error('Frame2 load error:', e)
-        setError('Could not load capabilities. Is the backend running?')
+        console.error("Frame2 load error:", e);
+        setError("Could not load capabilities. Is the backend running?");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    loadCaps()
-  }, [roleId, topK])
+    loadCaps();
+  }, [roleId, topK]);
 
   // Weight change
   // Called when the user moves a weight slider.
   // Sends PUT /roles/{roleId}/capabilities/{capId} with the new weight.
   // Updates the local caps list immediately so the UI feels instant.
   async function handleWeightChange(capId, newWeight) {
-    setSaving(capId)
+    setSaving(capId);
     try {
-      const updated = await updateCapability(roleId, capId, { weight: newWeight })
-      setCaps(updated)
+      const updated = await updateCapability(roleId, capId, {
+        weight: newWeight,
+      });
+      setCaps(updated);
     } catch {
-      alert('Failed to update weight.')
+      alert("Failed to update weight.");
     } finally {
-      setSaving(null)
+      setSaving(null);
     }
   }
 
@@ -93,14 +101,14 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
   // Sends DELETE /roles/{roleId}/capabilities/{capId}.
   // Backend returns the new list (without the deleted item) which we store.
   async function handleRemove(capId) {
-    setSaving(capId)
+    setSaving(capId);
     try {
-      const updated = await deleteCapability(roleId, capId)
-      setCaps(updated)
+      const updated = await deleteCapability(roleId, capId);
+      setCaps(updated);
     } catch {
-      alert('Failed to remove capability.')
+      alert("Failed to remove capability.");
     } finally {
-      setSaving(null)
+      setSaving(null);
     }
   }
 
@@ -108,16 +116,16 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
   // Called when user types in the search box and presses Enter or clicks Search.
   // Hits GET /esco/search?q=... on the backend.
   async function handleSearch() {
-    if (!query.trim()) return
-    setSearching(true)
-    setResults([])
+    if (!query.trim()) return;
+    setSearching(true);
+    setResults([]);
     try {
-      const results = await searchEsco(query)
-      setResults(results)
+      const results = await searchEsco(query);
+      setResults(results);
     } catch {
-      alert('Search failed.')
+      alert("Search failed.");
     } finally {
-      setSearching(false)
+      setSearching(false);
     }
   }
 
@@ -128,28 +136,29 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
   // Clears the search box and results after adding.
   async function handleAdd(skill) {
     try {
-      const updated = await addCapability(roleId, skill.concept_uri, 3)
-      setCaps(updated)
-      setQuery('')
-      setResults([])
+      const updated = await addCapability(roleId, skill.concept_uri, 3);
+      setCaps(updated);
+      setQuery("");
+      setResults([]);
     } catch (e) {
       // 409 means the skill is already in the list
-      if (e.message.includes('409')) {
-        alert('That skill is already in the list.')
+      if (e.message.includes("409")) {
+        alert("That skill is already in the list.");
       } else {
-        alert('Failed to add capability.')
+        alert("Failed to add capability.");
       }
     }
   }
 
-  if (loading) return <div className="loading">Loading capabilities...</div>
-  if (error)   return <div className="error">{error}</div>
+  if (loading) return <div className="loading">Loading capabilities...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="page">
       <div className="page-title">Skill requirements</div>
       <div className="page-sub">
-        AI-suggested skills for this role — adjust weights, remove, or add from ESCO
+        AI-suggested skills for this role — adjust weights, remove, or add from
+        ESCO
       </div>
 
       {/* ── Capability list ── */}
@@ -162,7 +171,9 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
         </div>
 
         {caps.length === 0 && (
-          <div style={{ color: 'var(--muted2)', fontSize: 13, padding: '8px 0' }}>
+          <div
+            style={{ color: "var(--muted2)", fontSize: 13, padding: "8px 0" }}
+          >
             No capabilities yet. Add one using the search below.
           </div>
         )}
@@ -171,72 +182,132 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
           <div
             key={cap.cap_id}
             style={{
-              padding: '14px 16px',
+              padding: "14px 16px",
               marginBottom: 8,
-              background: '#141414',
+              background: "#141414",
               borderRadius: 8,
-              border: '1px solid #2a2a2a',
+              border: "1px solid #2a2a2a",
             }}
           >
             {/* Row 1: skill name + is_inferred badge + remove button */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#d0d0d0' }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#d0d0d0",
+                }}
+              >
                 {cap.name}
               </span>
 
               {/* Badge shows whether this skill was auto-inferred by AI or added manually */}
-              {cap.is_inferred
-                ? <span className="badge badge-green">AI suggested</span>
-                : <span className="badge badge-blue">Manual</span>
-              }
+              {cap.is_inferred ? (
+                <span className="badge badge-green">AI suggested</span>
+              ) : (
+                <span className="badge badge-blue">Manual</span>
+              )}
 
               {/* Remove button — disabled while a save is in progress on this row */}
               <button
                 onClick={() => handleRemove(cap.cap_id)}
                 disabled={saving === cap.cap_id}
                 style={{
-                  background: 'none', border: 'none', color: '#444',
-                  cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px',
+                  background: "none",
+                  border: "none",
+                  color: "#444",
+                  cursor: "pointer",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  padding: "0 4px",
                 }}
                 title="Remove skill"
-              >✕</button>
+              >
+                ✕
+              </button>
             </div>
 
             {/* Full ESCO description — always visible */}
             {cap.esco_description && (
-            <p style={{
-                fontSize: 11, color: '#c8c8c8', lineHeight: 1.7,
-                marginBottom: 10,
-                paddingLeft: 10,
-                borderLeft: '2px solid #3a3a3a', textAlign: 'left'
-            }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#c8c8c8",
+                  lineHeight: 1.7,
+                  marginBottom: 10,
+                  paddingLeft: 10,
+                  borderLeft: "2px solid #3a3a3a",
+                  textAlign: "left",
+                }}
+              >
                 {cap.esco_description}
-            </p>
+              </p>
             )}
 
             {/* Row 3: weight slider
                 The weight (1–5) controls how much this skill influences the
                 candidate ranking. Higher weight = this skill matters more. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-              <span style={{ fontSize: 10, color: '#555', width: 42 }}>Weight</span>
-              <span style={{ fontSize: 10, color: '#555' }}>1</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 8,
+              }}
+            >
+              <span style={{ fontSize: 10, color: "#555", width: 42 }}>
+                Weight
+              </span>
+              <span style={{ fontSize: 10, color: "#555" }}>1</span>
               <input
                 type="range"
-                min={1} max={5} step={1}
+                min={1}
+                max={5}
+                step={1}
                 value={weightValues[cap.cap_id] ?? cap.weight}
-                onChange={(e) => setWeightValues(prev => ({ ...prev, [cap.cap_id]: Number(e.target.value) }))}
-                onMouseUp={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
-                onTouchEnd={(e) => handleWeightChange(cap.cap_id, Number(e.target.value))}
-                style={{ flex: 1, accentColor: '#86BC25', height: 4, cursor: 'pointer' }}
+                onChange={(e) =>
+                  setWeightValues((prev) => ({
+                    ...prev,
+                    [cap.cap_id]: Number(e.target.value),
+                  }))
+                }
+                onMouseUp={(e) =>
+                  handleWeightChange(cap.cap_id, Number(e.target.value))
+                }
+                onTouchEnd={(e) =>
+                  handleWeightChange(cap.cap_id, Number(e.target.value))
+                }
+                style={{
+                  flex: 1,
+                  accentColor: "#86BC25",
+                  height: 4,
+                  cursor: "pointer",
+                }}
               />
-              <span style={{ fontSize: 10, color: '#555' }}>5</span>
-              <span style={{
-                background: '#86BC25', color: '#0a0a0a',
-                fontSize: 11, fontWeight: 700,
-                borderRadius: 5, padding: '2px 8px',
-                minWidth: 24, textAlign: 'center',
-              }}>
-                {saving === cap.cap_id ? '…' : (weightValues[cap.cap_id] ?? cap.weight)}
+              <span style={{ fontSize: 10, color: "#555" }}>5</span>
+              <span
+                style={{
+                  background: "#86BC25",
+                  color: "#0a0a0a",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  borderRadius: 5,
+                  padding: "2px 8px",
+                  minWidth: 24,
+                  textAlign: "center",
+                }}
+              >
+                {saving === cap.cap_id
+                  ? "…"
+                  : (weightValues[cap.cap_id] ?? cap.weight)}
               </span>
             </div>
           </div>
@@ -254,17 +325,22 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
         </div>
 
         {/* Search input + button */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <input
             type="text"
             placeholder="Search ESCO skills e.g. risk management..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             style={{
-              flex: 1, background: '#111', border: '1px solid #252525',
-              borderRadius: 6, padding: '8px 11px', fontSize: 12,
-              color: '#bbb', fontFamily: 'inherit',
+              flex: 1,
+              background: "#111",
+              border: "1px solid #252525",
+              borderRadius: 6,
+              padding: "8px 11px",
+              fontSize: 12,
+              color: "#bbb",
+              fontFamily: "inherit",
             }}
           />
           <button
@@ -272,7 +348,7 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
             onClick={handleSearch}
             disabled={searching}
           >
-            {searching ? 'Searching…' : 'Search'}
+            {searching ? "Searching…" : "Search"}
           </button>
         </div>
 
@@ -280,27 +356,29 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
         {/* Each result shows the skill name and a short description.
             Clicking it calls handleAdd() which POSTs it to the backend. */}
         {searchResults.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {searchResults.slice(0, 8).map((skill) => (
               <div
                 key={skill.concept_uri}
                 onClick={() => handleAdd(skill)}
                 style={{
-                  padding: '9px 12px',
-                  background: '#111',
-                  border: '1px solid #222',
+                  padding: "9px 12px",
+                  background: "#111",
+                  border: "1px solid #222",
                   borderRadius: 7,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
                   gap: 2,
                 }}
               >
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#d0d0d0' }}>
+                <span
+                  style={{ fontSize: 12, fontWeight: 600, color: "#d0d0d0" }}
+                >
                   {skill.preferred_label}
                 </span>
                 {skill.description && (
-                  <span style={{ fontSize: 11, color: '#555' }}>
+                  <span style={{ fontSize: 11, color: "#555" }}>
                     {skill.description.slice(0, 100)}…
                   </span>
                 )}
@@ -312,21 +390,21 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
 
       {/* ── Navigation ── */}
       <div className="actions">
-        <button className="btn-secondary" onClick={onBack}>← Back</button>
+        <button className="btn-secondary" onClick={onBack}>
+          ← Back
+        </button>
         <button
           className="btn-primary"
-          disabled={autoSelectLoading}
-          style={{ opacity: autoSelectLoading ? 0.5 : 1 }}
           onClick={async () => {
             try {
-              await saveCapabilities(roleId, caps)
+              await saveCapabilities(roleId, caps);
             } catch (e) {
-              console.error('Failed to save capabilities:', e)
+              console.error("Failed to save capabilities:", e);
             }
-            onNext(roleId)
+            onNext(roleId);
           }}
         >
-          {autoSelectLoading ? 'Finding best candidate…' : mode === 'auto' ? 'Run auto-match →' : 'Browse candidates →'}
+          Browse candidates →
         </button>
       </div>
 
@@ -334,5 +412,5 @@ export default function Frame2({ roleId, role, topK = 5, mode, autoSelectLoading
         This service uses the ESCO classification of the European Commission.
       </div>
     </div>
-  )
+  );
 }
