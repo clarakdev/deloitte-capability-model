@@ -198,9 +198,9 @@ export default function Frame3({
 
   return (
     <div className="page">
-      <div className="page-title">Select a team member</div>
+      <div className="page-title">Select team members</div>
       <div className="page-sub">
-        Candidates ranked by capability match score — click a card to select
+        Select one candidate to view their gap analysis, or two to compare results side by side.
       </div>
 
       {/* Filter toggles */}
