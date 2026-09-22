@@ -3,7 +3,6 @@
 //   frame   — which of the 4 steps the user is on (0–4)
 //   roleId  — the selected role UUID from Supabase
 //   empId   — the selected employee (e.g. "EMP001"), set in Frame 3, used in Frame 4
-//   mode    — "auto" skips Frame 3 (AI picks candidates), "hands" includes it
 
 import { useState } from "react";
 import Frame0 from "./pages/Frame0";
@@ -14,7 +13,6 @@ import Frame4 from "./pages/Frame4";
 import TeamReportPage from "./pages/TeamReportPage";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { requestAutoSelect } from "./api/api";
 import "./index.css";
 import "./App.css";
 
@@ -31,17 +29,13 @@ export default function App() {
   const [roleId, setRoleId] = useState(null);
   const [empId, setEmpId] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [mode, setMode] = useState("hands");
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [viewSavedAssignment, setViewSavedAssignment] = useState(false);
   const [view, setView] = useState("login");
   const [profile, setProfile] = useState(null);
   const [topK, setTopK] = useState(5);
-
-  // LLM auto-select result passed to Frame 4
-  const [autoSelect, setAutoSelect] = useState(null);
-  const [autoSelectLoading, setAutoSelectLoading] = useState(false);
 
   function goTo(f) {
     setFrame(f);
@@ -84,11 +78,9 @@ export default function App() {
     setRoleId(null);
     setEmpId(null);
     setSelectedEmployee(null);
-    setMode("hands");
-    setSelectedProject(null);
+    setSelectedEmployees([]);
     setSelectedRole(null);
     setViewSavedAssignment(false);
-    setAutoSelect(null);
     setView("dashboard");
   }
 
@@ -100,11 +92,9 @@ export default function App() {
     setRoleId(null);
     setEmpId(null);
     setSelectedEmployee(null);
-    setMode("hands");
-    setSelectedProject(null);
+    setSelectedEmployees([]);
     setSelectedRole(null);
     setViewSavedAssignment(false);
-    setAutoSelect(null);
     setView("login");
   }
 
@@ -136,52 +126,6 @@ export default function App() {
               >
                 Back to Dashboard
               </button>
-
-              <div
-                style={{
-                  display: "flex",
-                  background: "#1c1c1c",
-                  borderRadius: 6,
-                  padding: 3,
-                  gap: 2,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setMode("auto")}
-                  style={{
-                    padding: "4px 14px",
-                    borderRadius: 4,
-                    border: "none",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    background: mode === "auto" ? "#86BC25" : "transparent",
-                    color: mode === "auto" ? "#0a0a0a" : "#555",
-                  }}
-                >
-                  Auto
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setMode("hands")}
-                  style={{
-                    padding: "4px 14px",
-                    borderRadius: 4,
-                    border: "none",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    background: mode === "hands" ? "#86BC25" : "transparent",
-                    color: mode === "hands" ? "#0a0a0a" : "#555",
-                  }}
-                >
-                  Hands-on
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -258,13 +202,12 @@ export default function App() {
                 if (hasAssignment) {
                   setEmpId(savedEmployeeId);
                   setViewSavedAssignment(true);
-                  setAutoSelect(null);
                   goTo(4);
                 } else {
                   setEmpId(null);
                   setSelectedEmployee(null);
+                  setSelectedEmployees([]);
                   setViewSavedAssignment(false);
-                  setAutoSelect(null);
                   goTo(2);
                 }
               }}
@@ -279,33 +222,11 @@ export default function App() {
               roleId={roleId}
               role={selectedRole}
               topK={topK}
-              mode={mode}
-              autoSelectLoading={autoSelectLoading}
               onBack={() => goTo(1)}
               onNext={(id) => {
                 setRoleId(id);
                 setViewSavedAssignment(false);
-                if (mode === "auto") {
-                  setAutoSelect(null);
-                  setAutoSelectLoading(true);
-                  requestAutoSelect(
-                    id,
-                    parseProjectStartDate(selectedProject?.start_date),
-                    selectedProject?.end_date || null,
-                  )
-                    .then((result) => {
-                      setAutoSelect(result);
-                      setAutoSelectLoading(false);
-                      goTo(4); // only navigate AFTER result is ready
-                    })
-                    .catch(() => {
-                      setAutoSelect({ error: "unavailable" });
-                      setAutoSelectLoading(false);
-                      goTo(4);
-                    });
-                } else {
-                  goTo(3);
-                }
+                goTo(3);
               }}
             />
           )}
@@ -321,9 +242,16 @@ export default function App() {
               projectEndDate={selectedProject?.end_date || null}
               requiredPercentage={selectedRole?.required_percentage ?? 100}
               onBack={() => goTo(2)}
-              onNext={(employee) => {
-                setEmpId(employee.employee_id);
-                setSelectedEmployee(employee);
+              onNext={(employees) => {
+                setSelectedEmployees(employees);
+
+                // Keep the existing single-employee state populated with the
+                // first selected candidate for backwards compatibility.
+                const primaryEmployee = employees[0] || null;
+
+                setEmpId(primaryEmployee?.employee_id || null);
+                setSelectedEmployee(primaryEmployee);
+
                 goTo(4);
               }}
             />
@@ -336,11 +264,10 @@ export default function App() {
               projectId={selectedProject?.id}
               empId={empId}
               selectedEmployee={selectedEmployee}
-              mode={mode}
-              autoSelect={autoSelect}
+              selectedEmployees={selectedEmployees}
               viewSavedAssignment={viewSavedAssignment}
               selectedRole={selectedRole}
-              onBack={() => goTo(mode === "auto" ? 2 : 3)}
+              onBack={() => goTo(3)}
               onBackToRoles={() => goTo(1)}
             />
           )}

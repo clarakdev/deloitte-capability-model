@@ -131,7 +131,7 @@ export function getEmployeeById(employeeId) {
   return request(`/employees/${encodeURIComponent(employeeId)}`)
 }
 
-// LLM gap analysis (hands-on report + auto selection)
+// LLM gap analysis
 
 // Request an objective prose fit report + 0–100 score for one candidate.
 // Returns { employee_id, overall_fit_score, report }.
@@ -139,17 +139,6 @@ export function requestLLMReport(roleId, empId) {
   return request(`/roles/${roleId}/candidates/${empId}/llm-report`, {
     method: 'POST',
   })
-}
-
-// Ask the LLM to pick the best candidate from the top 5 (auto mode).
-// Returns { role_id, selected_employee_id, rationale, all_top_candidates }.
-export function requestAutoSelect(roleId, projectStartDate = null, projectEndDate = null) {
-  let url = `/roles/${roleId}/auto-select`
-  const params = []
-  if (projectStartDate) params.push(`project_start_date=${projectStartDate}`)
-  if (projectEndDate) params.push(`project_end_date=${projectEndDate}`)
-  if (params.length) url += `?${params.join('&')}`
-  return request(url, { method: 'POST' })
 }
 
 // Supabase — Projects
