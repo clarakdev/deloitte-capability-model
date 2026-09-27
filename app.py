@@ -261,6 +261,10 @@ class TeamReportIn(BaseModel):
     worked_together_count: int | None = None
     rm_notes: str | None = None
 
+class ChemistryReportIn(BaseModel):
+    chemistry_counts: dict
+    project_name: str
+
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -396,7 +400,7 @@ def _hydrate_report_capabilities(
 
     return hydrated
 
-def _calculate_capacity(employees: list, project_start_date: str = None, project_end_date: str = None) -> list:
+def _calculate_capacity(employees: list, project_start_date: str = None, project_end_date: str = None, required_percentage: int = 100) -> list:
     """
     Returns a deep copy of employees with remaining_capacity and
     capacity_status computed from allocations overlapping the given
@@ -406,6 +410,7 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
     allocations, floored at 0.
     capacity_status: "On Leave" when the employee is on leave for these
     dates, takes precedence over the percentage number for display purposes.
+    "Insufficient" when remaining_capacity is below required_percentage (BUG005).
 
     If no project dates are given, everyone defaults to 100% and no status.
     """
@@ -418,6 +423,10 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
         emp["capacity_status"] = None
 
     if not project_start_date:
+        # Still flag insufficient capacity even without dates
+        for emp in employees:
+            if emp["remaining_capacity"] < required_percentage:
+                emp["capacity_status"] = "Insufficient"
         return employees
 
     try:
@@ -440,6 +449,9 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
             )
             if on_leave:
                 emp["capacity_status"] = "On Leave"
+            elif emp["remaining_capacity"] < required_percentage:
+                emp["capacity_status"] = "Insufficient"
+
     except ValueError:
         pass
 
@@ -927,6 +939,10 @@ def get_candidates(
         description="Project start date (YYYY-MM-DD). If provided, overrides employee availability based on unavailability periods (US023)",
     ),
     project_end_date: str = Query(default=None),
+    required_percentage: int = Query(
+        default=100,
+        description="Minimum availability percentage required for this role (BUG005)",
+    ),
     locations: list[str] | None = Query(
         default=None,
         description="Only return employees whose location is in this list (BUG002 fix — filters before the 25-candidate cap)",
@@ -950,7 +966,7 @@ def get_candidates(
 
     # US023/US32 — override availability based on project start date
     employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
-    employees = _calculate_capacity(employees, project_start_date, project_end_date)
+    employees = _calculate_capacity(employees, project_start_date, project_end_date, required_percentage)
     results = rank_candidates(
         caps,
         employees,
@@ -964,6 +980,13 @@ def get_candidates(
         results = [c for c in results if c.get("location") in locations]
     if role_levels:
         results = [c for c in results if c.get("role_level") in role_levels]
+    # Available-only must also exclude anyone below the role's required availability
+    if available_only:
+        results = [
+            c for c in results
+            if c.get("remaining_capacity") is not None
+            and c["remaining_capacity"] >= required_percentage
+        ]
     # US034 — limit candidate list to 25
     results = results[:25]
     # US033 — calculate available_from for unavailable employees
@@ -1323,3 +1346,43 @@ async def generate_project_team_report(
         ),
         headers={"Content-Disposition": (f'attachment; filename="{filename}"')},
     )
+
+@app.post(
+    "/projects/{project_id}/chemistry-report",
+    tags=["LLM"],
+    summary="Generate team dynamics analysis from Business Chemistry mix",
+)
+async def generate_chemistry_report(
+    project_id: str,
+    body: ChemistryReportIn,
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an expert in team dynamics and Deloitte's Business Chemistry framework. Analyse the team chemistry mix and provide actionable insights."
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Project: {body.project_name}\n\n"
+                    f"TEAM BUSINESS CHEMISTRY BREAKDOWN:\n"
+                    f"Pioneer (values possibilities and new ideas): {body.chemistry_counts.get('Pioneer', 0)}\n"
+                    f"Guardian (values stability and best practice): {body.chemistry_counts.get('Guardian', 0)}\n"
+                    f"Driver (values challenge and results): {body.chemistry_counts.get('Driver', 0)}\n"
+                    f"Integrator (values relationships and harmony): {body.chemistry_counts.get('Integrator', 0)}\n\n"
+                    f"Based on this chemistry mix, provide 4-5 insights as a JSON object with a single key 'team_dynamics' containing a list of strings. "
+                    f"Each string should cover: strengths of this mix, risks or blind spots, and how the team might work best together. "
+                    f"Respond with ONLY the JSON object."
+                )
+            }
+        ]
+
+        from core.llm_report import _call_model, _parse_json_content
+        content = await _call_model(messages)
+        raw = _parse_json_content(content)
+        return {"team_dynamics": raw.get("team_dynamics", [])}
+
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Chemistry report unavailable: {e}")
