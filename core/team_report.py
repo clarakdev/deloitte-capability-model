@@ -174,6 +174,41 @@ def _add_team_metrics(
     document.add_paragraph()
 
 
+def _add_role_level_distribution(document: Document, entries: list[dict]) -> None:
+    groups = [
+        ("Senior Consultant & below", {"Analyst", "Consultant", "Senior Consultant"}, "86BC25"),
+        ("Manager–Director", {"Manager", "Senior Manager", "Director"}, "3478B8"),
+        ("Partner", {"Partner"}, "8460AD"),
+    ]
+    total = len(entries)
+    counts = [
+        sum(1 for entry in entries if entry["employee"].get("role_level") in levels)
+        for _, levels, _ in groups
+    ]
+
+    if not total:
+        return
+
+    bar = document.add_table(rows=1, cols=len(groups))
+    bar.autofit = False
+    available_width = 6.9
+    for index, ((_, _, color), count) in enumerate(zip(groups, counts)):
+        width = Inches(available_width * count / total)
+        bar.columns[index].width = width
+        cell = bar.rows[0].cells[index]
+        cell.width = width
+        _set_cell_shading(cell, color)
+        _set_cell_text(cell, f"{count} ({count / total:.0%})" if count else "", color="FFFFFF", bold=True, size=9)
+
+    legend = document.add_table(rows=1, cols=len(groups))
+    legend.autofit = False
+    for index, ((label, _, color), count) in enumerate(zip(groups, counts)):
+        cell = legend.rows[0].cells[index]
+        _set_cell_text(cell, f"{label}: {count} ({count / total:.0%})", color=color, size=8)
+
+    document.add_paragraph()
+
+
 def _add_bullet_list(
     document: Document,
     items: list[str],
@@ -621,6 +656,7 @@ def build_team_report_docx(
     entries: list[dict],
     team_summary: dict,
     worked_together_score: int | None = None,
+    worked_together_count: int | None = None,
     rm_notes: str | None = None,
 ) -> BytesIO:
     
@@ -695,6 +731,8 @@ def build_team_report_docx(
     _add_section_heading(document, "Proposed Team")
 
     _add_team_overview_table(document, entries)
+    _add_section_heading(document, "Role Level Distribution")
+    _add_role_level_distribution(document, entries)
 
     average_team_match = (
         round(sum(entry["match_score"] for entry in entries) / len(entries) * 100)
@@ -720,10 +758,16 @@ def build_team_report_docx(
         team_summary,
     )
 
-    if worked_together_score is not None or rm_notes:
+    if worked_together_score is not None or worked_together_count is not None or rm_notes:
         _add_section_heading(document, "Resource Manager's Assessment")
 
-        if worked_together_score is not None:
+        if worked_together_count is not None:
+            _add_small_label(
+                document,
+                "Employees who have worked together before",
+                f"{worked_together_count} of {len(entries)} team members",
+            )
+        elif worked_together_score is not None:
             _add_small_label(
                 document,
                 "Worked together before",
