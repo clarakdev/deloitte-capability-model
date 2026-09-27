@@ -258,6 +258,7 @@ class TeamReportIn(BaseModel):
     client: str | None = None
     roles: list[TeamReportRoleIn]
     worked_together_score: int | None = None
+    worked_together_count: int | None = None
     rm_notes: str | None = None
 
 
@@ -1302,6 +1303,7 @@ async def generate_project_team_report(
         entries=team_entries,
         team_summary=team_summary,
         worked_together_score=body.worked_together_score,
+        worked_together_count=body.worked_together_count,
         rm_notes=body.rm_notes,
     )
 

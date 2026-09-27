@@ -12,9 +12,18 @@ import { supabase } from "../supabase";
 import TeamMemberDetail from "./TeamMemberDetail";
 
 const ROLE_LEVEL_GROUPS = {
-  junior: ["Analyst", "Consultant", "Senior Consultant"],
-  management: ["Manager", "Senior Manager", "Director"],
-  partner: ["Partner"],
+  junior: {
+    label: "Senior Consultant & below",
+    levels: ["Analyst", "Consultant", "Senior Consultant"],
+  },
+  senior: {
+    label: "Manager–Director",
+    levels: ["Manager", "Senior Manager", "Director"],
+  },
+  partner: {
+    label: "Partner",
+    levels: ["Partner"],
+  },
 };
 
 const RADAR_AXES = [
@@ -36,10 +45,9 @@ function scoreBadgeClass(score) {
 }
 
 function seniorityGroup(roleLevel) {
-  if (ROLE_LEVEL_GROUPS.junior.includes(roleLevel)) return "junior";
-  if (ROLE_LEVEL_GROUPS.management.includes(roleLevel)) return "management";
-  if (ROLE_LEVEL_GROUPS.partner.includes(roleLevel)) return "partner";
-  return null;
+  return Object.entries(ROLE_LEVEL_GROUPS).find(([, group]) =>
+    group.levels.includes(roleLevel),
+  )?.[0] ?? null;
 }
 
 export default function TeamReportPage({ projectId, onBackToRoles }) {
@@ -233,8 +241,9 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
       if (group) counts[group] += 1;
       return counts;
     },
-    { junior: 0, management: 0, partner: 0 },
+    { junior: 0, senior: 0, partner: 0 },
   );
+  const seniorShare = (seniorityCounts.senior + seniorityCounts.partner) / team.length;
   const radarValue = Math.max(0.1, Math.min(1, averageMatch / 5));
   const radarCenter = 110;
   const radarRadius = 72;
@@ -323,9 +332,66 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
             <span className="badge badge-green">RM</span>
           </div>
           <div style={{ display: "grid", gap: 10, fontSize: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Senior Consultant &amp; below</span><strong>{seniorityCounts.junior}</strong></div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Manager–Director</span><strong>{seniorityCounts.management}</strong></div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Partner</span><strong>{seniorityCounts.partner}</strong></div>
+            <div
+              role="img"
+              aria-label={`Role level distribution: ${Object.entries(ROLE_LEVEL_GROUPS)
+                .map(([groupId, group]) => `${group.label} ${seniorityCounts[groupId]}`)
+                .join(", ")}`}
+              style={{
+                display: "flex",
+                width: "100%",
+                height: 34,
+                overflow: "hidden",
+                borderRadius: 8,
+              }}
+            >
+              {Object.entries(ROLE_LEVEL_GROUPS).map(([groupId], index) => {
+                const count = seniorityCounts[groupId];
+                const percentage = (count / team.length) * 100;
+                const colors = ["#86BC25", "#5b9bd5", "#9b6dd4"];
+
+                return (
+                  <div
+                    key={groupId}
+                    style={{
+                      display: "flex",
+                      flex: `0 0 ${percentage}%`,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 0,
+                      background: colors[index],
+                      color: "#111",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {percentage >= 10 ? `${Math.round(percentage)}%` : null}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px" }}>
+              {Object.entries(ROLE_LEVEL_GROUPS).map(([groupId, group], index) => {
+                const count = seniorityCounts[groupId];
+                const percentage = Math.round((count / team.length) * 100);
+                const colors = ["#86BC25", "#5b9bd5", "#9b6dd4"];
+
+                return (
+                  <div key={groupId} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span
+                      aria-hidden="true"
+                      style={{ width: 8, height: 8, flex: "0 0 8px", borderRadius: "50%", background: colors[index] }}
+                    />
+                    <span>{group.label}</span>
+                    <strong>{count} ({percentage}%)</strong>
+                  </div>
+                );
+              })}
+            </div>
+            {seniorShare >= 0.5 && (
+              <div className="badge badge-amber" style={{ whiteSpace: "normal", lineHeight: 1.5 }}>
+                This team's seniority mix is weighted toward senior levels, which may increase budget requirements. Use Back to review and adjust role selections if needed.
+              </div>
+            )}
             <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid var(--border)" }}>
               <span>Worked together before</span>
               <input type="number" min="1" max="5" step="1" value={workedTogether} onChange={(event) => setWorkedTogether(event.target.value)} placeholder="1-5" style={{ width: 58 }} />
