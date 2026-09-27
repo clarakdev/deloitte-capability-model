@@ -61,6 +61,11 @@ export default function App() {
     }
   }
 
+  function handleBackToRoles() {
+    setFrame(1);
+    setView("flow");
+  }
+
   function parseProjectStartDate(startDateText) {
     if (!startDateText) return null;
     try {
@@ -169,7 +174,7 @@ export default function App() {
       {view === "teamReport" && (
         <TeamReportPage
           projectId={selectedProject?.id}
-          onBackToDashboard={handleExitToDashboard}
+          onBackToRoles={handleBackToRoles}
         />
       )}
 

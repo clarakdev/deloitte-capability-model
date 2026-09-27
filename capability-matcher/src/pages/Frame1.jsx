@@ -415,13 +415,7 @@ export default function Frame1({
                   opacity: teamReportStatus === "loading" ? 0.6 : 1,
                 }}
               >
-                {teamReportStatus === "loading"
-                  ? "Generating report..."
-                  : teamReportStatus === "done"
-                    ? "Report generated ✓"
-                    : allRolesAssigned
-                      ? "View Team Report"
-                      : "Generate Team Report"}
+                View Team Report
               </button>
             </span>
           </div>

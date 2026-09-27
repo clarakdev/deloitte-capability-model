@@ -42,7 +42,7 @@ function seniorityGroup(roleLevel) {
   return null;
 }
 
-export default function TeamReportPage({ projectId, onBackToDashboard }) {
+export default function TeamReportPage({ projectId, onBackToRoles }) {
   const [project, setProject] = useState(null);
   const [projectName, setProjectName] = useState("Project");
   const [team, setTeam] = useState([]);
@@ -258,8 +258,8 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
           <div className="page-sub">{projectName}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          {onBackToDashboard && (
-            <button className="btn-secondary" type="button" onClick={onBackToDashboard}>Back to Dashboard</button>
+          {onBackToRoles && (
+            <button className="btn-secondary" type="button" onClick={onBackToRoles}>Back to Roles</button>
           )}
           <button
             className="btn-primary"
