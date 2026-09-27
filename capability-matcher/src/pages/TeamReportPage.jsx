@@ -11,6 +11,7 @@ import {
 } from "../api/api";
 import { supabase } from "../supabase";
 import TeamMemberDetail from "./TeamMemberDetail";
+import RadarChart from "../components/RadarChart";
 
 const ROLE_LEVEL_GROUPS = {
   junior: ["Analyst", "Consultant", "Senior Consultant"],
@@ -18,22 +19,21 @@ const ROLE_LEVEL_GROUPS = {
   partner: ["Partner"],
 };
 
-const RADAR_AXES = [
-  "Business Analysis",
-  "Stakeholder Management",
-  "Technical Delivery",
-  "Leadership",
-  "Communication",
-];
-
-function scoreOutOfFive(score) {
-  return Math.round(Math.max(0, Math.min(1, Number(score) || 0)) * 5);
+// Overall employee-role match uses the same 1–10 scale as Frames 3 and 4.
+function scoreOutOfTen(score) {
+  return Math.ceil(Math.max(0, Math.min(1, Number(score) || 0)) * 10);
 }
 
 function scoreBadgeClass(score) {
-  if (score >= 4) return "badge badge-green";
-  if (score === 3) return "badge badge-amber";
+  if (score >= 8) return "badge badge-green";
+  if (score >= 6) return "badge badge-amber";
   return "badge badge-red";
+}
+
+function scoreColor(score) {
+  if (score >= 8) return "#86BC25";
+  if (score >= 6) return "#d4922a";
+  return "#e05252";
 }
 
 function seniorityGroup(roleLevel) {
@@ -111,6 +111,7 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
               return {
                 ...employee,
                 role_id: assignment.role_id,
+                role_title: roleTitle,
                 match_score: assignment.match_score ?? employee.match_score,
               };
             }),
@@ -234,7 +235,7 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
   }
 
   const averageMatch =
-    team.reduce((total, member) => total + scoreOutOfFive(member.match_score), 0) /
+    team.reduce((total, member) => total + scoreOutOfTen(member.match_score), 0) /
     team.length;
   const seniorityCounts = team.reduce(
     (counts, member) => {
@@ -244,20 +245,18 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
     },
     { junior: 0, management: 0, partner: 0 },
   );
-  const radarValue = Math.max(0.1, Math.min(1, averageMatch / 5));
-  const radarCenter = 110;
-  const radarRadius = 72;
-  const radarPoint = (index, value) => {
-    const angle = (Math.PI * 2 * index) / RADAR_AXES.length - Math.PI / 2;
+  const radarItems = team.map((member, index) => {
+    const score = scoreOutOfTen(member.match_score);
     return {
-      x: radarCenter + Math.cos(angle) * radarRadius * value,
-      y: radarCenter + Math.sin(angle) * radarRadius * value,
+      key: `${member.role_id}-${member.employee_id}`,
+      label: member.role_title || `Role ${index + 1}`,
+      sublabel: member.name || member.employee_name,
+      value: Number(member.match_score) || 0,
+      displayValue: `${score}/10`,
+      color: scoreColor(score),
+      member,
     };
-  };
-  const radarPolygon = RADAR_AXES.map((_, index) => {
-    const point = radarPoint(index, radarValue);
-    return `${point.x},${point.y}`;
-  }).join(" ");
+  });
 
   return (
     <div className="page">
@@ -286,46 +285,24 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
       </div>
       {reportError && <div className="error" style={{ padding: "0 0 14px" }}>{reportError}</div>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
-        <section className="card">
-          <div className="card-head">
-            <div className="card-title">Team Capability Match</div>
+      <section className="card">
+        <div className="card-head">
+          <div className="card-title">Team Capability Match</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <strong style={{ fontSize: 20, color: "var(--green)" }}>{averageMatch.toFixed(1)}/10</strong>
+            <span style={{ color: "var(--muted2)", fontSize: 11 }}>average role fit</span>
             <span className="badge badge-blue">AI match</span>
           </div>
-          {/* This basic chart can be replaced with a teammate's more polished chart component later. */}
-          <div aria-label="Team capability radar chart" style={{ minHeight: 230, display: "grid", placeItems: "center", border: "1px dashed var(--border)", marginBottom: 16 }}>
-            <svg viewBox="0 0 220 220" role="img" aria-label="Average team capability radar chart" style={{ width: "100%", maxWidth: 250, height: 220 }}>
-              {[0.33, 0.66, 1].map((scale) => (
-                <polygon
-                  key={scale}
-                  points={RADAR_AXES.map((_, index) => {
-                    const point = radarPoint(index, scale);
-                    return `${point.x},${point.y}`;
-                  }).join(" ")}
-                  fill="none"
-                  stroke="var(--border)"
-                  strokeWidth="1"
-                />
-              ))}
-              {RADAR_AXES.map((axis, index) => {
-                const end = radarPoint(index, 1);
-                const label = radarPoint(index, 1.18);
-                return (
-                  <g key={axis}>
-                    <line x1={radarCenter} y1={radarCenter} x2={end.x} y2={end.y} stroke="var(--border)" strokeWidth="1" />
-                    <text x={label.x} y={label.y} textAnchor="middle" dominantBaseline="middle" fill="var(--muted2)" fontSize="7">{axis}</text>
-                  </g>
-                );
-              })}
-              <polygon points={radarPolygon} fill="var(--green-dim)" stroke="var(--green)" strokeWidth="2" />
-            </svg>
-          </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <strong style={{ fontSize: 28, color: "var(--green)" }}>{averageMatch.toFixed(1)}/5</strong>
-            <span style={{ color: "var(--muted2)", fontSize: 12 }}>average match</span>
-          </div>
-        </section>
+        </div>
+        <RadarChart
+          items={radarItems}
+          ariaLabel="Employee-role fit radar chart"
+          hint="Hover to highlight · click to open a team member"
+          onItemClick={(item) => setSelectedMember({ employee: item.member, roleId: item.member.role_id })}
+        />
+      </section>
 
+      <div>
         <section className="card" style={{ borderLeft: "3px solid var(--green)" }}>
           <div className="card-head">
             <div className="card-title">Team Composition — RM Assessment</div>
@@ -366,7 +343,7 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
         {team.map((member) => {
-          const score = scoreOutOfFive(member.match_score);
+          const score = scoreOutOfTen(member.match_score);
           return (
             <section
               className="card"
@@ -384,7 +361,7 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
             >
               <div className="card-head">
                 <div className="card-title">{member.name || member.employee_name}</div>
-                <span className={scoreBadgeClass(score)}>{score}/5</span>
+                <span className={scoreBadgeClass(score)}>{score}/10</span>
               </div>
               <div style={{ display: "grid", gap: 5, color: "var(--muted2)", fontSize: 12 }}>
                 <div>{member.title}</div>

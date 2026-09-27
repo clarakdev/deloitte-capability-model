@@ -21,6 +21,7 @@ import {
   getSavedCapabilities,
   loadCapabilities,
 } from "../api/api";
+import CapabilityFitRadar from "../components/CapabilityFitRadar";
 
 // Gap score colours line up with the 1–5 gap score bands:
 // >80% → 5/5 strong, 60–80% → 4/5 adequate, <60% → 1–3/5 gap.
@@ -302,6 +303,12 @@ function ComparisonPanel({ employee, fitData, roleId, projectId }) {
           </div>
         ))}
       </div>
+
+      <CapabilityFitRadar
+        fitData={fitData}
+        colorFor={simColor}
+        scoreFor={scoreOutOfFive}
+      />
 
       {/* Capability breakdown */}
       <div className="card">
@@ -1048,6 +1055,12 @@ export default function Frame4({
           </div>
         ))}
       </div>
+
+      <CapabilityFitRadar
+        fitData={fitData}
+        colorFor={simColor}
+        scoreFor={scoreOutOfFive}
+      />
 
       {/* Per-capability breakdown */}
       <div className="card">
