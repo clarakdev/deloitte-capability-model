@@ -7,6 +7,7 @@ import {
   getRoles,
   getSavedCapabilities,
   inferCapabilities,
+  loadCapabilities,
 } from "../api/api";
 import { supabase } from "../supabase";
 import TeamMemberDetail from "./TeamMemberDetail";
@@ -89,9 +90,17 @@ export default function TeamReportPage({ projectId, onBackToDashboard }) {
 
               if (roleTitle) {
                 try {
-                  await inferCapabilities(assignment.role_id, roleTitle, roleDescription);
+                  // Keep backend memory in sync with each role's saved
+                  // capabilities so the team report reflects the PM's chosen
+                  // skill set rather than a fresh auto-inferred one.
+                  const savedCaps = await getSavedCapabilities(assignment.role_id);
+                  if (savedCaps && savedCaps.length > 0) {
+                    await loadCapabilities(assignment.role_id, savedCaps);
+                  } else {
+                    await inferCapabilities(assignment.role_id, roleTitle, roleDescription);
+                  }
                 } catch (inferenceError) {
-                  console.warn("Could not re-infer capabilities:", inferenceError);
+                  console.warn("Could not load role capabilities:", inferenceError);
                 }
               }
 

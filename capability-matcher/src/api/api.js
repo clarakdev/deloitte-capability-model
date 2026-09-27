@@ -422,12 +422,35 @@ export async function getProjectAssignments(projectId) {
 }
 
 // Infer capabilities for Supabase roles
-
-export function inferCapabilities(roleId, title, description, topK = 5) {
+//
+// Runs AI inference only if the backend has no capability list stored yet;
+// otherwise the stored list (including the PM's edits) is returned unchanged.
+// Pass force = true to deliberately discard it and generate fresh suggestions.
+export function inferCapabilities(roleId, title, description, topK = 5, force = false) {
   return request(`/infer/${encodeURIComponent(roleId)}/capabilities`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, top_k: topK }),
+    body: JSON.stringify({ title, description, top_k: topK, force }),
+  })
+}
+
+// Pushes the persisted capability list (Supabase `capabilities`) into backend
+// matching memory, so candidate ranking and gap analysis use exactly the
+// capabilities the PM confirmed in Frame 2 — even after a backend restart.
+// Backend endpoint: POST /roles/{roleId}/capabilities/load
+export function loadCapabilities(roleId, capabilities) {
+  return request(`/roles/${encodeURIComponent(roleId)}/capabilities/load`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      capabilities: capabilities.map((cap) => ({
+        cap_id: cap.cap_id,
+        name: cap.name,
+        esco_description: cap.esco_description || '',
+        weight: cap.weight,
+        is_inferred: !!cap.is_inferred,
+      })),
+    }),
   })
 }
 
