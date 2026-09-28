@@ -94,7 +94,7 @@ export function searchEsco(query) {
 //     filtered on the backend before the 25-candidate cap, same as the other filters)
 // The match_score (0–1) is computed by the backend's matching engine.
 // Backend endpoint: GET /roles/{roleId}/candidates
-export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null, projectEndDate = null, locations = [], roleLevels = [], requiredPercentage) {
+export function getCandidates(roleId, availableOnly = false, requirePriorExp = false, projectStartDate = null, projectEndDate = null, locations = [], roleLevels = [], requiredPercentage = null) {
   let url = `/roles/${roleId}/candidates?available_only=${availableOnly}&require_prior_experience=${requirePriorExp}`
   if (projectStartDate) url += `&project_start_date=${projectStartDate}`
   if (projectEndDate) url += `&project_end_date=${projectEndDate}`
