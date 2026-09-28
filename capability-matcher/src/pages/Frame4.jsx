@@ -18,16 +18,25 @@ import {
   saveAssignment,
   requestLLMReport,
   inferCapabilities,
+  getSavedCapabilities,
+  loadCapabilities,
 } from "../api/api";
+import CapabilityFitRadar from "../components/CapabilityFitRadar";
 
+// Gap score colours line up with the 1–5 gap score bands:
+// >80% → 5/5 strong, 60–80% → 4/5 adequate, <60% → 1–3/5 gap.
 function simColor(sim, isGap) {
-  if (isGap) return "#e05252";
-  if (sim >= 0.85) return "#86BC25";
-  return "#5b9bd5";
+  if (isGap || sim < 0.6) return "#e05252";
+  if (sim <= 0.8) return "#5b9bd5";
+  return "#86BC25";
 }
 
 function scoreOutOfFive(score) {
   return Math.ceil(Math.max(0, Math.min(1, score)) * 5);
+}
+
+function scoreOutOfTen(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 10);
 }
 
 function WeightDots({ weight }) {
@@ -168,7 +177,7 @@ function ComparisonPanel({ employee, fitData, roleId, projectId }) {
                 color: "#86BC25",
               }}
             >
-              {scoreOutOfFive(employee.match_score)}/5
+              {scoreOutOfTen(employee.match_score)}/10
             </div>
 
             <div style={{ fontSize: 10, color: "#999" }}>overall match</div>
@@ -294,6 +303,12 @@ function ComparisonPanel({ employee, fitData, roleId, projectId }) {
           </div>
         ))}
       </div>
+
+      <CapabilityFitRadar
+        fitData={fitData}
+        colorFor={simColor}
+        scoreFor={scoreOutOfFive}
+      />
 
       {/* Capability breakdown */}
       <div className="card">
@@ -489,29 +504,40 @@ export default function Frame4({
       setError(null);
 
       try {
-        // Step 1 — load role from Supabase to get title and description
-        // needed to re-infer capabilities if backend was restarted
-        let roleTitle = selectedRole?.title || "";
-        let roleDescription = selectedRole?.description || "";
+        // Step 1 — make sure backend matching memory holds the capabilities
+        // the PM confirmed in Frame 2. The gap analysis below must describe
+        // that list exactly, so the persisted capabilities are loaded into the
+        // backend (no re-inference — that would discard user edits).
+        let saved = [];
+        try {
+          saved = await getSavedCapabilities(roleId);
+        } catch (e) {
+          console.warn("Could not load saved capabilities:", e);
+        }
 
-        if (!roleTitle && roleId) {
+        if (saved && saved.length > 0) {
+          try {
+            await loadCapabilities(roleId, saved);
+          } catch (e) {
+            console.warn("Could not sync capabilities to backend:", e);
+          }
+        } else if (roleId) {
+          // Nothing saved for this role (e.g. legacy hardcoded roles) — make
+          // sure the backend has a capability list at all before matching.
           const { data } = await supabase
             .from("roles")
             .select("title, description")
             .eq("id", roleId)
             .single();
-          if (data) {
-            roleTitle = data.title;
-            roleDescription = data.description;
-          }
-        }
-
-        // Step 2 — re-infer capabilities into FastAPI memory
-        if (roleTitle) {
-          try {
-            await inferCapabilities(roleId, roleTitle, roleDescription);
-          } catch (e) {
-            console.warn("Could not re-infer capabilities:", e);
+          const roleTitle = selectedRole?.title || data?.title || "";
+          const roleDescription =
+            selectedRole?.description || data?.description || "";
+          if (roleTitle) {
+            try {
+              await inferCapabilities(roleId, roleTitle, roleDescription);
+            } catch (e) {
+              console.warn("Could not infer capabilities:", e);
+            }
           }
         }
 
@@ -793,7 +819,7 @@ export default function Frame4({
                 background: "#86BC25",
               }}
             />
-            Strong match (≥85%)
+            Strong match (&gt;80%)
           </span>
 
           <span
@@ -811,7 +837,7 @@ export default function Frame4({
                 background: "#5b9bd5",
               }}
             />
-            Adequate (60–84%)
+            Adequate (60–80%)
           </span>
 
           <span
@@ -900,7 +926,7 @@ export default function Frame4({
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#86BC25" }}>
-                {scoreOutOfFive(employee.match_score)}/5
+                {scoreOutOfTen(employee.match_score)}/10
               </div>
               <div style={{ fontSize: 10, color: "#999999" }}>
                 overall match
@@ -1030,6 +1056,12 @@ export default function Frame4({
         ))}
       </div>
 
+      <CapabilityFitRadar
+        fitData={fitData}
+        colorFor={simColor}
+        scoreFor={scoreOutOfFive}
+      />
+
       {/* Per-capability breakdown */}
       <div className="card">
         <div className="card-head">
@@ -1153,7 +1185,7 @@ export default function Frame4({
               background: "#86BC25",
             }}
           />
-          Strong match (≥85%)
+          Strong match (&gt;80%)
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <div
@@ -1164,7 +1196,7 @@ export default function Frame4({
               background: "#5b9bd5",
             }}
           />
-          Adequate (60–84%)
+          Adequate (60–80%)
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <div

@@ -10,6 +10,7 @@ import {
   searchEsco,
   saveCapabilities,
   getSavedCapabilities,
+  loadCapabilities,
 } from "../api/api";
 
 export default function Frame2({ roleId, role, topK = 5, onBack, onNext }) {
@@ -41,8 +42,14 @@ export default function Frame2({ roleId, role, topK = 5, onBack, onNext }) {
         if (role?.title) {
           const saved = await getSavedCapabilities(roleId);
           if (saved && saved.length > 0) {
-            // Sync saved caps into FastAPI memory
-            await inferCapabilities(roleId, role.title, role.description, topK);
+            // Load the saved caps into FastAPI memory so add/remove/edit
+            // operate on exactly the list shown here, and so the matching
+            // engine (Frames 3–4) keeps using the PM's chosen capabilities.
+            try {
+              await loadCapabilities(roleId, saved);
+            } catch (syncError) {
+              console.warn("Could not load saved capabilities:", syncError);
+            }
             // Use saved caps for display
             setCaps(
               saved.map((c) => ({
@@ -56,12 +63,15 @@ export default function Frame2({ roleId, role, topK = 5, onBack, onNext }) {
             setLoading(false);
             return;
           }
-          // No saved caps — infer fresh from AI with topK
+          // No saved caps — infer fresh from AI with topK. force = true so a
+          // stale in-memory list from an abandoned earlier visit cannot
+          // override the requested suggestion count.
           const data = await inferCapabilities(
             roleId,
             role.title,
             role.description,
             topK,
+            true,
           );
           setCaps(data);
         } else {

@@ -12,7 +12,12 @@ In-memory state
 Capability lists are stored in `_capability_state` (role_id → list[dict]).
 They are populated lazily on the first GET /roles/{id}/capabilities call by
 running capability inference. All POST/PUT/DELETE mutations update this dict.
-State is reset when the server restarts (by design for this sprint).
+State is reset when the server restarts (by design for this sprint); clients
+restore a persisted list with POST /roles/{id}/capabilities/load.
+
+Once a capability list exists it is authoritative: POST /infer/{id}/capabilities
+returns it unchanged (user edits included) and only runs inference when no list
+is stored yet, unless `force` is explicitly requested.
 
 ESCO attribution (required)
 ----------------------------
@@ -186,6 +191,20 @@ class AddCapabilityIn(BaseModel):
 class UpdateCapabilityIn(BaseModel):
     weight: int | None = Field(default=None, ge=1, le=5)
     esco_uri: str | None = None  # provide to swap to a different ESCO skill
+
+
+class SavedCapabilityIn(BaseModel):
+    """A capability record persisted by the client (Supabase `capabilities`)."""
+
+    cap_id: str
+    name: str
+    esco_description: str = ""
+    weight: int = Field(default=3, ge=1, le=5)
+    is_inferred: bool = False
+
+
+class LoadCapabilitiesIn(BaseModel):
+    capabilities: list[SavedCapabilityIn]
 
 
 class CandidateOut(BaseModel):
@@ -363,12 +382,12 @@ def _esco_skill_to_out(s: dict) -> EscoSkillOut:
     )
 
 
-def _hydrate_report_capabilities(
-    capabilities: list[TeamReportCapabilityIn],
-) -> list[dict]:
+def _hydrate_capabilities(capabilities: list) -> list[dict]:
     """
-    Convert saved Supabase capabilities into the full capability structure
-    required by analyse_fit(), including ESCO embeddings.
+    Convert persisted capability records (Supabase rows saved by the frontend,
+    request payloads or TeamReportCapabilityIn models) into the full capability
+    structure required by analyse_fit() and the matching engine, including
+    ESCO embeddings.
     """
     uri_to_index = get_uri_to_index()
     esco_embeddings = get_esco_embeddings()
@@ -649,6 +668,9 @@ class InferCapabilitiesIn(BaseModel):
     title: str
     description: str
     top_k: int = 5  # default 5, range 1-10
+    # True discards any stored (possibly user-edited) list and re-infers.
+    # Leave false for "make sure capabilities are loaded" calls.
+    force: bool = False
 
 
 @app.post(
@@ -661,13 +683,36 @@ def infer_capabilities_from_description(role_id: str, body: InferCapabilitiesIn)
     """
     Infer capabilities for any role using its title and description.
     Used for roles coming from Supabase that are not in project.json.
-    On subsequent calls returns the cached capability list if it exists.
+    Returns the stored capability list if one exists, so PM edits survive
+    repeated calls. Set `force` to discard the stored list and re-infer.
     """
     cached = _capability_state.get(role_id)
-    if cached is None or len(cached) != body.top_k:
+    if cached is None or body.force:
         _capability_state[role_id] = infer_capabilities(
             body.title, body.description, top_k=max(1, min(10, body.top_k))
         )
+    return [_cap_to_out(c) for c in _capability_state[role_id]]
+
+
+@app.post(
+    "/roles/{role_id}/capabilities/load",
+    response_model=list[CapabilityOut],
+    tags=["Capabilities"],
+    summary="Load a persisted capability list into matching memory",
+)
+def load_capabilities(role_id: str, body: LoadCapabilitiesIn):
+    """
+    Restore a role's persisted capability list (Supabase `capabilities`) into
+    the in-memory state that the matching engine reads.
+
+    Called by the frontend before matching so the ranking, gap analysis and LLM
+    reports run against the PM's chosen capabilities — including after a backend
+    restart, when the in-memory state has been reset.
+
+    Supplying an empty list clears the role's capabilities.
+    """
+    _capability_state[role_id] = _hydrate_capabilities(body.capabilities)
+    _invalidate_llm_cache(role_id)
     return [_cap_to_out(c) for c in _capability_state[role_id]]
 
 
@@ -1191,7 +1236,7 @@ async def generate_project_team_report(
                 detail=(f"Role '{role.title}' has no saved capabilities."),
             )
 
-        capabilities = _hydrate_report_capabilities(role.capabilities)
+        capabilities = _hydrate_capabilities(role.capabilities)
 
         fit_report = analyse_fit(
             capabilities,

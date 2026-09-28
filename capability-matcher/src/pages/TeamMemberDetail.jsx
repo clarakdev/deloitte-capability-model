@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCandidateFit } from "../api/api";
+import CapabilityFitRadar from "../components/CapabilityFitRadar";
 
 function scoreOutOfFive(score) {
   return Math.ceil(Math.max(0, Math.min(1, Number(score) || 0)) * 5);
@@ -76,6 +77,10 @@ export default function TeamMemberDetail({ employee, roleId, onBack, initialNote
       <div className="page-sub">
         {[employee.title, employee.business_unit, employee.location].filter(Boolean).join(" · ")}
       </div>
+
+      {fitData.length > 0 && (
+        <CapabilityFitRadar fitData={fitData} colorFor={simColor} scoreFor={scoreOutOfFive} />
+      )}
 
       <section className="card">
         <div className="card-head">

@@ -60,8 +60,8 @@ function scoreColor(score) {
   return { bg: "#2a1e0a", color: "#d4922a" };
 }
 
-function scoreOutOfFive(score) {
-  return Math.ceil(Math.max(0, Math.min(1, score)) * 5);
+function scoreOutOfTen(score) {
+  return Math.ceil(Math.max(0, Math.min(1, score)) * 10);
 }
 
 export default function Frame3({
@@ -524,7 +524,7 @@ export default function Frame3({
                       borderRadius: 20,
                     }}
                   >
-                    {scoreOutOfFive(c.match_score)}/5
+                    {scoreOutOfTen(c.match_score)}/10
                   </span>
 
                   <div style={{ display: "flex", gap: 5 }}>
