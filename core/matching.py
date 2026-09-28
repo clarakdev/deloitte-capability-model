@@ -165,7 +165,7 @@ def rank_candidates(
             "available_from": None,  # populated in get_candidates (US033)
             "remaining_capacity": emp.get("remaining_capacity", 100), #US040
             "capacity_status":    emp.get("capacity_status"), #US040
-            "business_chemistry":   emp.get("business_chemistry"),
+            "business_chemistry":   emp.get("business_chemistry", None),
         })
 
     results.sort(key=lambda x: x["match_score"], reverse=True)
