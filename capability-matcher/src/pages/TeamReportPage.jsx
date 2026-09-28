@@ -62,6 +62,8 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
   const [rmNotes, setRmNotes] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [memberNotes, setMemberNotes] = useState({});
+  const [chemistryReport, setChemistryReport]     = useState(null)
+  const [generatingChemistry, setGeneratingChemistry] = useState(false)
 
   useEffect(() => {
     async function loadReport() {
@@ -259,6 +261,36 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
     return `${point.x},${point.y}`;
   }).join(" ");
 
+  async function handleGenerateChemistry() {
+    setGeneratingChemistry(true)
+    try {
+      const counts = { Pioneer: 0, Guardian: 0, Driver: 0, Integrator: 0 }
+      team.forEach(a => {
+        if (a.business_chemistry && counts[a.business_chemistry] !== undefined) {
+          counts[a.business_chemistry]++
+        }
+      })
+
+      const res = await fetch(`http://localhost:8000/projects/${projectId}/chemistry-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          chemistry_counts: counts,
+          project_name: projectName,
+        })
+      })
+      const data = await res.json()
+      setChemistryReport(data.team_dynamics)
+    } catch (e) {
+      console.error('Chemistry report error:', e)
+    } finally {
+      setGeneratingChemistry(false)
+    }
+  }
+
   return (
     <div className="page">
       <div className="card-head">
@@ -286,7 +318,7 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
       </div>
       {reportError && <div className="error" style={{ padding: "0 0 14px" }}>{reportError}</div>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <section className="card">
           <div className="card-head">
             <div className="card-title">Team Capability Match</div>
@@ -403,6 +435,139 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
           </div>
         </section>
       </div>
+
+      {/* Team Business Chemistry */}
+        <div style={{
+          background: '#1a1a1a', border: '1px solid #2a2a2a',
+          borderRadius: 10, padding: 18,  marginBottom: 16,
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', marginBottom: 14,
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#e0e0e0' }}>
+              Team Business Chemistry
+            </span>
+            <span style={{ fontSize: 10, color: '#86BC25', fontWeight: 600 }}>
+              DELOITTE
+            </span>
+          </div>
+
+          {(() => {
+            const types = {
+              Pioneer:    { color: '#EF9F27', desc: 'Values possibilities and spark of new ideas' },
+              Guardian:   { color: '#5b9bd5', desc: 'Values stability, thoroughness and best practice' },
+              Driver:     { color: '#e05252', desc: 'Values challenge, momentum and results' },
+              Integrator: { color: '#86BC25', desc: 'Values relationships, harmony and connection' },
+            }
+
+            const counts = { Pioneer: 0, Guardian: 0, Driver: 0, Integrator: 0 }
+            team.forEach(a => {
+              if (a.business_chemistry && counts[a.business_chemistry] !== undefined) {
+                counts[a.business_chemistry]++
+              }
+            })
+
+            return (
+              <>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  gap: 8, marginBottom: 14,
+                }}>
+                  {Object.entries(types).map(([type, { color, desc }]) => (
+                    <div key={type} style={{
+                      background: '#111', borderRadius: 8, padding: '10px 12px',
+                      border: `1px solid ${counts[type] > 0 ? color + '44' : '#222'}`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, color,
+                          background: color + '22', borderRadius: 4,
+                          padding: '2px 7px',
+                        }}>
+                          {type[0]}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#d0d0d0' }}>
+                          {type}
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 700, color }}>
+                          {counts[type]}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 10, color: '#666', lineHeight: 1.4 }}>
+                        {desc}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Composition bar */}
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, color: '#666', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Team composition
+                  </div>
+                  <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', gap: 1 }}>
+                    {Object.entries(types).map(([type, { color }]) => (
+                      counts[type] > 0 && (
+                        <div key={type} style={{ flex: counts[type], background: color, borderRadius: 2 }} />
+                      )
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+                    {Object.entries(types).map(([type, { color }]) => (
+                      <span key={type} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#666' }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {team.some(a => !a.business_chemistry) && (
+                  <div style={{ fontSize: 10, color: '#555', marginTop: 8, fontStyle: 'italic' }}>
+                    {team.filter(a => !a.business_chemistry).length} team member(s) have no chemistry type assigned.
+                  </div>
+                )}
+                
+                {/* Generate chemistry analysis button */}
+                <button
+                  onClick={chemistryReport ? () => setChemistryReport(null) : handleGenerateChemistry}
+                  disabled={generatingChemistry}
+                  style={{
+                    marginTop: 12, width: '100%',
+                    background: generatingChemistry ? '#1a1a1a' : '#1e2a14',
+                    border: '1px solid #86BC25',
+                    borderRadius: 6, padding: '7px 0',
+                    fontSize: 11, fontWeight: 600, color: '#86BC25',
+                    cursor: generatingChemistry ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    opacity: generatingChemistry ? 0.6 : 1,
+                  }}
+                >
+                  {generatingChemistry
+                    ? 'Analysing team dynamics…'
+                    : chemistryReport
+                    ? 'Hide team dynamics ▲'
+                    : 'Generate team dynamics ▼'}
+                </button>
+
+                {/* Chemistry AI result */}
+                {chemistryReport && chemistryReport.length > 0 && (
+                  <div style={{ marginTop: 12, borderTop: '1px solid #222', paddingTop: 12 }}>
+                    <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                      Team Dynamics Analysis
+                    </div>
+                    {chemistryReport.map((point, i) => (
+                      <div key={i} style={{ fontSize: 11, color: '#aaaaaa', lineHeight: 1.6, marginBottom: 6, paddingLeft: 8, borderLeft: '2px solid #86BC25' }}>
+                        {point}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </div>
 
       <section className="card">
         <div className="card-head"><div className="card-title">Executive Summary</div></div>

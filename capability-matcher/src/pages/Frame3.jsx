@@ -69,7 +69,7 @@ export default function Frame3({
   projectId,
   projectStartDate,
   projectEndDate,
-  requiredPercentage,
+  requiredPercentage = 100,
   onBack,
   onNext,
 }) {
@@ -108,6 +108,7 @@ export default function Frame3({
       projectEndDate,
       selectedLocations,
       selectedRoleLevels,
+      requiredPercentage,
     )
       .then(setCandidates)
       .catch(() =>
@@ -120,6 +121,7 @@ export default function Frame3({
     priorExpOnly,
     projectStartDate,
     projectEndDate,
+    requiredPercentage,
     selectedLocations,
     selectedRoleLevels,
   ]);
@@ -416,8 +418,7 @@ export default function Frame3({
             c.remaining_capacity <= 0;
           const isUnderCapacity =
             requiredPercentage != null &&
-            requiredPercentage < 100 &&
-            c.remaining_capacity > 0 &&
+            c.remaining_capacity != null &&
             c.remaining_capacity < requiredPercentage;
           const rpt = reports[c.employee_id];
           const showPanel =
