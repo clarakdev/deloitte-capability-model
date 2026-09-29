@@ -424,7 +424,7 @@ def _create_radar_chart(
     # Legend
     # ------------------------------------------------------------
 
-    legend_ax = fig.add_axes([0.53, 0.08, 0.45, 0.84])
+    legend_ax = fig.add_axes([0.56, 0.08, 0.42, 0.84])
 
     legend_ax.axis("off")
 
@@ -485,7 +485,7 @@ def _create_radar_chart(
         sublabel = item.get("sublabel")
 
         if sublabel:
-            sublabel_y = label_y + (unit_height * 0.35)
+            sublabel_y = label_y + (unit_height * 0.22)
 
             legend_ax.text(
                 0.09,
