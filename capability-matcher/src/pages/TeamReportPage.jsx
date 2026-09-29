@@ -74,9 +74,10 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
       setError(null);
 
       try {
-        const [assignments, projects] = await Promise.all([
+        const [assignments, projects, roles] = await Promise.all([
           getProjectAssignments(projectId),
           getAllProjects(),
+          getRoles(projectId),
         ]);
 
         const projectRecord = (projects || []).find(
@@ -85,22 +86,24 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
         setProject(projectRecord || null);
         setProjectName(projectRecord?.name || "Project Report");
 
-        const resolvedTeam = (
-          await Promise.all(
-            (assignments || []).map(async (assignment) => {
-              let roleTitle = "";
-              let roleDescription = "";
+        const assignmentsByRole = new Map(
+  (assignments || []).map((assignment) => [
+    assignment.role_id,
+    assignment,
+  ]),
+);
 
-              const { data: role } = await supabase
-                .from("roles")
-                .select("title, description")
-                .eq("id", assignment.role_id)
-                .single();
+const resolvedTeam = (
+  await Promise.all(
+    (roles || []).map(async (role) => {
+      const assignment = assignmentsByRole.get(role.id);
 
-              if (role) {
-                roleTitle = role.title || "";
-                roleDescription = role.description || "";
-              }
+      // A role without a saved employee assignment is not part of
+      // the proposed team yet.
+      if (!assignment) return null;
+
+      const roleTitle = role.title || "";
+      const roleDescription = role.description || "";
 
               if (roleTitle) {
                 try {
