@@ -1317,6 +1317,7 @@ async def generate_project_team_report(
                 "role_title": role.title,
                 "role_description": role.description,
                 "employee": employee,
+                "business_chemistry": employee.get("business_chemistry"),
                 "match_score": float(role.assignment.match_score),
                 "fit_report": fit_report,
                 "avg_fit": avg_fit,

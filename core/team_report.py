@@ -6,6 +6,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from io import BytesIO
+import math
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -18,6 +25,14 @@ DELOITTE_GREEN = "86BC25"
 DARK_GREY = "333333"
 LIGHT_GREY = "F2F2F2"
 MID_GREY = "666666"
+
+CHART_GREEN = "#86BC25"
+CHART_BLUE = "#5B9BD5"
+CHART_RED = "#E05252"
+CHART_ORANGE = "#D4922A"
+CHART_PURPLE = "#8460AD"
+CHART_GRID = "#D9D9D9"
+CHART_TEXT = "#333333"
 
 
 def _set_cell_shading(cell, fill: str) -> None:
@@ -174,9 +189,507 @@ def _add_team_metrics(
     document.add_paragraph()
 
 
+def _score_out_of_five(score: float) -> int:
+    """Match the frontend scoreOutOfFive() behaviour."""
+    value = max(0.0, min(1.0, float(score or 0)))
+    return math.ceil(value * 5)
+
+
+def _score_out_of_ten(score: float) -> int:
+    """Match the team-report /10 display."""
+    value = max(0.0, min(1.0, float(score or 0)))
+    return math.ceil(value * 10)
+
+
+def _add_chart_image(
+    document: Document,
+    image: BytesIO,
+    width: float = 6.4,
+) -> None:
+    """Insert an in-memory chart image into the DOCX."""
+    image.seek(0)
+
+    paragraph = document.add_paragraph()
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    paragraph.paragraph_format.space_after = Pt(6)
+
+    run = paragraph.add_run()
+    run.add_picture(image, width=Inches(width))
+
+
+def _create_radar_chart(
+    items: list[dict],
+    *,
+    threshold: float | None = None,
+    threshold_label: str | None = None,
+) -> BytesIO | None:
+    """
+    Generate a Word-friendly equivalent of the React RadarChart.
+
+    items:
+        {
+            "label": str,
+            "sublabel": str | None,
+            "value": float 0..1,
+            "display_value": str,
+            "is_gap": bool,
+        }
+
+    The frontend uses numbered vertices because long role/capability
+    names are displayed in a separate legend. This does the same.
+    """
+
+    if len(items) < 3:
+        return None
+
+    count = len(items)
+
+    values = [max(0.0, min(1.0, float(item.get("value", 0) or 0))) for item in items]
+
+    angles = np.linspace(
+        0,
+        2 * np.pi,
+        count,
+        endpoint=False,
+    ).tolist()
+
+    closed_angles = angles + angles[:1]
+    closed_values = values + values[:1]
+
+    # Give the legend more vertical room for larger capability sets.
+    height = max(3.5, min(6.0, 2.5 + count * 0.32))
+
+    fig = plt.figure(
+        figsize=(7.2, height),
+        dpi=180,
+        facecolor="white",
+    )
+
+    # ------------------------------------------------------------
+    # Radar
+    # ------------------------------------------------------------
+
+    ax = fig.add_axes(
+        [0.04, 0.15, 0.47, 0.72],
+        polar=True,
+    )
+
+    # First axis points upwards, matching RadarChart.jsx.
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+
+    ax.set_ylim(0, 1)
+
+    # Same five levels as frontend:
+    # 20%, 40%, 60%, 80%, 100%.
+    ax.set_yticks(
+        [
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1.0,
+        ]
+    )
+
+    ax.set_yticklabels([])
+
+    ax.grid(
+        color=CHART_GRID,
+        linewidth=0.8,
+    )
+
+    ax.spines["polar"].set_color(CHART_GRID)
+
+    # Numbered axes.
+    ax.set_xticks(angles)
+    ax.set_xticklabels(
+        [str(index + 1) for index in range(count)],
+        fontsize=8,
+        fontweight="bold",
+        color=CHART_TEXT,
+    )
+
+    # Main green fit polygon.
+    ax.plot(
+        closed_angles,
+        closed_values,
+        color=CHART_GREEN,
+        linewidth=2,
+        zorder=3,
+    )
+
+    ax.fill(
+        closed_angles,
+        closed_values,
+        color=CHART_GREEN,
+        alpha=0.16,
+        zorder=2,
+    )
+
+    # Individual data points.
+    for index, value in enumerate(values):
+        item = items[index]
+
+        point_color = CHART_RED if item.get("is_gap") else CHART_GREEN
+
+        ax.scatter(
+            [angles[index]],
+            [value],
+            s=24,
+            color=point_color,
+            edgecolors="white",
+            linewidths=0.6,
+            zorder=5,
+        )
+
+    # Optional gap threshold.
+    if threshold is not None:
+        threshold = max(
+            0.0,
+            min(1.0, float(threshold)),
+        )
+
+        threshold_values = [threshold] * count
+        threshold_values.append(threshold_values[0])
+
+        ax.plot(
+            closed_angles,
+            threshold_values,
+            color=CHART_RED,
+            linewidth=1.2,
+            linestyle=(0, (3, 3)),
+            alpha=0.7,
+            zorder=4,
+        )
+
+    # ------------------------------------------------------------
+    # Legend
+    # ------------------------------------------------------------
+
+    legend_ax = fig.add_axes([0.55, 0.08, 0.42, 0.84])
+
+    legend_ax.axis("off")
+
+    row_height = min(
+        0.12,
+        0.82 / max(count, 1),
+    )
+
+    y = 0.95
+
+    for index, item in enumerate(items):
+        is_gap = bool(item.get("is_gap"))
+
+        number_color = CHART_RED if is_gap else CHART_GREEN
+
+        legend_ax.text(
+            0.00,
+            y,
+            str(index + 1),
+            fontsize=8,
+            fontweight="bold",
+            color=number_color,
+            va="top",
+        )
+
+        legend_ax.text(
+            0.08,
+            y,
+            str(item.get("label") or ""),
+            fontsize=7.5,
+            fontweight="bold",
+            color=CHART_TEXT,
+            va="top",
+            wrap=True,
+        )
+
+        legend_ax.text(
+            1.00,
+            y,
+            str(item.get("display_value") or ""),
+            fontsize=8,
+            fontweight="bold",
+            color=number_color,
+            va="top",
+            ha="right",
+        )
+
+        sublabel = item.get("sublabel")
+
+        if sublabel:
+            legend_ax.text(
+                0.08,
+                y - 0.035,
+                str(sublabel),
+                fontsize=6.5,
+                color=CHART_RED if is_gap else "#777777",
+                va="top",
+            )
+
+        y -= row_height
+
+    if threshold is not None and threshold_label:
+        legend_ax.text(
+            0.00,
+            0.015,
+            f"- - -  {threshold_label}",
+            fontsize=7,
+            color=CHART_RED,
+            va="bottom",
+        )
+
+    output = BytesIO()
+
+    fig.savefig(
+        output,
+        format="png",
+        dpi=180,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+
+    plt.close(fig)
+
+    output.seek(0)
+
+    return output
+
+
+def _add_team_capability_radar(
+    document: Document,
+    entries: list[dict],
+) -> None:
+    items = []
+
+    for entry in entries:
+        score = max(
+            0.0,
+            min(
+                1.0,
+                float(entry.get("match_score", 0) or 0),
+            ),
+        )
+
+        employee = entry.get("employee", {}) or {}
+
+        items.append(
+            {
+                "label": entry.get("role_title", "Role"),
+                "sublabel": employee.get("name", ""),
+                "value": score,
+                "display_value": f"{_score_out_of_ten(score)}/10",
+                "is_gap": False,
+            }
+        )
+
+    radar = _create_radar_chart(items)
+
+    if radar is None:
+        return
+
+    _add_chart_image(
+        document,
+        radar,
+        width=6.4,
+    )
+
+    if entries:
+        average = sum(
+            float(entry.get("match_score", 0) or 0) for entry in entries
+        ) / len(entries)
+
+        paragraph = document.add_paragraph()
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        paragraph.paragraph_format.space_after = Pt(8)
+
+        run = paragraph.add_run(
+            f"Average role fit: {_score_out_of_ten(average):.1f}/10"
+        )
+
+        run.bold = True
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor.from_string(DELOITTE_GREEN)
+
+
+def _get_business_chemistry_counts(
+    entries: list[dict],
+) -> dict[str, int]:
+    counts = {
+        "Pioneer": 0,
+        "Guardian": 0,
+        "Driver": 0,
+        "Integrator": 0,
+    }
+
+    for entry in entries:
+        employee = entry.get("employee", {}) or {}
+
+        chemistry = employee.get("business_chemistry") or entry.get(
+            "business_chemistry"
+        )
+
+        if chemistry in counts:
+            counts[chemistry] += 1
+
+    return counts
+
+
+def _add_business_chemistry(
+    document: Document,
+    entries: list[dict],
+) -> None:
+    counts = _get_business_chemistry_counts(entries)
+
+    total = sum(counts.values())
+
+    if total == 0:
+        paragraph = document.add_paragraph(
+            "Business Chemistry information is not available for this team."
+        )
+
+        for run in paragraph.runs:
+            run.font.name = "Arial"
+            run.font.size = Pt(9)
+            run.font.color.rgb = RGBColor.from_string(MID_GREY)
+
+        return
+
+    chemistry = [
+        ("Pioneer", CHART_ORANGE),
+        ("Guardian", CHART_BLUE),
+        ("Driver", CHART_RED),
+        ("Integrator", CHART_GREEN),
+    ]
+
+    fig, ax = plt.subplots(
+        figsize=(7.2, 1.45),
+        dpi=180,
+        facecolor="white",
+    )
+
+    left = 0.0
+
+    for label, color in chemistry:
+        count = counts[label]
+
+        if count == 0:
+            continue
+
+        percentage = count / total * 100
+
+        ax.barh(
+            [0],
+            [percentage],
+            left=left,
+            color=color,
+            height=0.35,
+        )
+
+        if percentage >= 12:
+            ax.text(
+                left + percentage / 2,
+                0,
+                f"{round(percentage)}%",
+                ha="center",
+                va="center",
+                fontsize=8,
+                fontweight="bold",
+                color="white",
+            )
+
+        left += percentage
+
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-0.65, 0.65)
+    ax.axis("off")
+
+    legend = "     ".join(f"{label}: {counts[label]}" for label, _ in chemistry)
+
+    ax.text(
+        50,
+        -0.48,
+        legend,
+        ha="center",
+        va="center",
+        fontsize=7.5,
+        color=CHART_TEXT,
+    )
+
+    output = BytesIO()
+
+    fig.savefig(
+        output,
+        format="png",
+        dpi=180,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+
+    plt.close(fig)
+
+    output.seek(0)
+
+    _add_chart_image(
+        document,
+        output,
+        width=6.4,
+    )
+
+
+def _add_individual_capability_radar(
+    document: Document,
+    fit_report: list[dict],
+) -> None:
+    items = []
+
+    for index, fit in enumerate(fit_report or []):
+        similarity = max(
+            0.0,
+            min(
+                1.0,
+                float(fit.get("similarity", 0) or 0),
+            ),
+        )
+
+        is_gap = bool(fit.get("is_gap"))
+
+        items.append(
+            {
+                "label": (
+                    fit.get("cap_name") or fit.get("name") or f"Capability {index + 1}"
+                ),
+                "sublabel": ("Gap - upskilling needed" if is_gap else None),
+                "value": similarity,
+                "display_value": f"{_score_out_of_five(similarity)}/5",
+                "is_gap": is_gap,
+            }
+        )
+
+    radar = _create_radar_chart(
+        items,
+        threshold=0.6,
+        threshold_label="Gap threshold (60%)",
+    )
+
+    if radar is None:
+        return
+
+    _add_chart_image(
+        document,
+        radar,
+        width=6.2,
+    )
+
+
 def _add_role_level_distribution(document: Document, entries: list[dict]) -> None:
     groups = [
-        ("Senior Consultant & below", {"Analyst", "Consultant", "Senior Consultant"}, "86BC25"),
+        (
+            "Senior Consultant & below",
+            {"Analyst", "Consultant", "Senior Consultant"},
+            "86BC25",
+        ),
         ("Manager–Director", {"Manager", "Senior Manager", "Director"}, "3478B8"),
         ("Partner", {"Partner"}, "8460AD"),
     ]
@@ -198,13 +711,21 @@ def _add_role_level_distribution(document: Document, entries: list[dict]) -> Non
         cell = bar.rows[0].cells[index]
         cell.width = width
         _set_cell_shading(cell, color)
-        _set_cell_text(cell, f"{count} ({count / total:.0%})" if count else "", color="FFFFFF", bold=True, size=9)
+        _set_cell_text(
+            cell,
+            f"{count} ({count / total:.0%})" if count else "",
+            color="FFFFFF",
+            bold=True,
+            size=9,
+        )
 
     legend = document.add_table(rows=1, cols=len(groups))
     legend.autofit = False
     for index, ((label, _, color), count) in enumerate(zip(groups, counts)):
         cell = legend.rows[0].cells[index]
-        _set_cell_text(cell, f"{label}: {count} ({count / total:.0%})", color=color, size=8)
+        _set_cell_text(
+            cell, f"{label}: {count} ({count / total:.0%})", color=color, size=8
+        )
 
     document.add_paragraph()
 
@@ -659,7 +1180,6 @@ def build_team_report_docx(
     worked_together_count: int | None = None,
     rm_notes: str | None = None,
 ) -> BytesIO:
-    
     """
     Build the final Team Capability Report and return it as an in-memory DOCX.
     """
@@ -730,9 +1250,46 @@ def build_team_report_docx(
 
     _add_section_heading(document, "Proposed Team")
 
-    _add_team_overview_table(document, entries)
-    _add_section_heading(document, "Role Level Distribution")
-    _add_role_level_distribution(document, entries)
+    _add_team_overview_table(
+        document,
+        entries,
+    )
+
+    # ── Team capability radar ─────────────────────────────────────────────
+
+    _add_section_heading(
+        document,
+        "Team Capability Match",
+    )
+
+    _add_team_capability_radar(
+        document,
+        entries,
+    )
+
+    # ── Role level distribution ───────────────────────────────────────────
+
+    _add_section_heading(
+        document,
+        "Role Level Distribution",
+    )
+
+    _add_role_level_distribution(
+        document,
+        entries,
+    )
+
+    # ── Business Chemistry ─────────────────────────────────────────────────
+
+    _add_section_heading(
+        document,
+        "Team Business Chemistry",
+    )
+
+    _add_business_chemistry(
+        document,
+        entries,
+    )
 
     average_team_match = (
         round(sum(entry["match_score"] for entry in entries) / len(entries) * 100)
@@ -758,7 +1315,11 @@ def build_team_report_docx(
         team_summary,
     )
 
-    if worked_together_score is not None or worked_together_count is not None or rm_notes:
+    if (
+        worked_together_score is not None
+        or worked_together_count is not None
+        or rm_notes
+    ):
         _add_section_heading(document, "Resource Manager's Assessment")
 
         if worked_together_count is not None:
@@ -781,7 +1342,6 @@ def build_team_report_docx(
                 run.font.name = "Arial"
                 run.font.size = Pt(9)
                 run.font.color.rgb = RGBColor.from_string(DARK_GREY)
-
 
     document.add_page_break()
 
@@ -838,14 +1398,35 @@ def build_team_report_docx(
                 f"{years} years",
             )
 
-        _add_fit_summary(document, entry)
+        _add_fit_summary(
+            document,
+            entry,
+        )
 
-        _add_section_heading(document, "Profile")
+        # ── Individual capability radar ─────────────────────────────────
+
+        _add_section_heading(
+            document,
+            "Capability Fit Profile",
+        )
+
+        _add_individual_capability_radar(
+            document,
+            entry["fit_report"],
+        )
+
+        _add_section_heading(
+            document,
+            "Profile",
+        )
 
         profile = document.add_paragraph(
             employee.get("summary", "") or "No employee summary recorded."
         )
+
         profile.paragraph_format.line_spacing = 1.15
+
+        # ── Detailed capability alignment ───────────────────────────────
 
         _add_section_heading(
             document,
