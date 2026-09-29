@@ -170,10 +170,16 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
           assignment,
         ]),
       );
+      const rolesById = new Map((roles || []).map((role) => [role.id, role]));
+
       const rolesForReport = await Promise.all(
-        (roles || []).map(async (role) => {
-          const capabilities = await getSavedCapabilities(role.id);
-          const assignment = assignmentsByRole.get(role.id);
+        team.map(async (member) => {
+          const role = rolesById.get(member.role_id);
+          const assignment = assignmentsByRole.get(member.role_id);
+
+          if (!role) {
+            throw new Error(`Role ${member.role_id} could not be found.`);
+          }
 
           if (
             !assignment?.employee_id ||
@@ -181,9 +187,11 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
             assignment.match_score === null
           ) {
             throw new Error(
-              `Missing saved assignment data for role ${role.id}.`,
+              `Missing saved assignment data for role ${member.role_id}.`,
             );
           }
+
+          const capabilities = await getSavedCapabilities(member.role_id);
 
           return {
             id: role.id,

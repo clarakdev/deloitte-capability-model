@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from io import BytesIO
 import math
+import textwrap
 
 import matplotlib
 
@@ -226,7 +227,7 @@ def _create_radar_chart(
     """
     Generate a Word-friendly equivalent of the React RadarChart.
 
-    items:
+    Each item contains:
         {
             "label": str,
             "sublabel": str | None,
@@ -244,7 +245,16 @@ def _create_radar_chart(
 
     count = len(items)
 
-    values = [max(0.0, min(1.0, float(item.get("value", 0) or 0))) for item in items]
+    values = [
+        max(
+            0.0,
+            min(
+                1.0,
+                float(item.get("value", 0) or 0),
+            ),
+        )
+        for item in items
+    ]
 
     angles = np.linspace(
         0,
@@ -256,8 +266,51 @@ def _create_radar_chart(
     closed_angles = angles + angles[:1]
     closed_values = values + values[:1]
 
-    # Give the legend more vertical room for larger capability sets.
-    height = max(3.5, min(6.0, 2.5 + count * 0.32))
+    # ------------------------------------------------------------
+    # Prepare legend text
+    # ------------------------------------------------------------
+
+    prepared_items = []
+
+    for item in items:
+        label = str(item.get("label") or "")
+
+        wrapped_label = textwrap.wrap(
+            label,
+            width=34,
+            break_long_words=False,
+            break_on_hyphens=False,
+        ) or [""]
+
+        prepared_items.append(
+            {
+                **item,
+                "_label_lines": wrapped_label,
+            }
+        )
+
+    # Each legend item reserves enough vertical space for:
+    # - all wrapped capability/role-name lines
+    # - optional gap text
+    row_units = []
+
+    for item in prepared_items:
+        units = len(item["_label_lines"])
+
+        if item.get("sublabel"):
+            units += 0.75
+
+        row_units.append(max(1.25, units))
+
+    total_units = sum(row_units)
+
+    height = max(
+        4.0,
+        min(
+            8.0,
+            2.5 + total_units * 0.38,
+        ),
+    )
 
     fig = plt.figure(
         figsize=(7.2, height),
@@ -303,6 +356,7 @@ def _create_radar_chart(
 
     # Numbered axes.
     ax.set_xticks(angles)
+
     ax.set_xticklabels(
         [str(index + 1) for index in range(count)],
         fontsize=8,
@@ -347,7 +401,10 @@ def _create_radar_chart(
     if threshold is not None:
         threshold = max(
             0.0,
-            min(1.0, float(threshold)),
+            min(
+                1.0,
+                float(threshold),
+            ),
         )
 
         threshold_values = [threshold] * count
@@ -367,22 +424,24 @@ def _create_radar_chart(
     # Legend
     # ------------------------------------------------------------
 
-    legend_ax = fig.add_axes([0.55, 0.08, 0.42, 0.84])
+    legend_ax = fig.add_axes([0.53, 0.08, 0.45, 0.84])
 
     legend_ax.axis("off")
 
-    row_height = min(
-        0.12,
-        0.82 / max(count, 1),
-    )
+    # Normalised vertical spacing inside the legend.
+    available_height = 0.84
+    unit_height = available_height / max(total_units, 1)
 
-    y = 0.95
+    y = 0.96
 
-    for index, item in enumerate(items):
+    for index, item in enumerate(prepared_items):
         is_gap = bool(item.get("is_gap"))
 
         number_color = CHART_RED if is_gap else CHART_GREEN
 
+        label_lines = item["_label_lines"]
+
+        # Number column.
         legend_ax.text(
             0.00,
             y,
@@ -393,19 +452,26 @@ def _create_radar_chart(
             va="top",
         )
 
-        legend_ax.text(
-            0.08,
-            y,
-            str(item.get("label") or ""),
-            fontsize=7.5,
-            fontweight="bold",
-            color=CHART_TEXT,
-            va="top",
-            wrap=True,
-        )
+        # Capability / role-name column.
+        label_y = y
 
+        for line in label_lines:
+            legend_ax.text(
+                0.09,
+                label_y,
+                line,
+                fontsize=7.2,
+                fontweight="bold",
+                color=CHART_TEXT,
+                va="top",
+                ha="left",
+            )
+
+            label_y -= unit_height
+
+        # Score has its own right-hand column.
         legend_ax.text(
-            1.00,
+            0.98,
             y,
             str(item.get("display_value") or ""),
             fontsize=8,
@@ -415,20 +481,25 @@ def _create_radar_chart(
             ha="right",
         )
 
+        # Optional gap text sits closely beneath the capability label.
         sublabel = item.get("sublabel")
 
         if sublabel:
+            sublabel_y = label_y + (unit_height * 0.35)
+
             legend_ax.text(
-                0.08,
-                y - 0.035,
+                0.09,
+                sublabel_y,
                 str(sublabel),
-                fontsize=6.5,
-                color=CHART_RED if is_gap else "#777777",
+                fontsize=6.4,
+                color=(CHART_RED if is_gap else "#777777"),
                 va="top",
+                ha="left",
             )
 
-        y -= row_height
+        y -= row_units[index] * unit_height
 
+    # Threshold key.
     if threshold is not None and threshold_label:
         legend_ax.text(
             0.00,
@@ -683,51 +754,128 @@ def _add_individual_capability_radar(
     )
 
 
-def _add_role_level_distribution(document: Document, entries: list[dict]) -> None:
+def _add_role_level_distribution(
+    document: Document,
+    entries: list[dict],
+) -> None:
     groups = [
         (
             "Senior Consultant & below",
             {"Analyst", "Consultant", "Senior Consultant"},
-            "86BC25",
+            CHART_GREEN,
         ),
-        ("Manager–Director", {"Manager", "Senior Manager", "Director"}, "3478B8"),
-        ("Partner", {"Partner"}, "8460AD"),
-    ]
-    total = len(entries)
-    counts = [
-        sum(1 for entry in entries if entry["employee"].get("role_level") in levels)
-        for _, levels, _ in groups
+        (
+            "Manager–Director",
+            {"Manager", "Senior Manager", "Director"},
+            CHART_BLUE,
+        ),
+        (
+            "Partner",
+            {"Partner"},
+            CHART_PURPLE,
+        ),
     ]
 
-    if not total:
+    counts = {label: 0 for label, _, _ in groups}
+
+    for entry in entries:
+        employee = entry.get("employee", {}) or {}
+        role_level = employee.get("role_level")
+
+        for label, levels, _ in groups:
+            if role_level in levels:
+                counts[label] += 1
+                break
+
+    total = sum(counts.values())
+
+    if total == 0:
+        paragraph = document.add_paragraph(
+            "Role level information is not available for this team."
+        )
+
+        for run in paragraph.runs:
+            run.font.name = "Arial"
+            run.font.size = Pt(9)
+            run.font.color.rgb = RGBColor.from_string(MID_GREY)
+
         return
 
-    bar = document.add_table(rows=1, cols=len(groups))
-    bar.autofit = False
-    available_width = 6.9
-    for index, ((_, _, color), count) in enumerate(zip(groups, counts)):
-        width = Inches(available_width * count / total)
-        bar.columns[index].width = width
-        cell = bar.rows[0].cells[index]
-        cell.width = width
-        _set_cell_shading(cell, color)
-        _set_cell_text(
-            cell,
-            f"{count} ({count / total:.0%})" if count else "",
-            color="FFFFFF",
-            bold=True,
-            size=9,
+    fig, ax = plt.subplots(
+        figsize=(7.2, 1.45),
+        dpi=180,
+        facecolor="white",
+    )
+
+    left = 0.0
+
+    for label, _, color in groups:
+        count = counts[label]
+
+        if count == 0:
+            continue
+
+        percentage = count / total * 100
+
+        ax.barh(
+            [0],
+            [percentage],
+            left=left,
+            color=color,
+            height=0.35,
         )
 
-    legend = document.add_table(rows=1, cols=len(groups))
-    legend.autofit = False
-    for index, ((label, _, color), count) in enumerate(zip(groups, counts)):
-        cell = legend.rows[0].cells[index]
-        _set_cell_text(
-            cell, f"{label}: {count} ({count / total:.0%})", color=color, size=8
-        )
+        # Percentage ONLY, centred in its segment.
+        if percentage >= 10:
+            ax.text(
+                left + percentage / 2,
+                0,
+                f"{round(percentage)}%",
+                ha="center",
+                va="center",
+                fontsize=8,
+                fontweight="bold",
+                color="white",
+            )
 
-    document.add_paragraph()
+        left += percentage
+
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-0.65, 0.65)
+    ax.axis("off")
+
+    # Counts remain down here, not inside the bar.
+    legend = "     ".join(f"{label}: {counts[label]}" for label, _, _ in groups)
+
+    ax.text(
+        50,
+        -0.48,
+        legend,
+        ha="center",
+        va="center",
+        fontsize=7.5,
+        color=CHART_TEXT,
+    )
+
+    output = BytesIO()
+
+    fig.savefig(
+        output,
+        format="png",
+        dpi=180,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+
+    plt.close(fig)
+
+    output.seek(0)
+
+    _add_chart_image(
+        document,
+        output,
+        width=6.4,
+    )
 
 
 def _add_bullet_list(
