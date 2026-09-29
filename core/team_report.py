@@ -70,6 +70,11 @@ def _add_section_heading(document: Document, text: str) -> None:
     paragraph.paragraph_format.space_before = Pt(12)
     paragraph.paragraph_format.space_after = Pt(6)
 
+    # Keep the section heading attached to the content immediately below it.
+    # If the following content does not fit, Word moves the heading with it
+    # instead of leaving an orphaned heading at the bottom of the page.
+    paragraph.paragraph_format.keep_with_next = True
+
     run = paragraph.add_run(text.upper())
     run.bold = True
     run.font.name = "Arial"
@@ -635,7 +640,7 @@ def _add_business_chemistry(
     ]
 
     fig, ax = plt.subplots(
-        figsize=(7.2, 1.45),
+        figsize=(7.2, 1.20),
         dpi=180,
         facecolor="white",
     )
@@ -802,7 +807,7 @@ def _add_role_level_distribution(
         return
 
     fig, ax = plt.subplots(
-        figsize=(7.2, 1.45),
+        figsize=(7.2, 1.20),
         dpi=180,
         facecolor="white",
     )
@@ -1559,15 +1564,15 @@ def build_team_report_docx(
         detail_run.font.size = Pt(9)
         detail_run.font.color.rgb = RGBColor.from_string(MID_GREY)
 
-    years = employee.get("years_experience")
-    if years is not None:
-        year_label = "year" if years == 1 else "years"
+        years = employee.get("years_experience")
+        if years is not None:
+            year_label = "year" if years == 1 else "years"
 
-        _add_small_label(
-            document,
-            "Experience",
-            f"{years} {year_label}",
-        )
+            _add_small_label(
+                document,
+                "Experience",
+                f"{years} {year_label}",
+            )
 
         _add_fit_summary(
             document,
@@ -1618,6 +1623,7 @@ def build_team_report_docx(
             entry.get("rationale")
             or "AI-generated assignment rationale was unavailable for this export."
         )
+
         rationale.paragraph_format.line_spacing = 1.15
 
         _add_section_heading(
