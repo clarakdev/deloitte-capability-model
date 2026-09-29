@@ -1394,6 +1394,27 @@ def build_team_report_docx(
             str(project["client"]),
         )
 
+    if project.get("location"):
+        _add_small_label(
+            document,
+            "Location",
+            str(project["location"]),
+        )
+
+    if project.get("start_date"):
+        _add_small_label(
+            document,
+            "Start Date",
+            str(project["start_date"]),
+        )
+
+    if project.get("end_date"):
+        _add_small_label(
+            document,
+            "End Date",
+            str(project["end_date"]),
+        )
+
     # ── Team overview ─────────────────────────────────────────────────────
 
     _add_section_heading(document, "Proposed Team")
@@ -1538,13 +1559,15 @@ def build_team_report_docx(
         detail_run.font.size = Pt(9)
         detail_run.font.color.rgb = RGBColor.from_string(MID_GREY)
 
-        years = employee.get("years_experience")
-        if years is not None:
-            _add_small_label(
-                document,
-                "Experience",
-                f"{years} years",
-            )
+    years = employee.get("years_experience")
+    if years is not None:
+        year_label = "year" if years == 1 else "years"
+
+        _add_small_label(
+            document,
+            "Experience",
+            f"{years} {year_label}",
+        )
 
         _add_fit_summary(
             document,

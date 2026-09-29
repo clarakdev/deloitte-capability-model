@@ -87,23 +87,23 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
         setProjectName(projectRecord?.name || "Project Report");
 
         const assignmentsByRole = new Map(
-  (assignments || []).map((assignment) => [
-    assignment.role_id,
-    assignment,
-  ]),
-);
+          (assignments || []).map((assignment) => [
+            assignment.role_id,
+            assignment,
+          ]),
+        );
 
-const resolvedTeam = (
-  await Promise.all(
-    (roles || []).map(async (role) => {
-      const assignment = assignmentsByRole.get(role.id);
+        const resolvedTeam = (
+          await Promise.all(
+            (roles || []).map(async (role) => {
+              const assignment = assignmentsByRole.get(role.id);
 
-      // A role without a saved employee assignment is not part of
-      // the proposed team yet.
-      if (!assignment) return null;
+              // A role without a saved employee assignment is not part of
+              // the proposed team yet.
+              if (!assignment) return null;
 
-      const roleTitle = role.title || "";
-      const roleDescription = role.description || "";
+              const roleTitle = role.title || "";
+              const roleDescription = role.description || "";
 
               if (roleTitle) {
                 try {
@@ -223,6 +223,9 @@ const resolvedTeam = (
         project_name: project?.name || projectName,
         project_description: project?.description || "",
         client: project?.client || null,
+        location: project?.location || null,
+        start_date: project?.start_date || null,
+        end_date: project?.end_date || null,
         roles: rolesForReport,
         worked_together_score:
           workedTogether === "" ? null : Number(workedTogether),

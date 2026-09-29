@@ -275,6 +275,9 @@ class TeamReportIn(BaseModel):
     project_name: str
     project_description: str = ""
     client: str | None = None
+    location: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
     roles: list[TeamReportRoleIn]
     worked_together_score: int | None = None
     worked_together_count: int | None = None
@@ -1343,11 +1346,14 @@ async def generate_project_team_report(
             }
         )
 
-    project_context = {
+        project_context = {
         "id": body.project_id,
         "name": body.project_name,
         "description": body.project_description,
         "client": body.client,
+        "location": body.location,
+        "start_date": body.start_date,
+        "end_date": body.end_date,
     }
 
     # Generate the team-level AI executive summary.
