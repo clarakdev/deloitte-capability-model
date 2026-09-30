@@ -275,10 +275,17 @@ PRIORITY CAPABILITY GAPS
 
 Return only material gaps.
 
+Return a MAXIMUM of 5 priority capability gaps.
+If more than 5 material gaps exist, select the 5 most important based on the
+supplied deterministic team risk priority and supporting evidence.
+Prioritise High before Medium before Low.
+
 Each gap must contain:
 - capability
 - priority: "High", "Medium", or "Low"
 - insight: one concise explanation of why the gap matters
+
+Use the supplied deterministic team risk priority as the primary guide.
 
 Use the supplied deterministic team risk priority as the primary guide.
 
@@ -665,9 +672,7 @@ def _build_team_prompt(
             )
 
         elif gap_count == 0:
-            interpretation = (
-                "No deterministic capability gaps identified."
-            )
+            interpretation = "No deterministic capability gaps identified."
 
         elif high_weight_gap_count > 0:
             interpretation = (
@@ -675,9 +680,7 @@ def _build_team_prompt(
             )
 
         else:
-            interpretation = (
-                "Some capability-level gaps are present."
-            )
+            interpretation = "Some capability-level gaps are present."
 
         role_signal_lines.append(
             f"- {role_title}: "
@@ -1124,10 +1127,10 @@ def _validate_team_response(raw: dict) -> dict:
     if not isinstance(gaps, list):
         raise LLMReportError("'priority_capability_gaps' must be a list.")
 
-    if len(gaps) > 5:
-        raise LLMReportError(
-            "'priority_capability_gaps' must contain " "no more than 5 items."
-        )
+    # The prompt requests a maximum of 5 material gaps.
+    # Defensively trim any extra items rather than rejecting
+    # an otherwise valid executive assessment.
+    gaps = gaps[:5]
 
     validated_gaps = []
 

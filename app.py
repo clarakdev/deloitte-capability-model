@@ -275,10 +275,14 @@ class TeamReportIn(BaseModel):
     project_name: str
     project_description: str = ""
     client: str | None = None
+    location: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
     roles: list[TeamReportRoleIn]
     worked_together_score: int | None = None
     worked_together_count: int | None = None
     rm_notes: str | None = None
+
 
 class ChemistryReportIn(BaseModel):
     chemistry_counts: dict
@@ -419,7 +423,13 @@ def _hydrate_capabilities(capabilities: list) -> list[dict]:
 
     return hydrated
 
-def _calculate_capacity(employees: list, project_start_date: str = None, project_end_date: str = None, required_percentage: int = 100) -> list:
+
+def _calculate_capacity(
+    employees: list,
+    project_start_date: str = None,
+    project_end_date: str = None,
+    required_percentage: int = 100,
+) -> list:
     """
     Returns a deep copy of employees with remaining_capacity and
     capacity_status computed from allocations overlapping the given
@@ -450,7 +460,11 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
 
     try:
         start = datetime.strptime(project_start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(project_end_date, "%Y-%m-%d").date() if project_end_date else start
+        end = (
+            datetime.strptime(project_end_date, "%Y-%m-%d").date()
+            if project_end_date
+            else start
+        )
 
         for emp in employees:
             committed = 0
@@ -462,8 +476,8 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
             emp["remaining_capacity"] = max(0, 100 - committed)
 
             on_leave = any(
-                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end and
-                datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
+                datetime.strptime(u["from"], "%Y-%m-%d").date() <= end
+                and datetime.strptime(u["to"], "%Y-%m-%d").date() >= start
                 for u in emp.get("unavailability", [])
             )
             if on_leave:
@@ -475,6 +489,7 @@ def _calculate_capacity(employees: list, project_start_date: str = None, project
         pass
 
     return employees
+
 
 # ── Authentication and RBAC ────────────────────────────────────────────────
 
@@ -993,8 +1008,8 @@ def get_candidates(
         description="Only return employees whose location is in this list (BUG002 fix — filters before the 25-candidate cap)",
     ),
     role_levels: list[str] | None = Query(
-    default=None,
-    description="Only return employees whose role_level is in this list (filters before the 25-candidate cap, same pattern as BUG002)",
+        default=None,
+        description="Only return employees whose role_level is in this list (filters before the 25-candidate cap, same pattern as BUG002)",
     ),
     current_user: dict = Depends(get_current_user),
 ):
@@ -1011,7 +1026,9 @@ def get_candidates(
 
     # US023/US32 — override availability based on project start date
     employees = _apply_availability(_EMPLOYEES, project_start_date, project_end_date)
-    employees = _calculate_capacity(employees, project_start_date, project_end_date, required_percentage)
+    employees = _calculate_capacity(
+        employees, project_start_date, project_end_date, required_percentage
+    )
     results = rank_candidates(
         caps,
         employees,
@@ -1028,7 +1045,8 @@ def get_candidates(
     # Available-only must also exclude anyone below the role's required availability
     if available_only:
         results = [
-            c for c in results
+            c
+            for c in results
             if c.get("remaining_capacity") is not None
             and c["remaining_capacity"] >= required_percentage
         ]
@@ -1317,6 +1335,7 @@ async def generate_project_team_report(
                 "role_title": role.title,
                 "role_description": role.description,
                 "employee": employee,
+                "business_chemistry": employee.get("business_chemistry"),
                 "match_score": float(role.assignment.match_score),
                 "fit_report": fit_report,
                 "avg_fit": avg_fit,
@@ -1327,12 +1346,14 @@ async def generate_project_team_report(
             }
         )
 
-
-    project_context = {
+        project_context = {
         "id": body.project_id,
         "name": body.project_name,
         "description": body.project_description,
         "client": body.client,
+        "location": body.location,
+        "start_date": body.start_date,
+        "end_date": body.end_date,
     }
 
     # Generate the team-level AI executive summary.
@@ -1345,7 +1366,9 @@ async def generate_project_team_report(
     except (
         LLMConfigError,
         LLMReportError,
-    ):
+    ) as exc:
+        print(f"TEAM SUMMARY LLM ERROR: " f"{type(exc).__name__}: {exc}")
+
         unavailable_message = "AI-generated analysis was unavailable for this export."
 
         team_summary = {
@@ -1392,6 +1415,7 @@ async def generate_project_team_report(
         headers={"Content-Disposition": (f'attachment; filename="{filename}"')},
     )
 
+
 @app.post(
     "/projects/{project_id}/chemistry-report",
     tags=["LLM"],
@@ -1406,7 +1430,7 @@ async def generate_chemistry_report(
         messages = [
             {
                 "role": "system",
-                "content": "You are an expert in team dynamics and Deloitte's Business Chemistry framework. Analyse the team chemistry mix and provide actionable insights."
+                "content": "You are an expert in team dynamics and Deloitte's Business Chemistry framework. Analyse the team chemistry mix and provide actionable insights.",
             },
             {
                 "role": "user",
@@ -1420,14 +1444,17 @@ async def generate_chemistry_report(
                     f"Based on this chemistry mix, provide 4-5 insights as a JSON object with a single key 'team_dynamics' containing a list of strings. "
                     f"Each string should cover: strengths of this mix, risks or blind spots, and how the team might work best together. "
                     f"Respond with ONLY the JSON object."
-                )
-            }
+                ),
+            },
         ]
 
         from core.llm_report import _call_model, _parse_json_content
+
         content = await _call_model(messages)
         raw = _parse_json_content(content)
         return {"team_dynamics": raw.get("team_dynamics", [])}
 
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Chemistry report unavailable: {e}")
+        raise HTTPException(
+            status_code=503, detail=f"Chemistry report unavailable: {e}"
+        )
