@@ -817,49 +817,6 @@ export default function TeamReportPage({ projectId, onBackToRoles }) {
         })()}
       </div>
 
-      <section className="card">
-        <div className="card-head">
-          <div className="card-title">Executive Summary</div>
-        </div>
-        {[
-          [
-            "Overall Team Suitability",
-            "Placeholder: replace with the overall suitability assessment.",
-          ],
-          [
-            "Key Strengths",
-            "Placeholder: summarize the team's strongest capabilities.",
-          ],
-          [
-            "Key Risks",
-            "Placeholder: note material delivery, coverage, or collaboration risks.",
-          ],
-          [
-            "Priority Capability Gaps",
-            "Placeholder: identify the capability gaps requiring attention.",
-          ],
-          [
-            "Management Judgement",
-            "Placeholder: add the RM's considered judgement.",
-          ],
-          [
-            "Recommended Actions",
-            "Placeholder: list recommended management actions.",
-          ],
-        ].map(([heading, text]) => (
-          <div key={heading} style={{ marginBottom: 12 }}>
-            <div
-              style={{ color: "var(--text)", fontSize: 12, fontWeight: 600 }}
-            >
-              {heading}
-            </div>
-            <div style={{ color: "var(--muted2)", fontSize: 12, marginTop: 4 }}>
-              {text}
-            </div>
-          </div>
-        ))}
-      </section>
-
       <div
         style={{
           display: "grid",
