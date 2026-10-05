@@ -2,10 +2,10 @@
 
 AI-powered role–capability matching web app for Deloitte. Project managers describe the roles on a project, the app infers the required skill capabilities from the ESCO taxonomy, and ranks employees against each role with a gap analysis.
 
-- **Backend** — FastAPI (Python): `app.py` and `core/`
-- **Frontend** — React (Vite): `capability-matcher/`
-- **Data** — projects, roles, capabilities and assignments live in Supabase; the employee pool and ESCO skill data are local files
-- **Auth** — Supabase authentication with role-based access on both the frontend and the backend
+- **Backend**: FastAPI (Python): `app.py` and `core/`
+- **Frontend**: React (Vite): `capability-matcher/`
+- **Data**: projects, roles, capabilities and assignments live in Supabase; the employee pool and ESCO skill data are local files
+- **Auth**: Supabase authentication with role-based access on both the frontend and the backend
 
 ---
 
@@ -27,11 +27,11 @@ My Projects lists the projects the user created or is assigned to; All Projects 
 
 Five steps, with **Back to Dashboard** available in the header at any point:
 
-1. **Projects** — select a project, or create, edit or delete one. Cards show who created each project.
-2. **Project setup** — add, edit, duplicate, delete and reorder roles, and set the required percentage for each.
-3. **Skill requirements** — AI infers the top ESCO skills from the role title and description (the count is configurable). Search the ESCO catalogue to add skills manually, adjust importance weights (1–5), and remove skills. Skills are saved to Supabase when you continue.
-4. **Select team** — candidates ranked by fit. Filter by availability, prior experience, location and role level; candidates without enough remaining capacity are flagged. Select one candidate for a gap analysis, or two to compare side by side.
-5. **Gap analysis** — per-capability strengths and gaps, an optional AI fit report, and a PDF export. Saving assigns the candidate to the role.
+1. **Projects**: select a project, or create, edit or delete one. Cards show who created each project.
+2. **Project setup**: add, edit, duplicate, delete and reorder roles, and set the required percentage for each.
+3. **Skill requirements**: AI infers the top ESCO skills from the role title and description (the count is configurable). Search the ESCO catalogue to add skills manually, adjust importance weights (1–5), and remove skills. Skills are saved to Supabase when you continue.
+4. **Select team**: candidates ranked by fit. Filter by availability, prior experience, location and role level; candidates without enough remaining capacity are flagged. Select one candidate for a gap analysis, or two to compare side by side.
+5. **Gap analysis**: per-capability strengths and gaps, an optional AI fit report, and a PDF export. Saving assigns the candidate to the role.
 
 ### Team report
 
@@ -41,7 +41,7 @@ Once every role in a project has an assignment, **View Team Report** becomes ava
 
 ## Authentication
 
-The app uses Supabase Auth. The frontend signs in with email and password and attaches the session token to every backend call. The backend validates the token with Supabase and enforces role checks per endpoint, so requests without a valid session return `401` — including Swagger UI at `http://localhost:8000/docs`.
+The app uses Supabase Auth. The frontend signs in with email and password and attaches the session token to every backend call. The backend validates the token with Supabase and enforces role checks per endpoint, so requests without a valid session return `401`, including Swagger UI at `http://localhost:8000/docs`.
 
 ---
 
@@ -59,9 +59,9 @@ For evaluation and handover, sign in with:
 
 ## Environment configuration
 
-Two local `.env` files are required (both are git-ignored). Example files are provided — copy each `.env.example` to `.env` and fill in the values.
+Two local `.env` files are required (both are git-ignored). Example files are provided, copy each `.env.example` to `.env` and fill in the values.
 
-**Backend** — repository root, `/.env.example`:
+**Backend**: repository root, `/.env.example`:
 
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key_here
@@ -74,7 +74,7 @@ SUPABASE_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-**Frontend** — `capability-matcher/.env.example`:
+**Frontend**: `capability-matcher/.env.example`:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
@@ -83,7 +83,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 Notes:
 
-- The Supabase keys are required — without them, sign-in and all data endpoints fail.
+- The Supabase keys are required. Without them, sign-in and all data endpoints fail.
 - The OpenRouter key is only needed for the AI fit reports and the chemistry analysis. Deterministic matching works without it.
 - `OPENROUTER_MODEL` can be any OpenRouter model id. If unset, the backend defaults to `deepseek/deepseek-v4-flash`.
 
@@ -128,7 +128,7 @@ npm install
 
 You need two terminals open at the same time.
 
-**Terminal 1 — backend**, from the repository root:
+**Terminal 1: backend**, from the repository root:
 
 ```bash
 python -m uvicorn app:app --reload
@@ -136,7 +136,7 @@ python -m uvicorn app:app --reload
 
 Ready when you see `Uvicorn running on http://127.0.0.1:8000`. The first start downloads and loads the embedding model, so allow a little extra time.
 
-**Terminal 2 — frontend**, from the `capability-matcher` folder:
+**Terminal 2: frontend**, from the `capability-matcher` folder:
 
 ```bash
 npm run dev
@@ -159,8 +159,8 @@ Closing either terminal stops that part of the app. To stop both, press `Ctrl + 
 | Port `8000` already in use (`Errno 10048`) | Stop the other Python process, or add `--port 8001` |
 | Port `5173` already in use | Vite picks the next free port automatically |
 | Sign-in or data fails | Check both `.env` files exist with the correct Supabase keys |
-| `401 Unauthorized` in Swagger | Expected — authenticate first (see Authentication) |
-| Blank white screen | Press F12 and check the browser console — usually a missing frontend `.env` or `npm install` |
+| `401 Unauthorized` in Swagger | Expected, authenticate first (see Authentication) |
+| Blank white screen | Press F12 and check the browser console, usually a missing frontend `.env` or `npm install` |
 | `npm install` fails | Make sure you're in the `capability-matcher` folder (the one with `package.json`) |
 
 ---
@@ -177,18 +177,18 @@ Closing either terminal stops that part of the app. To stop both, press `Ctrl + 
 ## Project structure
 
 ```text
-app.py                  FastAPI backend — all API endpoints
+app.py                  FastAPI backend (all API endpoints)
 core/                   Matching engine: capability inference, ranking, gap analysis,
                         embeddings, AI reports, security
 data/                   Demo project, synthetic employees, ESCO skills + pre-computed embeddings
 scripts/                Data generation scripts
 tests/                  Backend unit tests
-capability-matcher/     React frontend (Vite) — the current app
+capability-matcher/     React frontend (Vite)
 ```
 
 The root-level `package.json` and `src/` folder are an early prototype kept for reference; the app to run is `capability-matcher/`.
 
-In the frontend, backend calls are centralised in `capability-matcher/src/api/api.js` — the base URL is set there. One known exception: the chemistry-report call in `TeamReportPage.jsx` hardcodes `http://localhost:8000`.
+In the frontend, backend calls are centralised in `capability-matcher/src/api/api.js`, the base URL is set there. One known exception: the chemistry-report call in `TeamReportPage.jsx` hardcodes `http://localhost:8000`.
 
 ---
 
