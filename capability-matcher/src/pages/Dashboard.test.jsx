@@ -18,16 +18,13 @@ vi.mock('./AdminProjectsTab', () => ({
   default: () => <div>AdminProjectsTab</div>,
 }))
 
-vi.mock('./AdminEmployeesTab', () => ({
-  default: () => <div>AdminEmployeesTab</div>,
-}))
-
 describe('Dashboard role-based tab rendering', () => {
   it('renders only the Employee tabs for an Employee role', () => {
     render(
       <Dashboard
         profile={{ role: 'Employee', first_name: 'Ava', last_name: 'Stone' }}
         onStartMatching={() => {}}
+        onLogout={() => {}}
       />
     )
 
@@ -38,6 +35,7 @@ describe('Dashboard role-based tab rendering', () => {
     expect(screen.queryByRole('button', { name: 'Capability Matcher' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'All Projects' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'All Employees' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Logout' })).toBeTruthy()
   })
 
   it('renders the Manager-only Capability Matcher tab for a Manager role', () => {
@@ -45,6 +43,7 @@ describe('Dashboard role-based tab rendering', () => {
       <Dashboard
         profile={{ role: 'Manager', first_name: 'Jordan', last_name: 'Lee' }}
         onStartMatching={() => {}}
+        onLogout={() => {}}
       />
     )
 
@@ -57,20 +56,21 @@ describe('Dashboard role-based tab rendering', () => {
     expect(screen.queryByRole('button', { name: 'All Employees' })).toBeNull()
   })
 
-  it('renders the Admin-only directory tabs for an Admin role', () => {
+  it('renders the Admin tabs without an All Employees directory', () => {
     render(
       <Dashboard
         profile={{ role: 'Admin', first_name: 'Taylor', last_name: 'Ng' }}
         onStartMatching={() => {}}
+        onLogout={() => {}}
       />
     )
 
     expect(screen.getByRole('button', { name: 'Profile' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'My Projects' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'My Skills' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Capability Matcher' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'All Projects' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'All Employees' })).toBeTruthy()
 
-    expect(screen.queryByRole('button', { name: 'Capability Matcher' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'All Employees' })).toBeNull()
   })
 })

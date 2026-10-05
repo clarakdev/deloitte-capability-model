@@ -112,40 +112,20 @@ State is in-memory and resets on server restart. The model loads on startup (~5s
 - **State is shared** across all browser tabs for the duration of the server session. Changes made via POST/PUT/DELETE persist until the server restarts.
 - **Capabilities are inferred lazily** — a role's list is only created when you first call `GET /roles/{id}/capabilities`. You can call candidates directly and it will trigger inference automatically.
 - **ESCO attribution** (required in any frontend): *"This service uses the ESCO classification of the European Commission."*
-- **Testing Protected Endpoints in Swagger UI:** Because the API layer is now secure, running endpoints will return a `401 Unauthorized` or `403 Forbidden` error by default. To unlock them:
-  1. Scroll to the top of the Swagger UI page and click the green **Authorize** padlock button on the right.
-  2. Enter one of the test usernames (e.g., `pm_user`) and the password `password123` into the form.
-  3. Click **Authorize**, then click **Close**. 
-  Now, all subsequent endpoint executions will automatically pass the secure Bearer token in the background!
+- **Testing Protected Endpoints in Swagger UI:** Because the API layer is secured with Supabase authentication, running endpoints will return a `401 Unauthorized` error by default. To unlock them:
+  1. Sign in to the app (or call `POST /login`) with one of the Supabase demo accounts listed in the README.
+  2. Copy the returned Supabase `access_token`.
+  3. Scroll to the top of the Swagger UI page and click the green **Authorize** padlock button on the right, paste the token, then click **Authorize** → **Close**.
+  Now, all subsequent endpoint executions will automatically pass the token in the background!
 
 ---
 
-## US019 & US020 - Authentication & Security Evaluation Notes
+## Role-Based Access Notes
 
-### 1. Available Test Environment Accounts
+The frontend and API layer work together to enforce access restrictions. Protected endpoints screen each request's Supabase token, resolve the user's role from the `profiles` table, and reject the request before any data is returned when the role is not permitted.
 
-| Username | Password | Role |
-|---|---|---|
-| `admin_user` | `password123` | Admin |
-| `hr_user` | `password123` | HR User |
-| `pm_user` | `password123` | Project Manager |
-| `xavier_green` | `password123` | Employee |
+- **Resource Manager (Admin):** Full access — candidate search and fit data, employee directories, and all project operations.
+- **Project Manager:** Access to project-aligned matching endpoints (capabilities, candidates, fit, reports) for the projects they own.
+- **Employee:** Read-only access to fit data for their own roles; workforce directories and project-management endpoints are blocked.
 
-### 2. Backend Header Injection Instructions
-
-Client applications must first call the login endpoint and read the returned token string from the `access_token` field. Once received, the token must be injected into the outgoing request pipeline as a bearer token in the `Authorization` header.
-
-```http
-Authorization: Bearer <token>
-```
-
-This header should be attached to every protected request. In practical client implementations, this is typically handled by storing the token after login and adding it to each request before the API call is issued.
-
-### 3. Role-Based Views Mapping Rules
-
-The frontend and API layer work together to enforce access restrictions. Lower-privilege accounts cannot access all dashboard widgets or structural action vectors, and protected endpoints are screened by the backend RBAC validators before data is returned.
-
-- **Admin:** Full dashboard access, structural editing actions, and advanced management widgets remain available.
-- **HR User:** Access is permitted for workforce visibility and review functions, but permission-sensitive operational controls are suppressed or disabled.
-- **Project Manager:** Access is granted to project-aligned workforce views, while high-risk administrative functions remain blocked.
-- **Employee:** Access is restricted to personal or role-limited views; structural management elements are hidden to reduce exposure of sensitive workforce data.
+Legacy username/password accounts (`admin_user`, `hr_user`, `pm_user`, `xavier_green`) from sprint 2 have been removed — authentication now goes through Supabase Auth exclusively.
