@@ -138,7 +138,7 @@ export default function Frame1({
       setNewDesc("");
       setFormError("");
       setShowAddForm(false);
-    } catch (e) {
+    } catch {
       setFormError("Failed to save role. Try again.");
     }
   }
@@ -164,7 +164,7 @@ export default function Frame1({
       setEditingRole(null);
       setEditFields({ title: "", description: "" });
       setFormError("");
-    } catch (e) {
+    } catch {
       setFormError("Failed to update role. Try again.");
     }
   }
@@ -175,7 +175,7 @@ export default function Frame1({
     try {
       await deleteRole(roleId);
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
-    } catch (e) {
+    } catch {
       alert("Failed to delete role. Try again.");
     }
   }
@@ -190,7 +190,7 @@ export default function Frame1({
         required_percentage: role.required_percentage ?? 100,
       });
       setRoles((prev) => [...prev, duplicate]);
-    } catch (e) {
+    } catch {
       alert("Failed to duplicate role. Try again.");
     }
   }
@@ -202,7 +202,7 @@ export default function Frame1({
       try {
         const caps = await getSavedCapabilities(roleId);
         setSavedCaps((prev) => ({ ...prev, [roleId]: caps }));
-      } catch (e) {
+      } catch {
         console.error("Failed to load caps for role", roleId);
       }
     }
@@ -223,7 +223,7 @@ export default function Frame1({
           r.id === role.id ? { ...r, required_percentage: val } : r,
         ),
       );
-    } catch (e) {
+    } catch {
       alert("Failed to save required time. Try again.");
     } finally {
       setPercentageSaving((prev) => ({ ...prev, [role.id]: false }));
@@ -333,7 +333,7 @@ export default function Frame1({
           updateRole(role.id, { sort_order: index }),
         ),
       );
-    } catch (e) {
+    } catch {
       alert("Failed to save new order. Try again.");
     }
   }
@@ -1147,7 +1147,6 @@ export default function Frame1({
                   setShowAddForm(false);
                   setNewTitle("");
                   setNewDesc("");
-                  setNewPercentage(100);
                   setFormError("");
                 }}
               >

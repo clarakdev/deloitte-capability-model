@@ -39,21 +39,26 @@ export default function Frame0({ profile, onSelectProject }) {
 
   // Load projects
   useEffect(() => {
-    loadProjects()
-  }, [normalizedRole])
+    let isMounted = true
 
-  async function loadProjects() {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = isAdmin ? await getAllProjects() : await getProjects()
-      setProjects(data)
-    } catch (e) {
-      setError('Could not load projects. Check your connection.')
-    } finally {
-      setLoading(false)
+    async function loadProjects() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = isAdmin ? await getAllProjects() : await getProjects()
+        if (isMounted) setProjects(data)
+      } catch {
+        if (isMounted) setError('Could not load projects. Check your connection.')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
     }
-  }
+
+    loadProjects()
+    return () => {
+      isMounted = false
+    }
+  }, [isAdmin])
 
   // Create project
   async function handleCreate() {
@@ -65,7 +70,7 @@ export default function Frame0({ profile, onSelectProject }) {
       setFields({ name: '', client: '', description: '', duration: '', start_date: '' })
       setShowForm(false)
       setFormError('')
-    } catch (e) {
+    } catch {
       setFormError('Failed to create project. Try again.')
     } finally {
       setSaving(false)
@@ -81,7 +86,7 @@ export default function Frame0({ profile, onSelectProject }) {
       setProjects(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p))
       setEditingId(null)
       setFormError('')
-    } catch (e) {
+    } catch {
       setFormError('Failed to update project. Try again.')
     } finally {
       setSaving(false)
@@ -94,7 +99,7 @@ export default function Frame0({ profile, onSelectProject }) {
     try {
       await deleteProject(id)
       setProjects(prev => prev.filter(p => p.id !== id))
-    } catch (e) {
+    } catch {
       alert('Failed to delete project.')
     }
   }

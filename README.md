@@ -150,6 +150,27 @@ Closing either terminal stops that part of the app. To stop both, press `Ctrl + 
 
 ---
 
+## Tests and quality checks
+
+The backend pytest suite covers API behavior, capability inference and persistence, candidate matching, gap analysis, and LLM report validation. The frontend Vitest suite covers dashboard role-based tabs plus skill-requirement and candidate-selection workflows.
+
+Run the backend tests from the repository root:
+
+```bash
+python -m pytest -q
+```
+
+Run frontend tests and lint from `capability-matcher/`:
+
+```bash
+npm test
+npm run lint
+```
+
+The live OpenRouter integration tests are skipped unless `OPENROUTER_API_KEY` is set. Mocked frontend and backend tests do not require live external services.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |

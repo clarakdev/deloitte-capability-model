@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react'
-
 function formatRoleLabel(role) {
   const normalizedRole = String(role || 'Employee').toLowerCase()
   if (normalizedRole === 'admin') return 'Resource Manager'
@@ -9,37 +7,9 @@ function formatRoleLabel(role) {
 }
 
 export default function ProfileTab({ profile }) {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    try {
-      setLoading(false)
-    } catch (err) {
-      setError(err?.message || 'Unable to load profile data.')
-      setLoading(false)
-    }
-  }, [profile])
-
   const fullName = [profile?.first_name, profile?.last_name]
     .filter(Boolean)
     .join(' ') || 'User'
-
-  if (loading) {
-    return (
-      <div className="card" style={{ marginBottom: 0 }}>
-        <p style={{ color: '#aaaaaa', fontSize: 13 }}>Loading...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="card" style={{ marginBottom: 0 }}>
-        <p style={{ color: '#e05252', fontSize: 13 }}>{error}</p>
-      </div>
-    )
-  }
 
   return (
     <div className="card" style={{ marginBottom: 0 }}>

@@ -10,10 +10,6 @@ They cover:
   - /llm-report returns 200 and the cached shape when the LLM is stubbed.
   - A second identical /llm-report call does NOT re-invoke the LLM (US-S2-07).
   - Capability mutation invalidates the cache (US-S2-07).
-  - /auto-select returns a selected_employee_id that is one of the top 5 and
-    a non-empty rationale + the all_top_candidates list (US-S2-03/04).
-  - /auto-select 503s with no key.
-  - /auto-select 404s for an unknown role.
 
 The real-API path is covered by the key-gated integration tests in
 test_llm_report.py.
@@ -47,33 +43,29 @@ def client(monkeypatch):
     L._client = None  # reset the lazy singleton so it re-reads the (now empty) env
     appmod._llm_cache.clear()
     appmod._capability_state.clear()  # start from inferred capabilities
+    monkeypatch.setitem(
+        appmod.app.dependency_overrides,
+        appmod.get_current_user,
+        lambda: {
+            "user_id": "test-manager",
+            "username": "test-manager",
+            "role": "project manager",
+            "employee_id": None,
+        },
+    )
     return TestClient(appmod.app)
 
 
 @pytest.fixture()
 def stub_llm(monkeypatch):
-    """Monkeypatch the LLM entry points app.py imported with deterministic stubs."""
-    calls = {"report": 0, "auto": 0}
+    """Stub the LLM entry point imported by app.py."""
+    calls = {"report": 0}
 
     async def stub_report(*a, **kw):
         calls["report"] += 1
         return {"overall_fit_score": 77, "report": "Stubbed objective report."}
 
-    async def stub_select(*a, **kw):
-        calls["auto"] += 1
-        # Pick the rank-1 employee deterministically.
-        ranked = appmod.rank_candidates(
-            appmod._get_or_infer_capabilities(ROLE),
-            appmod._EMPLOYEES,
-            role_title="Solution Architect",
-        )
-        return {
-            "selected_employee_id": ranked[0]["employee_id"],
-            "rationale": "Rank 1 is best.",
-        }
-
     monkeypatch.setattr(appmod, "generate_fit_report", stub_report)
-    monkeypatch.setattr(appmod, "select_best_candidate", stub_select)
     return calls
 
 
@@ -115,12 +107,6 @@ def test_llm_report_503_when_no_key(client):
     assert "OPENROUTER_API_KEY" in r.json()["detail"]
 
 
-def test_auto_select_503_when_no_key(client):
-    r = client.post(f"/roles/{ROLE}/auto-select")
-    assert r.status_code == 503
-    assert "rank #1" in r.json()["detail"]
-
-
 # ── 404 paths ────────────────────────────────────────────────────────────────
 
 
@@ -131,11 +117,6 @@ def test_llm_report_404_unknown_role(client):
 
 def test_llm_report_404_unknown_employee(client):
     r = client.post(f"/roles/{ROLE}/candidates/NOPE/llm-report")
-    assert r.status_code == 404
-
-
-def test_auto_select_404_unknown_role(client):
-    r = client.post("/roles/NOPE/auto-select")
     assert r.status_code == 404
 
 
@@ -204,31 +185,3 @@ def test_cache_invalidated_on_capability_update(client, stub_llm):
 
     client.post(f"/roles/{ROLE}/candidates/{EMP}/llm-report")
     assert stub_llm["report"] == 2
-
-
-# ── US-S2-03/04: auto-select happy path ─────────────────────────────────────
-
-
-def test_auto_select_returns_top5_pick_and_rationale(client, stub_llm):
-    r = client.post(f"/roles/{ROLE}/auto-select")
-    assert r.status_code == 200, r.text
-    body = r.json()
-    assert body["role_id"] == ROLE
-    assert body["selected_employee_id"]
-    assert isinstance(body["rationale"], str) and body["rationale"].strip()
-    # The returned list must be the top 5 (or fewer if fewer employees exist).
-    assert 1 <= len(body["all_top_candidates"]) <= 5
-    # The selected id must be among the returned candidates.
-    ids = [c["employee_id"] for c in body["all_top_candidates"]]
-    assert body["selected_employee_id"] in ids
-    # Each candidate entry has the documented shape.
-    for c in body["all_top_candidates"]:
-        assert {"employee_id", "name", "match_score"} <= c.keys()
-    assert stub_llm["auto"] == 1
-
-
-def test_auto_select_cache_hit(client, stub_llm):
-    r1 = client.post(f"/roles/{ROLE}/auto-select")
-    r2 = client.post(f"/roles/{ROLE}/auto-select")
-    assert r1.json()["selected_employee_id"] == r2.json()["selected_employee_id"]
-    assert stub_llm["auto"] == 1

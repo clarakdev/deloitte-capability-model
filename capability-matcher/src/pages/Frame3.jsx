@@ -66,7 +66,6 @@ function scoreOutOfTen(score) {
 
 export default function Frame3({
   roleId,
-  projectId,
   projectStartDate,
   projectEndDate,
   requiredPercentage = 100,
@@ -98,23 +97,43 @@ export default function Frame3({
   );
 
   useEffect(() => {
-    setLoading(true);
-    setSelectedIds([]);
-    getCandidates(
-      roleId,
-      availableOnly,
-      priorExpOnly,
-      projectStartDate,
-      projectEndDate,
-      selectedLocations,
-      selectedRoleLevels,
-      requiredPercentage,
-    )
-      .then(setCandidates)
-      .catch(() =>
-        setError("Could not load candidates. Is the backend running?"),
-      )
-      .finally(() => setLoading(false));
+    let isMounted = true;
+
+    async function loadCandidates() {
+      await Promise.resolve();
+      if (!isMounted) return;
+      setLoading(true);
+      setSelectedIds([]);
+      setError(null);
+      try {
+        const data = await getCandidates(
+          roleId,
+          availableOnly,
+          priorExpOnly,
+          projectStartDate,
+          projectEndDate,
+          selectedLocations,
+          selectedRoleLevels,
+          requiredPercentage,
+        );
+        if (isMounted) {
+          setCandidates(data);
+          setSelectedIds([]);
+          setError(null);
+        }
+      } catch {
+        if (isMounted) {
+          setError("Could not load candidates. Is the backend running?");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadCandidates();
+    return () => {
+      isMounted = false;
+    };
   }, [
     roleId,
     availableOnly,

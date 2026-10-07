@@ -240,7 +240,6 @@ export default function App() {
           {frame === 3 && (
             <Frame3
               roleId={roleId}
-              projectId={selectedProject?.id}
               projectStartDate={parseProjectStartDate(
                 selectedProject?.start_date,
               )}

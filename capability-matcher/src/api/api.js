@@ -327,7 +327,7 @@ export async function getRoles(projectId) {
 export async function createRole(projectId, { title, description, sort_order = 0, required_percentage = 100 }) {
   const { data, error } = await supabase
     .from('roles')
-    .insert([{ project_id: projectId, title, description, sort_order }])
+    .insert([{ project_id: projectId, title, description, sort_order, required_percentage }])
     .select()
     .single()
   if (error) throw new Error(error.message)

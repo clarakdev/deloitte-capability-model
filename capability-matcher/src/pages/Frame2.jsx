@@ -87,7 +87,7 @@ export default function Frame2({ roleId, role, topK = 5, onBack, onNext }) {
       }
     }
     loadCaps();
-  }, [roleId, topK]);
+  }, [roleId, role?.title, role?.description, topK]);
 
   // Weight change
   // Called when the user moves a weight slider.

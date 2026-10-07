@@ -6,9 +6,7 @@
 //   2. New matching flow — empId set from Frame 3 candidate selection
 //      saves the assignment to Supabase
 
-import { useEffect, useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 import {
   getCandidateFit,
@@ -492,8 +490,6 @@ export default function Frame4({
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [existingAssignment, setExistingAssignment] = useState(null);
-  const exportRef = useRef(null);
-  const [exporting, setExporting] = useState(false);
 
   const isComparisonMode =
     !viewSavedAssignment && selectedEmployees.length === 2;
@@ -638,6 +634,8 @@ export default function Frame4({
     selectedEmployee,
     selectedEmployees,
     isComparisonMode,
+    selectedRole?.title,
+    selectedRole?.description,
   ]);
 
   async function handleGenerateReport() {
@@ -693,70 +691,6 @@ export default function Frame4({
       setSaveStatus("error");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleExportReport() {
-    if (!exportRef.current || exporting) return;
-
-    setExporting(true);
-
-    try {
-      // Wait for the IBM Plex Sans web font to finish loading.
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-
-      const canvas = await html2canvas(exportRef.current, {
-        scale: 2,
-        backgroundColor: "#0a0a0a",
-        useCORS: true,
-        logging: false,
-
-        // Hide all controls marked with pdf-hide in the copied document.
-        onclone: (clonedDocument) => {
-          clonedDocument.querySelectorAll(".pdf-hide").forEach((element) => {
-            element.style.display = "none";
-          });
-
-          const clonedPage = clonedDocument.querySelector(".pdf-snapshot");
-
-          if (clonedPage) {
-            clonedPage.style.background = "#0a0a0a";
-            clonedPage.style.paddingBottom = "24px";
-          }
-        },
-      });
-
-      const imageData = canvas.toDataURL("image/png", 1.0);
-
-      // Keep the report on one PDF page with the same proportions
-      // as the captured screen content.
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      const pdf = new jsPDF({
-        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
-        unit: "mm",
-        format: [pdfWidth, pdfHeight],
-        compress: true,
-      });
-
-      pdf.addImage(imageData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-      const employeeName = employee?.name
-        ? employee.name
-            .trim()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-zA-Z0-9-]/g, "")
-        : "Employee";
-
-      pdf.save(`Gap-Analysis-${employeeName}.pdf`);
-    } catch (error) {
-      console.error("Failed to export gap analysis:", error);
-      window.alert("Could not export the gap analysis. Please try again.");
-    } finally {
-      setExporting(false);
     }
   }
 
@@ -882,7 +816,7 @@ export default function Frame4({
     : 0;
 
   return (
-    <div ref={exportRef} className="page pdf-snapshot">
+    <div className="page">
       <div className="page-title">Gap analysis</div>
       <div className="page-sub">
         {viewSavedAssignment ? "Saved assignment" : "Selected candidate"} ·
@@ -1241,19 +1175,6 @@ export default function Frame4({
           </button>
         )}
 
-        {/*
-        <button
-          className="btn-primary"
-          onClick={handleExportReport}
-          disabled={exporting}
-          style={{
-            opacity: exporting ? 0.5 : 1,
-            cursor: exporting ? "default" : "pointer",
-          }}
-        >
-          {exporting ? "Exporting..." : "Export report"}
-        </button>
-        */}
       </div>
     </div>
   );
