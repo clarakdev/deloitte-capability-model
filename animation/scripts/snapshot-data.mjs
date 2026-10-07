@@ -21,3 +21,19 @@ writeFileSync(
   JSON.stringify(out, null, 1),
 );
 console.log(`Wrote ${out.length} employees (featured: ${FEATURED_ID})`);
+
+// The demo project shown in the Project Overview scene.
+const project = JSON.parse(readFileSync(new URL("../../data/project.json", import.meta.url), "utf8"));
+writeFileSync(
+  new URL("../src/data/project.sample.json", import.meta.url),
+  JSON.stringify(
+    {
+      name: project.name,
+      description: project.description,
+      roles: project.roles.map((r) => ({ id: r.id, title: r.title })),
+    },
+    null,
+    1,
+  ),
+);
+console.log(`Wrote project sample (${project.roles.length} roles)`);

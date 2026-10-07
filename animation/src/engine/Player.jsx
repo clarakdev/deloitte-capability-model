@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import {
+  LiveContext,
   TimeContext,
   nextCue,
   prevCueTime,
@@ -42,6 +43,9 @@ export function Player({ cues, end, scenes, children }) {
   const targetRef = useRef(null);
   const vRef = useRef(0);
   const videoRef = useRef(false);
+  // Time spent paused so far. `live = t + offset` keeps ambient motion running while the timeline rests at a cue.
+  const offsetRef = useRef(0);
+  const [, bump] = useReducer((n) => n + 1, 0);
 
   const setT = useCallback((v) => {
     tRef.current = v;
@@ -55,10 +59,20 @@ export function Player({ cues, end, scenes, children }) {
     if (!renderMode) return;
     window.__videoDuration = total;
     window.__setTime = (v) => {
-      flushSync(() => setT(videoToTimeline(v, cues, end)));
+      const tl = videoToTimeline(v, cues, end);
+      offsetRef.current = v - tl;
+      // bump() forces a render even when tl is unchanged (a hold), so ambient motion advances.
+      flushSync(() => {
+        setT(tl);
+        bump();
+      });
     };
     window.__setTimeline = (tl) => {
-      flushSync(() => setT(tl));
+      offsetRef.current = 0;
+      flushSync(() => {
+        setT(tl);
+        bump();
+      });
     };
     window.__ready = true;
   }, [renderMode, cues, end, total, setT]);
@@ -73,7 +87,9 @@ export function Player({ cues, end, scenes, children }) {
       last = now;
       if (videoRef.current) {
         vRef.current = (vRef.current + dt) % total;
-        setT(videoToTimeline(vRef.current, cues, end));
+        const tl = videoToTimeline(vRef.current, cues, end);
+        offsetRef.current = vRef.current - tl;
+        setT(tl);
       } else if (targetRef.current !== null) {
         const next = tRef.current + dt;
         if (next >= targetRef.current) {
@@ -82,6 +98,9 @@ export function Player({ cues, end, scenes, children }) {
         } else {
           setT(next);
         }
+      } else {
+        offsetRef.current += dt;
+        bump();
       }
       raf = requestAnimationFrame(loop);
     };
@@ -153,8 +172,11 @@ export function Player({ cues, end, scenes, children }) {
           videoRef.current = true;
           setVideoPreview(true);
         }
-      } else if (/^[1-9]$/.test(k) && scenes[Number(k) - 1]) {
-        jump(scenes[Number(k) - 1].t);
+      } else if (/^[0-9]$/.test(k) && scenes[(Number(k) + 9) % 10]) {
+        jump(scenes[(Number(k) + 9) % 10].t);
+      } else if (k === "[" || k === "]") {
+        const here = scenes.reduce((best, s, i) => (s.t <= tRef.current + 0.01 ? i : best), 0);
+        jump(scenes[Math.max(0, Math.min(scenes.length - 1, here + (k === "]" ? 1 : -1)))].t);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -173,7 +195,9 @@ export function Player({ cues, end, scenes, children }) {
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
-        <TimeContext.Provider value={t}>{children}</TimeContext.Provider>
+        <TimeContext.Provider value={t}>
+          <LiveContext.Provider value={t + offsetRef.current}>{children}</LiveContext.Provider>
+        </TimeContext.Provider>
       </div>
 
       {idle && !dev && <div className="hint">Press Space to begin</div>}
@@ -186,7 +210,7 @@ export function Player({ cues, end, scenes, children }) {
               {videoPreview ? "  ▶ video preview" : ""}
             </span>
             <span className="muted">
-              Space/→ next · ← back · 1-9 scene · V video preview · F fullscreen · D hide
+              Space/→ next · ← back · 1-9,0 or [ ] scene · V video preview · F fullscreen · D hide
             </span>
           </div>
           <div className="scrubber-track">

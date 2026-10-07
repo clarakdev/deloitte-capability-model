@@ -30,6 +30,14 @@ export const capacityColor = (remaining) => {
   return { bg: "#2a0d0d", color: "#e05252" };
 };
 
+export const scoreColor = (score) => {
+  if (score >= 0.85) return { bg: "#1e2a14", color: "#86BC25" };
+  if (score >= 0.7) return { bg: "#0d1f33", color: "#5b9bd5" };
+  return { bg: "#2a1e0a", color: "#d4922a" };
+};
+
+export const scoreOutOfTen = (s) => Math.ceil(Math.max(0, Math.min(1, s)) * 10);
+
 export const ROLE_LEVELS = [
   "Analyst",
   "Consultant",
@@ -73,4 +81,44 @@ export const shuffledPool = (() => {
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool;
+})();
+
+export const FILTER_LOCATION = "Auckland";
+
+// Row pattern for the ranked list (best first). K stays through both filters,
+// U is removed by "Available only", X is removed by the location filter.
+const RANK_PATTERN = "KXUKXUKXKUXKXKUXKXKXUKXKXKUXKX";
+
+/**
+ * The ranked candidate list shown after matching. Each entry also records
+ * whether the person is available and whether they match FILTER_LOCATION, so
+ * the filter scene can remove the right rows.
+ */
+export const ranked = (() => {
+  const used = new Set();
+  const take = (pred) => {
+    const e = shuffledPool.find((x) => !used.has(x.id) && pred(x));
+    used.add(e.id);
+    return e;
+  };
+  let leave = 0;
+  return [...RANK_PATTERN].map((cat, r) => {
+    const emp =
+      cat === "K"
+        ? take((x) => x.location === FILTER_LOCATION)
+        : cat === "X"
+          ? take((x) => x.location !== FILTER_LOCATION)
+          : take(() => true);
+    const unavailable = cat === "U";
+    const onLeave = unavailable && leave++ % 2 === 0;
+    return {
+      emp,
+      score: 0.972 - r * 0.017,
+      unavailable,
+      onLeave,
+      capacity: unavailable ? 0 : capacityFor(emp),
+      inLocation: emp.location === FILTER_LOCATION,
+      keep: cat === "K",
+    };
+  });
 })();

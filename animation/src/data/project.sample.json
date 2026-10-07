@@ -1,0 +1,26 @@
+{
+ "name": "Government Digital Services Modernisation",
+ "description": "A public-sector agency is replacing its legacy case-management platform with a cloud-native solution, consolidating three siloed systems into one.",
+ "roles": [
+  {
+   "id": "ROLE001",
+   "title": "Solution Architect"
+  },
+  {
+   "id": "ROLE002",
+   "title": "Data Engineer"
+  },
+  {
+   "id": "ROLE003",
+   "title": "Change & Adoption Lead"
+  },
+  {
+   "id": "ROLE004",
+   "title": "Cybersecurity Analyst"
+  },
+  {
+   "id": "ROLE005",
+   "title": "Project Manager"
+  }
+ ]
+}

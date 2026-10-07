@@ -5,6 +5,15 @@ export const TimeContext = createContext(0);
 export const useT = () => useContext(TimeContext);
 
 /**
+ * Ambient time (seconds) that keeps running while the timeline rests at a cue:
+ * live = t + (total time spent paused). In the video render it equals video time.
+ * Scenes use it for endless motion, and can recover the pause offset as live - t
+ * (constant while a beat plays).
+ */
+export const LiveContext = createContext(0);
+export const useLive = () => useContext(LiveContext);
+
+/**
  * Cues are the pause points of the interactive version (one keypress plays
  * up to the next cue). In the video render, playback never stops, but each
  * cue freezes the picture for `hold` seconds so viewers get time to read.

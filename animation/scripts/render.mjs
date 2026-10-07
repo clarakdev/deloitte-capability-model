@@ -9,7 +9,7 @@
 // Uses the installed Edge/Chrome (no browser download) and ffmpeg on PATH.
 
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, renameSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -68,6 +68,8 @@ try {
     const startFrame = Math.round(from * fps);
     const endFrame = Math.round(to * fps); // exclusive: last frame of a full render is the one before the loop point
     mkdirSync(dirname(out), { recursive: true });
+    // Encode to a temp file and rename on success, so an interrupted render never replaces a good video.
+    const tmp = out.replace(/\.mp4$/, ".partial.mp4");
 
     const ffmpeg = spawn(
       "ffmpeg",
@@ -76,7 +78,7 @@ try {
         "-f", "image2pipe", "-framerate", String(fps), "-c:v", "png", "-i", "-",
         "-c:v", "libx264", "-preset", "slow", "-crf", crf,
         "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        out,
+        tmp,
       ],
       { stdio: ["pipe", "inherit", "inherit"] },
     );
@@ -96,6 +98,7 @@ try {
     }
     ffmpeg.stdin.end();
     await done;
+    renameSync(tmp, out);
     console.log(`\nWrote ${out}  (${(endFrame - startFrame) / fps}s @ ${fps}fps)`);
   }
 } finally {

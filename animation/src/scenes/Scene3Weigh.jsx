@@ -15,12 +15,13 @@ const BULLETS_TOP = 300;
 
 export default function Scene3Weigh() {
   const t = useT();
-  if (t < TL.morph[0] || t >= TL.outro[1]) return null;
+  if (t < TL.morph[0] || t >= TL.cardOut[1]) return null;
 
   const m = prog(t, TL.morph[0], TL.morph[1], ease.inOutCubic);
   const more = prog(t, TL.more[0], TL.more[1], ease.inOutCubic);
   const moreItems = prog(t, TL.more[0] + 0.4, TL.more[1] + 0.2, ease.linear);
-  const out = prog(t, TL.outro[0], TL.outro[1], ease.inOutCubic);
+  const bOut = prog(t, TL.bulletsOut[0], TL.bulletsOut[1], ease.inOutCubic);
+  const cOut = prog(t, TL.cardOut[0], TL.cardOut[1], ease.inOutCubic);
 
   // Section progress: lit (content revealed) and active (spotlight)
   const starts = [...TL.bullets.map((b) => b[0]), TL.more[0]];
@@ -60,9 +61,9 @@ export default function Scene3Weigh() {
                 fontWeight: 500,
                 letterSpacing: "-0.015em",
                 color: mix("#6a6a6a", "#ffffff", active[i]),
-                opacity: inP * (1 - out),
-                transform: `translateX(${(1 - inP) * -60 - out * 40}px)`,
-                filter: inP < 1 ? `blur(${(1 - inP) * 8}px)` : "none",
+                opacity: inP * (1 - bOut),
+                transform: `translateX(${(1 - inP) * -60 - bOut * 40}px)`,
+                filter: inP < 1 || bOut > 0 ? `blur(${(1 - inP) * 8 + bOut * 8}px)` : "none",
                 whiteSpace: "nowrap",
               }}
             >
@@ -80,8 +81,9 @@ export default function Scene3Weigh() {
             fontWeight: 400,
             fontStyle: "italic",
             color: "#d0d0d0",
-            opacity: prog(t, TL.more[0], TL.more[0] + 0.8, ease.outCubic) * (1 - out),
-            transform: `translateX(${(1 - prog(t, TL.more[0], TL.more[0] + 0.8, ease.outCubic)) * -40 - out * 40}px)`,
+            opacity: prog(t, TL.more[0], TL.more[0] + 0.8, ease.outCubic) * (1 - bOut),
+            transform: `translateX(${(1 - prog(t, TL.more[0], TL.more[0] + 0.8, ease.outCubic)) * -40 - bOut * 40}px)`,
+            filter: bOut > 0 ? `blur(${bOut * 8}px)` : "none",
           }}
         >
           And more…
@@ -93,12 +95,12 @@ export default function Scene3Weigh() {
         style={{
           position: "absolute",
           left: rect.x,
-          top: rect.y + out * 30,
+          top: rect.y + cOut * 30,
           width: rect.w,
           height: rect.h,
           borderRadius: lerp(8, 16, m),
           overflow: "hidden",
-          opacity: 1 - out,
+          opacity: 1 - cOut,
           background: mix("#131a0d", "#101010", m),
           border: `1px solid ${mix("#86BC25", "#2a2a2a", m)}`,
           boxShadow: `0 ${30 * m}px ${70 * m}px rgba(0,0,0,0.55), 0 0 ${28 * (1 - m)}px rgba(134,188,37,${0.35 * (1 - m)})`,

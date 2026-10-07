@@ -1,11 +1,11 @@
 import { lerp } from "../engine/easing.js";
 
-const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const parse = (c) => (c.startsWith("#") ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)) : c.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number));
 
-/** Blend two #rrggbb colours. */
+/** Blend two colours (#rrggbb or rgb(r, g, b)). */
 export const mix = (a, b, p) => {
-  const [r1, g1, b1] = hex(a);
-  const [r2, g2, b2] = hex(b);
+  const [r1, g1, b1] = parse(a);
+  const [r2, g2, b2] = parse(b);
   return `rgb(${Math.round(lerp(r1, r2, p))}, ${Math.round(lerp(g1, g2, p))}, ${Math.round(lerp(b1, b2, p))})`;
 };
 
