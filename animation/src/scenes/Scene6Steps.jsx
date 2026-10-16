@@ -38,13 +38,13 @@ function getLayout() {
  */
 export default function Scene6Steps() {
   const t = useT();
-  if (t < TL.stepBar[0] || t >= TL.outro[1]) return null;
+  if (t < TL.stepBar[0] || t >= TL.finalOut[1]) return null;
 
   const slots = getLayout();
   const barIn = prog(t, TL.stepBar[0], TL.stepBar[1], ease.outCubic);
-  const out = prog(t, TL.outro[0], TL.outro[1], ease.inOutCubic);
+  const out = prog(t, TL.finalOut[0], TL.finalOut[1], ease.inOutCubic);
   const appear = prog(t, TL.hl1[0], TL.hl1[1], ease.outCubic);
-  const pos = prog(t, TL.hl2[0], TL.hl2[1], ease.inOutCubic) + prog(t, TL.hl3[0], TL.hl3[1], ease.inOutCubic); // 0 = step 1 … 2 = step 3
+  const pos = prog(t, TL.hl2[0], TL.hl2[1], ease.inOutCubic) + prog(t, TL.hl3[0], TL.hl3[1], ease.inOutCubic) + prog(t, TL.hl4[0], TL.hl4[1], ease.inOutCubic) + prog(t, TL.hl5[0], TL.hl5[1], ease.inOutCubic); // 0 = step 1 … 4 = step 5
 
   const seg = Math.min(Math.floor(pos), STEPS.length - 2);
   const pill = {

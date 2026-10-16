@@ -15,7 +15,7 @@ static snapshot of `data/employees.json` and `data/project.json` (no backend nee
 cd animation
 npm install
 npm run dev          # http://localhost:5199  (add ?dev for the scrubber)
-npm run render       # -> renders/showcase.mp4 (~17 min for 1080p60)
+npm run render       # -> renders/showcase.mp4 (~35 min for 1080p60, ~3 min of video)
 ```
 
 `npm run render` uses the installed Edge/Chrome and `ffmpeg` on PATH.
@@ -45,6 +45,13 @@ Each beat is one keypress (cue labels are in `CUES`).
 | 11 | "All in just a few seconds" | 1; still ticking |
 | 12 | Ranked candidates (list stops, rows flip) | 1 |
 | 13 | Filters (Available only + location) | 1 |
+| 14 | AI report on the top candidate | 1 |
+| 15 | Gap analysis for the selected candidate | 1 |
+| 16 | Two candidates compared side by side | 1 |
+| 17 | Team report | 1 |
+| 18 | "This team is not locked in" | 1 |
+| 19 | "Data-informed decisions…" | 1 |
+| 20 | Closing title | 1 (then one more press fades out and restarts) |
 
 ## Presenting
 
@@ -78,13 +85,17 @@ After the last beat, one more press fades out and restarts.
 
 ```
 src/engine/      easing, Player (keys, clock, render hook), cue/hold maths, scroll motion profile
-src/components/  EmployeeRow (Frame3 row; optional match meter / fit elements), EmployeeCard (new),
-                 ProjectOverview (Frame1), SkillRequirements (Frame2), FilterBar (Frame3 filters),
-                 ProductPage (shared card/badge/page frame), Words, Backdrop
-src/scenes/      one file per scene (Scene6Steps is the progress bar that stays up through
-                 scenes 6-13; Scene8Skills covers scenes 8 and 9, which share one skills page;
-                 Scene10Match covers scenes 10-13, which share one candidate list)
-src/theme.js     product colours + sample-data helpers (featured employee, availability)
+src/components/  EmployeeRow (Frame3 row; optional match meter / fit / AI-report button / tick),
+                 EmployeeCard (new), ProjectOverview (Frame1), SkillRequirements (Frame2),
+                 FilterBar (Frame3 filters), AiReportPanel (Frame3 inline report),
+                 GapPanel (Frame4, simplified), TeamReport (team report page, simplified),
+                 Radar (radar plot), ProductPage (shared card/badge/page frame), Words, Backdrop
+src/scenes/      one file per scene group (Scene6Steps is the progress bar that stays up through
+                 scenes 6-19; Scene8Skills = scenes 8-9, one skills page; Scene10Match = scenes
+                 10-14, one candidate list; Scene15Gap = 15-16, gap panels; Scene17Team = 17-19,
+                 team report; Scene20Title = closing title)
+src/theme.js     product colours + sample-data helpers (featured employee, ranked list)
+src/story.js     data for the gap/team scenes (capabilities, two compared candidates, the team)
 src/layout.js    shared positions (list column, card, text)
 scripts/         render.mjs, snapshot-data.mjs
 ```

@@ -104,11 +104,55 @@ export const TL = {
   locClose: [70.4, 70.7], // dropdown closes, button shows 1 selected
   locCollapse: [70.7, 71.5], // rows from other locations leave
 
+  // Scene 13 text leaves as scene 14 begins
+  filterTextOut: [72.2, 72.9],
+
+  // Scene 14 – AI report on the top candidate
+  aiText: [72.8, 75.2],
+  reportBtn: [74.4, 75.2], // "Generate AI report" button appears, row grows
+  btnPress: [75.9, 76.2],
+  panelOpen: [76.2, 76.8], // report panel expands ("Generating…")
+  typeReport: [77.1, 79.0], // report text is written
+
+  // Scene 15 – gap analysis report for one candidate
+  pickRow: [79.9, 80.4], // top candidate is ticked as selected
+  aiTextOut: [79.9, 80.6],
+  hl4: [80.2, 81.0], // highlight moves to "Gap Analysis"
+  listOut: [80.9, 81.7], // candidate list and filters leave
+  gapText: [81.0, 83.7],
+  gapAIn: [81.5, 82.5], // panel enters; its charts draw in over the next ~2.3 s
+
+  // Scene 16 – compare two candidates
+  gapTextOut: [84.6, 85.3],
+  cmpText: [85.1, 86.7], // banner across the top
+  moveA: [85.3, 86.3], // first panel slides left
+  gapBIn: [86.1, 87.0], // second panel enters
+
+  // Scene 17 – team report
+  cmpOut: [88.8, 89.6], // banner and both panels leave
+  hl5: [89.0, 89.8], // highlight moves to "Team Report"
+  teamText: [89.5, 91.5],
+  teamIn: [89.7, 90.7],
+  teamRadar: [90.2, 91.6],
+  teamComp: [91.0, 92.0],
+  teamChem: [91.4, 92.7],
+
+  // Scene 18 – decisions can change
+  teamTextOut: [93.7, 94.4],
+  lockText: [94.3, 96.6],
+
+  // Scene 19 – closing line
+  winText: [97.6, 99.4],
+
+  // Scene 20 – everything leaves, title appears
+  finalOut: [100.4, 101.2],
+  title: [101.4, 102.9],
+
   // Everything fades back to the empty first frame so the video loops.
-  outro: [72.6, 74.6],
+  outro: [104.0, 106.0],
 };
 
-export const END = 74.6;
+export const END = 106.0;
 
 // `hold` = seconds the picture rests at this cue in the looping video
 // (ignored interactively).
@@ -134,6 +178,13 @@ export const CUES = [
   { t: 60.9, hold: 2.5, label: "All in a few seconds" },
   { t: 64.3, hold: 2.5, label: "Ranked candidates" },
   { t: 71.9, hold: 3.0, label: "Filtered" },
+  { t: 79.4, hold: 3.0, label: "AI report" },
+  { t: 84.2, hold: 3.5, label: "Gap analysis" },
+  { t: 88.3, hold: 3.5, label: "Two candidates compared" },
+  { t: 93.2, hold: 3.5, label: "Team report" },
+  { t: 97.0, hold: 2.5, label: "Decisions can change" },
+  { t: 99.8, hold: 2.5, label: "Winning team" },
+  { t: 103.3, hold: 4.0, label: "Deloitte Matchmaker" },
   { t: END, hold: 0.6, label: "Outro" },
 ];
 
@@ -152,4 +203,11 @@ export const SCENES = [
   { label: "Candidate matching", t: 55.1 },
   { label: "Ranked candidates", t: 60.9 },
   { label: "Filters", t: 64.3 },
+  { label: "AI report", t: 71.9 },
+  { label: "Gap analysis", t: 79.4 },
+  { label: "Comparison", t: 84.2 },
+  { label: "Team report", t: 88.3 },
+  { label: "Decisions can change", t: 93.2 },
+  { label: "Winning team", t: 97.0 },
+  { label: "Title", t: 99.8 },
 ];

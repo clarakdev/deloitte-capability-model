@@ -19,6 +19,9 @@ import Scene6Steps from "./scenes/Scene6Steps.jsx";
 import Scene7Overview from "./scenes/Scene7Overview.jsx";
 import Scene8Skills from "./scenes/Scene8Skills.jsx";
 import Scene10Match from "./scenes/Scene10Match.jsx";
+import Scene15Gap from "./scenes/Scene15Gap.jsx";
+import Scene17Team from "./scenes/Scene17Team.jsx";
+import Scene20Title from "./scenes/Scene20Title.jsx";
 
 function Show() {
   return (
@@ -33,6 +36,9 @@ function Show() {
       <Scene7Overview />
       <Scene8Skills />
       <Scene10Match />
+      <Scene15Gap />
+      <Scene17Team />
+      <Scene20Title />
     </Player>
   );
 }

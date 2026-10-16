@@ -7,7 +7,7 @@ const GREEN = "#86BC25";
 const WORDS = [
   "How",
   "do",
-  "project",
+  "resource",
   "managers",
   "pick",
   { br: true },

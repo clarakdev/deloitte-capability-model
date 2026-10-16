@@ -3,11 +3,12 @@ import { clamp, ease, lerp, mulberry32, prog } from "../engine/easing.js";
 import { TL } from "../timeline.js";
 import Words from "../components/Words.jsx";
 import EmployeeRow, { ROW_H_FIT } from "../components/EmployeeRow.jsx";
+import AiReportPanel, { REPORT_H } from "../components/AiReportPanel.jsx";
 import FilterBar from "../components/FilterBar.jsx";
 import { ranked, shuffledPool } from "../theme.js";
 import { H, TEXT_W, TEXT_X } from "../layout.js";
 
-// Scenes 10–13 share one list: endless ticking → stop → flip into ranked rows → filters.
+// Scenes 10–14 share one list: endless ticking → stop → flip into ranked rows → filters → AI report on the top row.
 
 // List geometry (stage px). Rows are the product's rows drawn at scale K.
 const K = 1.3;
@@ -15,6 +16,7 @@ const LX = 998;
 const CY = 590; // centre of the "active" row while ticking
 const PITCH = 104;
 const RH = ROW_H_FIT;
+const RH_BTN = 106; // native height of a row that shows the "Generate AI report" button
 const TOP_SLOT = 3; // the ranked list's first row sits this many slots above the active row
 const FILTER_Y = 166;
 
@@ -80,6 +82,27 @@ const TEXT_FILTER = [
   { text: "filtered.", ...EM },
 ];
 
+const TEXT_AI = [
+  "For",
+  "a",
+  { text: "deeper", ...EM },
+  { text: "dive", ...EM },
+  "into",
+  "a",
+  "candidate,",
+  "an",
+  { text: "AI", ...EM },
+  { text: "assistant", ...EM },
+  "can",
+  "examine",
+  "their",
+  "skills",
+  "and",
+  "write",
+  "a",
+  { text: "summary.", ...EM },
+];
+
 // ── endless random rows ──────────────────────────────────────────────
 const hash01 = (n) => mulberry32((Math.imul(n | 0, 2654435761) + 12345) >>> 0)();
 
@@ -142,7 +165,7 @@ function Placed({ y, opacity = 1, dx = 0, children }) {
 export default function Scene10Match() {
   const t = useT();
   const live = useLive();
-  if (t < TL.matchText[0] - 0.1 || t >= TL.outro[1]) return null;
+  if (t < TL.matchText[0] - 0.1 || t >= TL.listOut[1]) return null;
 
   const off = live - t; // pause offset; constant while a beat plays
   const [ts, te] = TL.stop;
@@ -161,8 +184,21 @@ export default function Scene10Match() {
   const L = t + off;
 
   const listIn = prog(t, TL.listIn[0], TL.listIn[1], ease.outCubic);
-  const out = prog(t, TL.outro[0], TL.outro[1], ease.inOutCubic);
+  const out = prog(t, TL.listOut[0], TL.listOut[1], ease.inOutCubic);
   const flipDone = prog(t, TL.flip[0], TL.flip[1], ease.linear);
+
+  // Scene 14/15: AI report on the top candidate, then it gets ticked as selected.
+  const btn = prog(t, TL.reportBtn[0], TL.reportBtn[1], ease.outCubic);
+  const [bp0, bp1] = TL.btnPress;
+  const press = prog(t, bp0, bp0 + 0.12, ease.outCubic) * (1 - prog(t, bp0 + 0.15, bp1, ease.outCubic));
+  const aiState = t < bp0 + 0.1 ? 0 : t < TL.typeReport[0] ? 1 : 2;
+  const panelP = prog(t, TL.panelOpen[0], TL.panelOpen[1], ease.outCubic);
+  const typed = prog(t, TL.typeReport[0], TL.typeReport[1], ease.linear);
+  const caret = typed > 0 && typed < 1;
+  const joined = prog(t, TL.panelOpen[0], TL.panelOpen[0] + 0.12, ease.linear);
+  const pickSlot = prog(t, TL.pickRow[0], TL.pickRow[0] + 0.25, ease.outCubic);
+  const pickFill = prog(t, TL.pickRow[0] + 0.15, TL.pickRow[1], ease.outCubic);
+  const h0 = lerp(RH, RH_BTN, btn);
 
   const rows = [];
 
@@ -197,13 +233,14 @@ export default function Scene10Match() {
     ranked.forEach((c, r) => {
       const hf = (c.unavailable ? 1 - collapseA : 1) * (!c.inLocation && !c.unavailable ? 1 - collapseB : 1);
       const yr = y;
-      y += PITCH * hf;
+      y += PITCH * hf + (r === 0 ? (h0 - RH) * K + REPORT_H * panelP * K : 0);
       if (hf < 0.01 || yr > H + 80) return;
 
       const fp = r < SLOT_COUNT ? prog(t, f0 + r * FLIP_STEP, f0 + r * FLIP_STEP + FLIP_DUR, ease.linear) : 1;
       const angle = fp >= 1 ? 0 : fp < 0.5 ? 90 * ease.inQuad(fp * 2) : -90 * (1 - ease.outQuad((fp - 0.5) * 2));
       const fresh = fp < 0.5;
       const k = r - TOP_SLOT;
+      const top = r === 0;
 
       rows.push(
         <Placed key={`r${r}`} y={yr} opacity={hf} dx={(1 - hf) * 40}>
@@ -219,17 +256,38 @@ export default function Scene10Match() {
             ) : (
               <EmployeeRow
                 emp={c.emp}
-                h={RH}
+                h={top ? h0 : RH}
                 score={c.score}
                 fit={ease.outQuad(clamp((fp - 0.5) * 2))}
                 capacity={c.onLeave ? null : c.capacity}
                 onLeave={c.onLeave}
                 dim={c.unavailable ? 0.45 : 1}
+                selected={top ? pickFill : 0}
+                ai={top ? { btn, state: aiState, press } : null}
+                pick={top ? { slot: pickSlot, fill: pickFill } : null}
+                joined={top ? joined : 0}
               />
             )}
           </div>
         </Placed>,
       );
+
+      if (top && panelP > 0.001) {
+        rows.push(
+          <div
+            key="report"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              transform: `translate(${LX}px, ${yr - (RH * K) / 2 + h0 * K}px) scale(${K})`,
+              transformOrigin: "0 0",
+            }}
+          >
+            <AiReportPanel name={c.emp.name} open={panelP} typed={typed} caret={caret} />
+          </div>,
+        );
+      }
     });
   }
 
@@ -254,7 +312,10 @@ export default function Scene10Match() {
         <Words words={TEXT_ORDER} t={t} window={TL.orderText} exit={TL.orderTextOut} perWord={0.09} wordDur={0.8} style={TEXT_STYLE} />
       </div>
       <div style={COLUMN}>
-        <Words words={TEXT_FILTER} t={t} window={TL.filterText} exit={TL.outro} perWord={0.09} wordDur={0.8} style={TEXT_STYLE} />
+        <Words words={TEXT_FILTER} t={t} window={TL.filterText} exit={TL.filterTextOut} perWord={0.09} wordDur={0.8} style={TEXT_STYLE} />
+      </div>
+      <div style={COLUMN}>
+        <Words words={TEXT_AI} t={t} window={TL.aiText} exit={TL.aiTextOut} perWord={0.09} wordDur={0.8} style={TEXT_STYLE} />
       </div>
 
       <div
@@ -262,7 +323,8 @@ export default function Scene10Match() {
           position: "absolute",
           inset: 0,
           opacity: listIn * (1 - out),
-          transform: `translate(${(1 - listIn) * 60}px, ${out * 24}px)`,
+          transform: `translate(${(1 - listIn) * 60 - out * 70}px, 0)`,
+          filter: out > 0 ? `blur(${out * 10}px)` : "none",
           WebkitMaskImage: mask,
           maskImage: mask,
         }}
@@ -276,9 +338,10 @@ export default function Scene10Match() {
             position: "absolute",
             left: LX,
             top: FILTER_Y,
-            transform: `scale(${K})`,
+            transform: `translateX(${-out * 70}px) scale(${K})`,
             transformOrigin: "0 0",
             opacity: 1 - out,
+            filter: out > 0 ? `blur(${out * 10}px)` : "none",
           }}
         >
           <FilterBar enter={fEnter} avail={avail} locOpen={locOpen} locChecked={locChecked} locActive={locActive} />
