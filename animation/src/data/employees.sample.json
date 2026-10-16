@@ -1,0 +1,2197 @@
+[
+ {
+  "id": "EMP001",
+  "name": "Uma Brown",
+  "title": "Enterprise Architect",
+  "role_level": "Partner",
+  "business_unit": "Technology",
+  "location": "Auckland",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP002",
+  "name": "David Walker",
+  "title": "Enterprise Architect",
+  "role_level": "Director",
+  "business_unit": "Risk Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP003",
+  "name": "Fiona White",
+  "title": "Enterprise Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Human Capital",
+  "location": "Tauranga",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP004",
+  "name": "Emma Edwards",
+  "title": "Enterprise Architect",
+  "role_level": "Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Hamilton",
+  "summary": "Emma is a highly experienced enterprise architecture and cloud design professional with over 18 years in the field. They have directed platform modernisation projects at scale and are recognised for stakeholder engagement at executive level.",
+  "years_experience": 18,
+  "current_role": "Enterprise Architect",
+  "prior_roles": [
+   "Cloud Engineer",
+   "Technical Lead"
+  ],
+  "project_experience": [
+   "Platform modernisation",
+   "Microservices architecture",
+   "Cloud migration"
+  ],
+  "industry_experience": [
+   "Technology Services",
+   "Financial Services"
+  ],
+  "skills": [
+   {
+    "name": "DevOps",
+    "category": "Technology Skills"
+   },
+   {
+    "name": "Quality Assessment",
+    "category": "Business Skills"
+   },
+   {
+    "name": "Requirements Gathering",
+    "category": "Business Skills"
+   },
+   {
+    "name": "AWS",
+    "category": "Technology Skills"
+   },
+   {
+    "name": "API Design",
+    "category": "Technology Skills"
+   },
+   {
+    "name": "Business Analysis",
+    "category": "Business Skills"
+   },
+   {
+    "name": "Python",
+    "category": "Technology Skills"
+   }
+  ],
+  "tools": [
+   "Terraform",
+   "Microsoft Azure",
+   "Confluence",
+   "JIRA"
+  ],
+  "certifications": [
+   "Azure Administrator",
+   "ITIL"
+  ],
+  "available": true,
+  "unavailability": [],
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ],
+  "business_chemistry": "Guardian"
+ },
+ {
+  "id": "EMP005",
+  "name": "Rachel Wood",
+  "title": "Enterprise Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Technology",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP006",
+  "name": "Simon Green",
+  "title": "Enterprise Architect",
+  "role_level": "Manager",
+  "business_unit": "Technology",
+  "location": "Christchurch",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP007",
+  "name": "Kevin Turner",
+  "title": "Enterprise Architect",
+  "role_level": "Manager",
+  "business_unit": "Risk Advisory",
+  "location": "Wellington",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE204",
+    "percentage": 25,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   }
+  ]
+ },
+ {
+  "id": "EMP008",
+  "name": "Priya Taylor",
+  "title": "Solution Architect",
+  "role_level": "Senior Consultant",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE201",
+    "percentage": 25,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP009",
+  "name": "Wendy Johnson",
+  "title": "Solution Architect",
+  "role_level": "Senior Consultant",
+  "business_unit": "Technology",
+  "location": "Queenstown",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP010",
+  "name": "Xavier Green",
+  "title": "Solution Architect",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP011",
+  "name": "Julia Walker",
+  "title": "Solution Architect",
+  "role_level": "Senior Consultant",
+  "business_unit": "Human Capital",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP012",
+  "name": "Victor Evans",
+  "title": "Technical Architect",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE201",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP013",
+  "name": "Diana Turner",
+  "title": "Technical Architect",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE205",
+    "percentage": 15,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP014",
+  "name": "Quinn Hughes",
+  "title": "Technical Architect",
+  "role_level": "Consultant",
+  "business_unit": "Technology",
+  "location": "Christchurch",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   }
+  ]
+ },
+ {
+  "id": "EMP015",
+  "name": "Zara White",
+  "title": "Technical Architect",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE207",
+    "percentage": 15,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP016",
+  "name": "Oliver Thompson",
+  "title": "Technical Architect",
+  "role_level": "Consultant",
+  "business_unit": "Human Capital",
+  "location": "Queenstown",
+  "business_chemistry": "Integrator",
+  "allocations": []
+ },
+ {
+  "id": "EMP017",
+  "name": "Fiona Jones",
+  "title": "Cloud Architect",
+  "role_level": "Analyst",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP018",
+  "name": "Tara Jackson",
+  "title": "Cloud Architect",
+  "role_level": "Analyst",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE203",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP019",
+  "name": "Adam White",
+  "title": "Cloud Architect",
+  "role_level": "Analyst",
+  "business_unit": "Risk Advisory",
+  "location": "Rotorua",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   }
+  ]
+ },
+ {
+  "id": "EMP020",
+  "name": "Clara Wilson",
+  "title": "Cloud Architect",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE204",
+    "percentage": 15,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP021",
+  "name": "Simon Wood",
+  "title": "Data Architect",
+  "role_level": "Partner",
+  "business_unit": "Technology",
+  "location": "Christchurch",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE201",
+    "percentage": 25,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE203",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP022",
+  "name": "Clara Hall",
+  "title": "Data Architect",
+  "role_level": "Director",
+  "business_unit": "Financial Advisory",
+  "location": "Christchurch",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE202",
+    "percentage": 40,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP023",
+  "name": "Tara Hughes",
+  "title": "Data Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP024",
+  "name": "Ben Hill",
+  "title": "Data Architect",
+  "role_level": "Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE206",
+    "percentage": 15,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   }
+  ]
+ },
+ {
+  "id": "EMP025",
+  "name": "Marcus Martin",
+  "title": "Data Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP026",
+  "name": "Natalie Williams",
+  "title": "Data Architect",
+  "role_level": "Manager",
+  "business_unit": "Risk Advisory",
+  "location": "Christchurch",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP027",
+  "name": "Kevin Green",
+  "title": "Data Architect",
+  "role_level": "Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   }
+  ]
+ },
+ {
+  "id": "EMP028",
+  "name": "Marcus Harris",
+  "title": "Senior Data Engineer",
+  "role_level": "Senior Consultant",
+  "business_unit": "Technology",
+  "location": "Wellington",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE202",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP029",
+  "name": "Marcus Lewis",
+  "title": "Senior Data Engineer",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE201",
+    "percentage": 15,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   }
+  ]
+ },
+ {
+  "id": "EMP030",
+  "name": "Simon Cooper",
+  "title": "Senior Data Engineer",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Rotorua",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE202",
+    "percentage": 15,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   }
+  ]
+ },
+ {
+  "id": "EMP031",
+  "name": "Julia Jackson",
+  "title": "Senior Data Engineer",
+  "role_level": "Senior Consultant",
+  "business_unit": "Human Capital",
+  "location": "Auckland",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE207",
+    "percentage": 20,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP032",
+  "name": "Ben Roberts",
+  "title": "Data Engineer",
+  "role_level": "Consultant",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE203",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP033",
+  "name": "David Cooper",
+  "title": "Data Engineer",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP034",
+  "name": "Fiona Thomas",
+  "title": "Data Engineer",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Tauranga",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE203",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP035",
+  "name": "Quinn Roberts",
+  "title": "Data Engineer",
+  "role_level": "Consultant",
+  "business_unit": "Technology",
+  "location": "Christchurch",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP036",
+  "name": "Bella Clarke",
+  "title": "Data Engineer",
+  "role_level": "Consultant",
+  "business_unit": "Technology",
+  "location": "Auckland",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE207",
+    "percentage": 15,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   }
+  ]
+ },
+ {
+  "id": "EMP037",
+  "name": "Quinn Evans",
+  "title": "Data Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Human Capital",
+  "location": "Christchurch",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE203",
+    "percentage": 20,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP038",
+  "name": "Tara Jones",
+  "title": "Data Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Technology",
+  "location": "Rotorua",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP039",
+  "name": "Fiona Turner",
+  "title": "Data Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP040",
+  "name": "Yasmin Hall",
+  "title": "Data Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 15,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE203",
+    "percentage": 25,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   }
+  ]
+ },
+ {
+  "id": "EMP041",
+  "name": "Quinn Taylor",
+  "title": "Change Lead",
+  "role_level": "Partner",
+  "business_unit": "Risk Advisory",
+  "location": "Wellington",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE204",
+    "percentage": 25,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP042",
+  "name": "Diana Walker",
+  "title": "Change Lead",
+  "role_level": "Director",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP043",
+  "name": "Fiona Davies",
+  "title": "Change Lead",
+  "role_level": "Senior Manager",
+  "business_unit": "Technology",
+  "location": "Wellington",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP044",
+  "name": "Bella Walker",
+  "title": "Change Lead",
+  "role_level": "Manager",
+  "business_unit": "Technology",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE205",
+    "percentage": 15,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP045",
+  "name": "Adam Hughes",
+  "title": "Change Lead",
+  "role_level": "Senior Manager",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE207",
+    "percentage": 15,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   }
+  ]
+ },
+ {
+  "id": "EMP046",
+  "name": "Laura Wilson",
+  "title": "Change Lead",
+  "role_level": "Manager",
+  "business_unit": "Human Capital",
+  "location": "Dunedin",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP047",
+  "name": "Clara Patel",
+  "title": "Change Lead",
+  "role_level": "Manager",
+  "business_unit": "Financial Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP048",
+  "name": "Laura Ward",
+  "title": "Senior Change Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Technology",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE204",
+    "percentage": 15,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP049",
+  "name": "Tara Clarke",
+  "title": "Senior Change Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP050",
+  "name": "Tara Roberts",
+  "title": "Senior Change Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Queenstown",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE201",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP051",
+  "name": "Clara Roberts",
+  "title": "Senior Change Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Human Capital",
+  "location": "Wellington",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP052",
+  "name": "Rachel Thomas",
+  "title": "Change Manager",
+  "role_level": "Consultant",
+  "business_unit": "Technology",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE202",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP053",
+  "name": "Natalie Hughes",
+  "title": "Change Manager",
+  "role_level": "Consultant",
+  "business_unit": "Human Capital",
+  "location": "Christchurch",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP054",
+  "name": "Quinn White",
+  "title": "Change Manager",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE203",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP055",
+  "name": "David Taylor",
+  "title": "Change Manager",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE202",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP056",
+  "name": "Adam Smith",
+  "title": "Change Manager",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP057",
+  "name": "Kevin Clarke",
+  "title": "Change Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP058",
+  "name": "Wendy Williams",
+  "title": "Change Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Human Capital",
+  "location": "Hamilton",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE207",
+    "percentage": 25,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE201",
+    "percentage": 25,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP059",
+  "name": "Julia Johnson",
+  "title": "Change Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Human Capital",
+  "location": "Auckland",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP060",
+  "name": "Julia Hall",
+  "title": "Change Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE207",
+    "percentage": 20,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE203",
+    "percentage": 40,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP061",
+  "name": "Marcus Clarke",
+  "title": "Security Architect",
+  "role_level": "Partner",
+  "business_unit": "Strategy & Operations",
+  "location": "Dunedin",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE201",
+    "percentage": 40,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP062",
+  "name": "Oliver Brown",
+  "title": "Security Architect",
+  "role_level": "Director",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP063",
+  "name": "Emma Wood",
+  "title": "Security Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Human Capital",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE201",
+    "percentage": 15,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP064",
+  "name": "Oliver Lewis",
+  "title": "Security Architect",
+  "role_level": "Manager",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP065",
+  "name": "Natalie Thompson",
+  "title": "Security Architect",
+  "role_level": "Senior Manager",
+  "business_unit": "Risk Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP066",
+  "name": "Rachel Evans",
+  "title": "Security Architect",
+  "role_level": "Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP067",
+  "name": "Simon Hall",
+  "title": "Security Architect",
+  "role_level": "Manager",
+  "business_unit": "Human Capital",
+  "location": "Dunedin",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE205",
+    "percentage": 20,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP068",
+  "name": "Hannah Williams",
+  "title": "Senior Security Analyst",
+  "role_level": "Senior Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Christchurch",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE201",
+    "percentage": 15,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP069",
+  "name": "Adam Walker",
+  "title": "Senior Security Analyst",
+  "role_level": "Senior Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Christchurch",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE201",
+    "percentage": 25,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP070",
+  "name": "Ben Ward",
+  "title": "Senior Security Analyst",
+  "role_level": "Senior Consultant",
+  "business_unit": "Strategy & Operations",
+  "location": "Dunedin",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE205",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP071",
+  "name": "Oliver Hughes",
+  "title": "Senior Security Analyst",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Wellington",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP072",
+  "name": "Quinn Thompson",
+  "title": "Information Security Consultant",
+  "role_level": "Consultant",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE206",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP073",
+  "name": "Hannah Jackson",
+  "title": "Information Security Consultant",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": []
+ },
+ {
+  "id": "EMP074",
+  "name": "Rachel Davies",
+  "title": "Information Security Consultant",
+  "role_level": "Consultant",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP075",
+  "name": "Simon Harris",
+  "title": "Information Security Consultant",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE203",
+    "percentage": 15,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP076",
+  "name": "Xavier Patel",
+  "title": "Information Security Consultant",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE201",
+    "percentage": 25,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE203",
+    "percentage": 25,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP077",
+  "name": "Bella Green",
+  "title": "Security Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP078",
+  "name": "Marcus Thompson",
+  "title": "Security Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE204",
+    "percentage": 25,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP079",
+  "name": "Julia Davies",
+  "title": "Security Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP080",
+  "name": "Ian Lewis",
+  "title": "Security Analyst",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE207",
+    "percentage": 20,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   }
+  ]
+ },
+ {
+  "id": "EMP081",
+  "name": "Alice Cooper",
+  "title": "Programme Manager",
+  "role_level": "Partner",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   },
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP082",
+  "name": "Laura Thomas",
+  "title": "Programme Manager",
+  "role_level": "Director",
+  "business_unit": "Strategy & Operations",
+  "location": "Queenstown",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE203",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP083",
+  "name": "Emma Wright",
+  "title": "Programme Manager",
+  "role_level": "Senior Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE204",
+    "percentage": 20,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE207",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP084",
+  "name": "Tara Edwards",
+  "title": "Programme Manager",
+  "role_level": "Manager",
+  "business_unit": "Financial Advisory",
+  "location": "Hamilton",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   }
+  ]
+ },
+ {
+  "id": "EMP085",
+  "name": "Clara Harris",
+  "title": "Programme Manager",
+  "role_level": "Senior Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Christchurch",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE201",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP086",
+  "name": "Zara Martin",
+  "title": "Programme Manager",
+  "role_level": "Manager",
+  "business_unit": "Human Capital",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP087",
+  "name": "Laura Wright",
+  "title": "Programme Manager",
+  "role_level": "Manager",
+  "business_unit": "Strategy & Operations",
+  "location": "Wellington",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE203",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP088",
+  "name": "Tara Wilson",
+  "title": "Senior Project Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Rotorua",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE203",
+    "percentage": 15,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   }
+  ]
+ },
+ {
+  "id": "EMP089",
+  "name": "David Edwards",
+  "title": "Senior Project Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-08-02",
+    "end_date": "2026-08-17"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   }
+  ]
+ },
+ {
+  "id": "EMP090",
+  "name": "David Williams",
+  "title": "Senior Project Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 15,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-10"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   }
+  ]
+ },
+ {
+  "id": "EMP091",
+  "name": "Uma Harris",
+  "title": "Senior Project Manager",
+  "role_level": "Senior Consultant",
+  "business_unit": "Technology",
+  "location": "Wellington",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ207",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-25",
+    "end_date": "2026-09-14"
+   },
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-10",
+    "end_date": "2026-09-05"
+   }
+  ]
+ },
+ {
+  "id": "EMP092",
+  "name": "Uma Roberts",
+  "title": "Project Manager",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Guardian",
+  "allocations": []
+ },
+ {
+  "id": "EMP093",
+  "name": "Simon Wilson",
+  "title": "Project Manager",
+  "role_level": "Consultant",
+  "business_unit": "Risk Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Driver",
+  "allocations": []
+ },
+ {
+  "id": "EMP094",
+  "name": "Emma Johnson",
+  "title": "Project Manager",
+  "role_level": "Consultant",
+  "business_unit": "Human Capital",
+  "location": "Hamilton",
+  "business_chemistry": "Pioneer",
+  "allocations": [
+   {
+    "project_id": "PROJ203",
+    "role_id": "ROLE203",
+    "percentage": 15,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE206",
+    "percentage": 25,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ },
+ {
+  "id": "EMP095",
+  "name": "Wendy Hall",
+  "title": "Project Manager",
+  "role_level": "Consultant",
+  "business_unit": "Financial Advisory",
+  "location": "Christchurch",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-07-20",
+    "end_date": "2026-08-12"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE206",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP096",
+  "name": "Marcus Walker",
+  "title": "Project Manager",
+  "role_level": "Consultant",
+  "business_unit": "Technology",
+  "location": "Auckland",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE202",
+    "percentage": 25,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP097",
+  "name": "George Evans",
+  "title": "Project Coordinator",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Queenstown",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE205",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ201",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-08-20",
+    "end_date": "2026-09-16"
+   }
+  ]
+ },
+ {
+  "id": "EMP098",
+  "name": "Ian Williams",
+  "title": "Project Coordinator",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Auckland-North Shore",
+  "business_chemistry": "Integrator",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE203",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   },
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE201",
+    "percentage": 40,
+    "start_date": "2026-07-15",
+    "end_date": "2026-08-08"
+   }
+  ]
+ },
+ {
+  "id": "EMP099",
+  "name": "Marcus Hill",
+  "title": "Project Coordinator",
+  "role_level": "Analyst",
+  "business_unit": "Human Capital",
+  "location": "Wellington",
+  "business_chemistry": "Guardian",
+  "allocations": [
+   {
+    "project_id": "PROJ205",
+    "role_id": "ROLE202",
+    "percentage": 20,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ202",
+    "role_id": "ROLE204",
+    "percentage": 40,
+    "start_date": "2026-08-05",
+    "end_date": "2026-08-28"
+   }
+  ]
+ },
+ {
+  "id": "EMP100",
+  "name": "David Ward",
+  "title": "Project Coordinator",
+  "role_level": "Analyst",
+  "business_unit": "Financial Advisory",
+  "location": "Dunedin",
+  "business_chemistry": "Driver",
+  "allocations": [
+   {
+    "project_id": "PROJ204",
+    "role_id": "ROLE202",
+    "percentage": 40,
+    "start_date": "2026-07-25",
+    "end_date": "2026-08-20"
+   },
+   {
+    "project_id": "PROJ206",
+    "role_id": "ROLE207",
+    "percentage": 40,
+    "start_date": "2026-07-18",
+    "end_date": "2026-08-15"
+   }
+  ]
+ }
+]
